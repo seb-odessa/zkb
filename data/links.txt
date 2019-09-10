@@ -1,0 +1,1 @@
+https://zkillboard.com/api/kills/shipTypeID/34495/regionID/10000028/zkbOnly/
