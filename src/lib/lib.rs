@@ -7,10 +7,10 @@ extern crate serde;
 extern crate serde_json;
 
 /** Returned by https://zkillboard.com/api/history/YYYYMMDD.json */
-type Id =  HashMap<u64, String>;
+pub type Id =  HashMap<u64, String>;
 
 #[derive(Serialize, Deserialize, Debug)]
-struct Record {
+pub struct Record {
     // returned by https://zkillboard.com/api/kills/
     // e.g.: https://zkillboard.com/api/kills/shipTypeID/34495/regionID/10000028/zkbOnly/month/08/
     killmail_id: u64,
@@ -19,7 +19,7 @@ struct Record {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
-struct Zkb {
+pub struct Zkb {
     #[serde(rename = "locationID")]
     location_id: u32,
     hash: String,
@@ -34,7 +34,7 @@ struct Zkb {
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
-struct KillMail {
+pub struct KillMail {
     attackers: Vec<Attacker>,
     killmail_id: u64,
     killmail_time: String,
@@ -43,7 +43,7 @@ struct KillMail {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
-struct Attacker {
+pub struct Attacker {
     character_id : u64,
     corporation_id: u64,
     damage_done: u32,
@@ -56,7 +56,7 @@ struct Attacker {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
-struct Victim {
+pub struct Victim {
     character_id: u64,
     corporation_id: u64,
     damage_taken: u32,
@@ -67,7 +67,7 @@ struct Victim {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
-struct Item {
+pub struct Item {
     flag: u16,
     item_type_id: u32,
     quantity_dropped: u32,
@@ -76,7 +76,7 @@ struct Item {
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
-struct Position {
+pub struct Position {
     x: f64,
     y: f64,
     z: f64,
