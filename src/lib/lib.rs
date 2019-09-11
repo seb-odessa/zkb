@@ -1,25 +1,45 @@
-
-use serde::{Deserialize, Serialize};
-use serde_json::json;
-use std::collections::HashMap;
-
+#![feature(custom_attribute)]
+#[macro_use]
+extern crate diesel;
 extern crate serde;
 extern crate serde_json;
 
-/** Returned by https://zkillboard.com/api/history/YYYYMMDD.json */
-pub type Id =  HashMap<u64, String>;
+pub mod schema;
+pub mod models;
+
+use serde::{Deserialize, Serialize};
+use diesel::sqlite::SqliteConnection;
+use self::models::{NewDate};
+
+
+pub fn create_date<'a>(conn: &SqliteConnection, year: i32, month: i32, day: i32) -> bool {
+    use crate::schema::dates;
+    use crate::diesel::RunQueryDsl;
+
+    let new = NewDate{
+        year: year,
+        month: month,
+        day: day
+    };
+    diesel::insert_into(dates::table)
+        .values(&new)
+        .execute(conn)
+        .expect(&format!("Failed to save date {}-{}-{}", year, month, day)) == 1
+
+}
+
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Record {
+pub struct Zkb {
     // returned by https://zkillboard.com/api/kills/
     // e.g.: https://zkillboard.com/api/kills/shipTypeID/34495/regionID/10000028/zkbOnly/month/08/
     killmail_id: u64,
-    zkb: Zkb
+    zkb: ZkbPayload
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
-pub struct Zkb {
+pub struct ZkbPayload {
     #[serde(rename = "locationID")]
     location_id: u32,
     hash: String,
@@ -86,9 +106,12 @@ pub struct Position {
 mod tests {
     use super::*;
     use serde::export::Result;
+    use serde_json::json;
+    use std::collections::HashMap;
 
     #[test]
     fn test_id() {
+        // Returned by https://zkillboard.com/api/history/YYYYMMDD.json /
         let rec = json!({
             "78146996":"4ceed992204ea5cab36f9543e80b90f0417534f5",
             "78146999":"f22a5166bfc52151c029cc169d9e0c289c439233",
@@ -96,7 +119,7 @@ mod tests {
         });
         let json = serde_json::to_string(&rec);
         assert!(json.is_ok());
-        let val: Result<Id, serde_json::Error> = serde_json::from_str(&json.unwrap());
+        let val: Result<HashMap<u64, String>, serde_json::Error> = serde_json::from_str(&json.unwrap());
         assert!(val.is_ok());
         let map = val.unwrap();
         assert!(map.get(&78146999).is_some());
@@ -104,7 +127,7 @@ mod tests {
     }
 
     #[test]
-    fn test_record() {
+    fn test_zkb() {
         let rec = json!({
         "killmail_id":78766279,
         "zkb":{
@@ -119,9 +142,9 @@ mod tests {
         });
         let json = serde_json::to_string(&rec);
         assert!(json.is_ok());
-        let val: Result<Record, serde_json::Error> = serde_json::from_str(&json.unwrap());
+        let val: Result<Zkb, serde_json::Error> = serde_json::from_str(&json.unwrap());
         assert!(val.is_ok());
-        let record = val.unwrap();
+        let record: Zkb = val.unwrap();
         assert_eq!(78766279, record.killmail_id);
         assert_eq!("05b689f860cd720cf3c8f71ab4c5100aff396081", record.zkb.hash);
     }
@@ -247,6 +270,23 @@ mod tests {
         assert_eq!(78560358, record.killmail_id);
         assert_eq!(30002384, record.solar_system_id);
         }
+    }
+
+    #[test]
+    fn test_111() {
+        // Returned by https://zkillboard.com/api/history/YYYYMMDD.json /
+        let rec = json!({
+            "78146996":"4ceed992204ea5cab36f9543e80b90f0417534f5",
+            "78146999":"f22a5166bfc52151c029cc169d9e0c289c439233",
+            "78147000":"34177ddc51664e50e2c6f7ef91f9e8a75f7addc1"
+        });
+        let json = serde_json::to_string(&rec);
+        assert!(json.is_ok());
+        let val: Result<HashMap<u64, String>, serde_json::Error> = serde_json::from_str(&json.unwrap());
+        assert!(val.is_ok());
+        let map = val.unwrap();
+        assert!(map.get(&78146999).is_some());
+        assert_eq!("f22a5166bfc52151c029cc169d9e0c289c439233", map.get(&78146999).unwrap());
     }
 }
 
