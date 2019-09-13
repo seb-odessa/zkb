@@ -15,6 +15,15 @@ path = "src/lib/lib.rs"
 name = "zkb"
 path = "src/main.rs"
 
+[[bin]]
+name = "show_dates"
+path = "tools/show_dates.rs"
+
+[[bin]]
+name = "create_date"
+path = "tools/create_date.rs"
+
+
 [dependencies]
     serde = { version = "1.0", features = ["derive"]}
     serde_json = "*"

@@ -6,27 +6,9 @@ extern crate serde_json;
 
 pub mod schema;
 pub mod models;
+pub mod database;
 
 use serde::{Deserialize, Serialize};
-use diesel::sqlite::SqliteConnection;
-use self::models::{NewDate};
-
-
-pub fn create_date<'a>(conn: &SqliteConnection, year: i32, month: i32, day: i32) -> bool {
-    use crate::schema::dates;
-    use crate::diesel::RunQueryDsl;
-
-    let new = NewDate{
-        year: year,
-        month: month,
-        day: day
-    };
-    diesel::insert_into(dates::table)
-        .values(&new)
-        .execute(conn)
-        .expect(&format!("Failed to save date {}-{}-{}", year, month, day)) == 1
-
-}
 
 
 #[derive(Serialize, Deserialize, Debug)]
