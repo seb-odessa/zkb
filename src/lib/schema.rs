@@ -11,11 +11,10 @@ table! {
     kills (id) {
         id -> Integer,
         hash -> Text,
-        date -> Integer,
+        date_id -> Integer,
     }
 }
 
-allow_tables_to_appear_in_same_query!(
-    dates,
-    kills,
-);
+joinable!(kills -> dates (date_id));
+
+allow_tables_to_appear_in_same_query!(dates, kills,);

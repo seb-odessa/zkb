@@ -4,15 +4,15 @@ extern crate lib;
 use diesel::prelude::*;
 use lib::database::*;
 use lib::models::*;
-use lib::schema::dates::dsl::*;
+use lib::schema::kills::dsl::*;
 
 fn main() {
     let conn = establish_connection();
-    let res = dates
+    let res = kills
         .limit(100)
-        .load::<Date>(&conn)
+        .load::<Kill>(&conn)
         .expect("Error loading date");
-    for date in res {
-        println!("{:?}", date);
+    for kill in res {
+        println!("{:?}", kill);
     }
 }
