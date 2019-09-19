@@ -1,4 +1,4 @@
-#![feature(custom_attribute)]
+//#![feature(custom_attribute)]
 #[macro_use]
 extern crate diesel;
 extern crate serde;

@@ -20,8 +20,8 @@ name = "show_dates"
 path = "tools/show_dates.rs"
 
 [[bin]]
-name = "create_date"
-path = "tools/create_date.rs"
+name = "insert_date"
+path = "tools/insert_date.rs"
 
 
 [dependencies]

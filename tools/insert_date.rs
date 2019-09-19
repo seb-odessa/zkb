@@ -13,8 +13,8 @@ fn main() {
         let month:i32 = args[2].parse().expect("Can't convert second argument to the Month");
         let day:i32 = args[3].parse().expect("Can't convert third argument to the Day number");
         let conn = establish_connection();
-        let r = create_date(&conn, year, month, day);
-        println!("Res = {}", r);
+        let r = insert_date(&conn, year, month, day);
+        println!("Res = {:?}", r);
 
     }
 }
