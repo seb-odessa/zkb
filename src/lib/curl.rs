@@ -2,6 +2,7 @@ use curl::easy::Easy;
 
 
 
+
 #[cfg(test)]
 mod tests {
     use super::*;
