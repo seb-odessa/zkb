@@ -1,5 +1,8 @@
-extern crate diesel;
+//extern crate diesel;
 extern crate lib;
+
+use lib::models::Date;
+
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();
@@ -18,7 +21,8 @@ fn main() {
             .parse()
             .expect("Can't convert third argument to the Day number");
         let conn = establish_connection();
-        let r = insert_date(&conn, year, month, day);
+        let date = Date::new(&year, &month, &day);
+        let r = insert_date(&conn, &date);
         println!("Res = {:?}", r);
     }
 }

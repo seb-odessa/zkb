@@ -1,23 +1,17 @@
 use curl::easy::Easy;
 
-
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_curl() {
-        let mut content = Vec::new();
+pub fn query(url: &str) -> Vec<u8> {
+    let mut content = Vec::new();
+    {
         let mut easy = Easy::new();
-        assert!(easy.url("https://example.com/").is_ok());
+        easy.url(url).expect(&format!("Can't open {}", url));
         let mut transfer = easy.transfer();
-        let done = transfer.write_function(|data| {
+        transfer.write_function(|data| {
             content.extend_from_slice(data);
             Ok(data.len())
-        });
-        assert!(done.is_ok());
-        assert!(transfer.perform().is_ok());
+        }).expect("Can't receive data from server");
+        transfer.perform().expect("Can't complete request");
     }
+    return content;
 }
+

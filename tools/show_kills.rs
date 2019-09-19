@@ -3,7 +3,7 @@ extern crate lib;
 
 use diesel::prelude::*;
 use lib::database::*;
-use lib::models::*;
+use lib::models::Kill;
 use lib::schema::kills::dsl::*;
 
 fn main() {

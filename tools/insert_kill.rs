@@ -19,7 +19,7 @@ fn main() {
             .expect("Can't convert first argument to the Year");
         let conn = establish_connection();
         
-        let r = insert_kill(&conn, &lib::models::NewKill::new(&id, &hash, &date_id));
+        let r = insert_kill(&conn, &lib::models::Kill::new(&id, &hash, &date_id));
         println!("Res = {:?}", r);
     }
 }
