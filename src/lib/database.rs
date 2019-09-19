@@ -13,14 +13,17 @@ pub fn establish_connection() -> Connection {
     Connection::establish(&url).expect(&format!("Error connection to {}", url))
 }
 
-pub fn insert_date(conn: &Connection, year: Integer, month: Integer, day: Integer) -> QueryResult<usize> {
+pub fn insert_date(conn: &Connection, year: Integer, month: Integer, day: Integer) -> QueryResult<Integer> {
 
     let new = models::NewDate {
         year: year,
         month: month,
         day: day,
     };
-    diesel::insert_into(schema::dates::table).values(&new).execute(conn)
+    diesel::insert_into(schema::dates::table)
+        .values(&new)
+        .execute(conn)
+        .and_then(|_|{ get_date_id(conn, year, month, day) })
 }
 
 pub fn get_date(conn: &Connection, date_id: Integer) -> QueryResult<models::Date> {
@@ -37,12 +40,10 @@ pub fn get_date_id(conn: &Connection, year: Integer, month: Integer, day: Intege
         .first(conn)
 }
 
+pub fn insert_kill(conn: &Connection, kill: &models::NewKill) -> QueryResult<usize> {
+    diesel::insert_into(schema::kills::table).values(kill).execute(conn)
+}
 
-pub fn insert_kill(conn: &Connection, id: Integer, hash: Hash, date_id: Integer) -> QueryResult<usize> {
-    let new = models::NewKill {
-        id: id,
-        hash: hash,
-        date_id: date_id,
-    };
-    diesel::insert_into(schema::kills::table).values(&new).execute(conn)
+pub fn insert_kills(conn: &Connection, kill: &Vec<models::NewKill>) -> QueryResult<usize> {
+    diesel::insert_into(schema::kills::table).values(kill).execute(conn)
 }
