@@ -38,6 +38,11 @@ pub fn insert_kill(conn: &Connection, kill: &Kill) -> QueryResult<usize> {
     diesel::insert_into(schema::kills::table).values(kill).execute(conn)
 }
 
-pub fn insert_kills(conn: &Connection, kill: &Vec<Kill>) -> QueryResult<usize> {
-    diesel::insert_into(schema::kills::table).values(kill).execute(conn)
+pub fn insert_kills(conn: &Connection, kills: &Vec<Kill>) -> QueryResult<usize> {
+    diesel::insert_into(schema::kills::table)
+            .values(kills)
+//            .on_conflict(schema::kills::columns::id).do_nothing()
+            .execute(conn)
+
+
 }
