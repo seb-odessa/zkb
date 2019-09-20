@@ -1,4 +1,5 @@
 extern crate diesel;
+extern crate hex;
 extern crate lib;
 
 fn main() {
@@ -11,7 +12,7 @@ fn main() {
         let id: i32 = args[1]
             .parse()
             .expect("Can't convert first argument to the Year");
-        let hash: String = args[2]
+        let hash_str: String = args[2]
             .parse()
             .expect("Can't convert second argument to the Hash");
         let date_id: i32 = args[1]
@@ -19,6 +20,7 @@ fn main() {
             .expect("Can't convert first argument to the Year");
         let conn = establish_connection();
         
+        let hash = hex::decode(hash_str).expect("Decoding failed");
         let r = insert_kill(&conn, &lib::models::Kill::new(&id, &hash, &date_id));
         println!("Res = {:?}", r);
     }

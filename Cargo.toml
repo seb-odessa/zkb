@@ -45,5 +45,7 @@ path = "tools/load_kills.rs"
     dotenv = "0.10"
     curl = "0.4"
     chrono = "0.4"
+    hex = "0.4"
+
 
 

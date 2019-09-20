@@ -2,6 +2,7 @@ use super::models;
 use super::schema;
 use models::{Date, Kill};
 use diesel::prelude::*;
+
 use diesel::sqlite::SqliteConnection as Connection;
 use models::Integer;
 
@@ -35,13 +36,16 @@ pub fn get_date_id(conn: &Connection, date: &Date) -> QueryResult<Integer> {
 }
 
 pub fn insert_kill(conn: &Connection, kill: &Kill) -> QueryResult<usize> {
-    diesel::insert_into(schema::kills::table).values(kill).execute(conn)
+    diesel::insert_into(schema::kills::table)
+            .values(kill)
+            // .on_conflict_do_nothing() on diesel 2.0
+            .execute(conn)
 }
 
 pub fn insert_kills(conn: &Connection, kills: &Vec<Kill>) -> QueryResult<usize> {
     diesel::insert_into(schema::kills::table)
             .values(kills)
-//            .on_conflict(schema::kills::columns::id).do_nothing()
+            // .on_conflict_do_nothing() on diesel 2.0
             .execute(conn)
 
 

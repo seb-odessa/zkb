@@ -10,7 +10,7 @@ table! {
 table! {
     kills (id) {
         id -> Integer,
-        hash -> Text,
+        hash -> Binary,
         date_id -> Integer,
     }
 }

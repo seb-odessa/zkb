@@ -9,7 +9,7 @@ CREATE UNIQUE INDEX dates_idx ON dates(year, month, day);
 
 CREATE TABLE kills(
     id INTEGER NOT NULL PRIMARY KEY,
-    hash TEXT NOT NULL,
+    hash BLOB NOT NULL,
     date_id INTEGER NOT NULL,
     FOREIGN KEY (date_id) REFERENCES dates(id)
 );

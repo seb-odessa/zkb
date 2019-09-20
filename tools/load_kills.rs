@@ -1,5 +1,6 @@
 extern crate serde_json;
 extern crate chrono;
+extern crate hex;
 
 use lib::curl;
 use lib::database::*;
@@ -25,7 +26,8 @@ fn load_day_kills(year: i32, month: i32, day: i32) -> usize {
     let map: HashMap<i32, String> = serde_json::from_str(&json).expect("Cant parse json");
     let mut kills = Vec::new();
     for (kill_id, kill_hash) in map.iter() {
-        kills.push(Kill::new(kill_id, kill_hash, &date_id));        
+        let hash = hex::decode(kill_hash).expect("Decoding failed");
+        kills.push(Kill::new(kill_id, &hash, &date_id));        
     }    
     insert_kills(&conn, &kills).expect("Can't insert kills")
 }

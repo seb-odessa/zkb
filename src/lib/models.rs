@@ -6,7 +6,7 @@ use super::schema::kills;
 use serde::{Deserialize, Serialize};
 
 pub type Integer = i32;
-pub type Hash = String;
+pub type Hash = Vec<u8>;
 
 #[derive(Debug, Queryable)]
 pub struct DateRow {
