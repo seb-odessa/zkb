@@ -35,8 +35,7 @@ fn load_day_kills(year: i32, month: i32, day: i32) -> usize {
 fn load_month_kills(year: i32, month: i32) -> usize {
     let mut total = 0;
     let mut date = Utc.ymd(year, month as u32, 1);
-    let end = Utc.ymd(year, month as u32 + 1 , 1);
-    while date < end {
+    while date.month() == month as u32 {
         let kills = load_day_kills(year, month, date.day() as i32);
         println!("Loaded {} kill mails for {:}", kills, date);
         date = date + Duration::days(1);
@@ -49,12 +48,11 @@ fn load_year_kills(year: i32) -> usize {
     let mut total = 0;
     for month in 1..13 {
         let kills = load_month_kills(year, month);
-        println!("\tLoaded {} kill mails for {}-{}", kills, year, month);
+        println!("\tLoaded {} kill mails for {}-{:02}", kills, year, month);
         total = total + kills
     }
     return total;
 }
-
 
 fn main() {
     let args: Vec<_> = std::env::args().collect();
