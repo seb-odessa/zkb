@@ -47,6 +47,4 @@ pub fn insert_kills(conn: &Connection, kills: &Vec<Kill>) -> QueryResult<usize> 
             .values(kills)
             // .on_conflict_do_nothing() on diesel 2.0
             .execute(conn)
-
-
 }
