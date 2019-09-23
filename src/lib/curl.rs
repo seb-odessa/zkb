@@ -1,5 +1,7 @@
 use curl::easy::Easy;
 
+// https://esi.evetech.net/latest/swagger.json
+
 pub fn query(url: &str) -> Vec<u8> {
     let mut content = Vec::new();
     {

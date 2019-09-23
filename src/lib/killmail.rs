@@ -4,75 +4,68 @@ pub mod database;
 pub mod models;
 pub mod schema;
 
-
-
-
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Zkb {
-    // returned by https://zkillboard.com/api/kills/
-    // e.g.: https://zkillboard.com/api/kills/shipTypeID/34495/regionID/10000028/zkbOnly/month/08/
-    killmail_id: u64,
-    zkb: ZkbPayload,
-}
+pub type BoolRequired = bool;
+pub type IntRequired = i32;
+pub type IntOptional = Option<i32>;
+pub type LongOptional = Option<i64>;
+pub type StrRequired = String;
+pub type ItemsOptional = Vec<Item>;
+pub type PositionOptional = Vec<Position>;
 
-#[derive(Serialize, Deserialize, Debug, Default)]
-#[serde(default)]
-pub struct ZkbPayload {
-    #[serde(rename = "locationID")]
-    location_id: u32,
-    hash: String,
-    #[serde(rename = "fittedValue")]
-    fitted_value: f32,
-    #[serde(rename = "totalValue")]
-    total_value: f32,
-    points: u16,
-    npc: bool,
-    solo: bool,
-    awox: bool,
-}
+
+//https://esi.evetech.net/latest/swagger.json
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct KillMail {
+    killmail_id: IntRequired,
+    killmail_time: StrRequired,
+    solar_system_id: IntRequired,
+    moon_id: IntOptional,
+    war_id: IntOptional,
+    victim: Victim,
     attackers: Vec<Attacker>,
-    killmail_id: u64,
-    killmail_time: String,
-    solar_system_id: u64,
-}
-
-#[derive(Serialize, Deserialize, Debug, Default)]
-#[serde(default)]
-pub struct Attacker {
-    character_id: u64,
-    corporation_id: u64,
-    damage_done: u32,
-    faction_id: u64,
-    final_blow: bool,
-    security_status: u32,
-    ship_type_id: u32,
-    weapon_type_id: u32,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
 pub struct Victim {
-    character_id: u64,
-    corporation_id: u64,
-    damage_taken: u32,
-    ship_type_id: u32,
-    items: Vec<Item>,
+    ship_type_id: IntRequired,
+    damage_taken: IntRequired,
+    character_id: IntOptional,
+    corporation_id: IntOptional,
+    alliance_id: IntOptional,
+    faction_id: IntOptional,
+    items: ItemsOptional,
     position: Position,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
-pub struct Item {
-    flag: u16,
-    item_type_id: u32,
-    quantity_dropped: u32,
-    singleton: u16,
+pub struct Attacker {
+    ship_type_id: IntOptional,
+    character_id: IntOptional,
+    corporation_id: IntOptional,
+    alliance_id: IntOptional,
+    faction_id: IntOptional,
+    damage_done: IntRequired,    
+    final_blow: BoolRequired,
+    security_status: IntRequired,
+    weapon_type_id: IntOptional,
 }
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+#[serde(default)]
+pub struct Item {
+    item_type_id: IntRequired,
+    singleton: IntRequired,
+    flag: IntRequired,
+    quantity_destroyed: LongOptional,
+    quantity_dropped: LongOptional,
+    items: ItemsOptional,
+}
+
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
