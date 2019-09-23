@@ -1,6 +1,8 @@
+extern crate hex;
 extern crate serde;
 extern crate serde_json;
 
+use std::fmt;
 use super::schema::dates;
 use super::schema::kills;
 use serde::{Deserialize, Serialize};
@@ -34,7 +36,7 @@ impl Date {
 }
 
 
-#[derive(Debug, Queryable, Insertable, Serialize, Deserialize)]
+#[derive(Queryable, Insertable, Serialize, Deserialize)]
 #[table_name = "kills"]
 pub struct Kill {
     pub id: Integer,
@@ -50,5 +52,9 @@ impl Kill {
         }
     }
 }
-
+impl fmt::Debug for Kill {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{{ {}, {}, {} }}", self.id, hex::encode(&self.hash), self.date_id)
+    }
+}
 

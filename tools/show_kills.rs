@@ -1,6 +1,7 @@
 extern crate diesel;
 extern crate lib;
 
+
 //use diesel::prelude::*;
 use lib::database::*;
 use lib::models::{Kill, Date};
@@ -11,15 +12,11 @@ fn perform_action(year: i32, month: i32, day: i32) {
     let date = Date::new(&year, &month, &day);
     let conn = establish_connection();
     let id = get_date_id(&conn, &date).expect("Failed to find records by date");
-
-    //     let res = kills
-    //     .limit(100)
-    //     .load::<Kill>(&conn)
-    //     .expect("Error loading date");
-    // for kill in res {
-    //     println!("{:?}", kill);
-    // }
-    //   let hash = hex::decode(hash_str).expect("Decoding failed");
+    let kills = get_kills(&conn, id).expect("Failed to query Kills");    
+    for kill in kills {
+        print!("{:?}\n", kill);
+    }
+    
      
 }
 
