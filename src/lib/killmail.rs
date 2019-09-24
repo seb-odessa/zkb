@@ -1,5 +1,3 @@
-
-
 use serde::{Deserialize, Serialize};
 
 pub type BoolRequired = bool;
@@ -10,65 +8,64 @@ pub type StrRequired = String;
 pub type ItemsOptional = Vec<Item>;
 pub type PositionOptional = Option<Position>;
 
-
 //https://esi.evetech.net/latest/swagger.json
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct KillMail {
-    killmail_id: IntRequired,
-    killmail_time: StrRequired,
-    solar_system_id: IntRequired,
-    moon_id: IntOptional,
-    war_id: IntOptional,
-    victim: Victim,
-    attackers: Vec<Attacker>,
+    pub killmail_id: IntRequired,
+    pub killmail_time: StrRequired,
+    pub solar_system_id: IntRequired,
+    pub moon_id: IntOptional,
+    pub war_id: IntOptional,
+    pub victim: Victim,
+    pub attackers: Vec<Attacker>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
 pub struct Victim {
-    ship_type_id: IntRequired,
-    damage_taken: IntRequired,
-    character_id: IntOptional,
-    corporation_id: IntOptional,
-    alliance_id: IntOptional,
-    faction_id: IntOptional,
-    items: ItemsOptional,
-    position: PositionOptional,
+    pub ship_type_id: IntRequired,
+    pub damage_taken: IntRequired,
+    pub character_id: IntOptional,
+    pub corporation_id: IntOptional,
+    pub alliance_id: IntOptional,
+    pub faction_id: IntOptional,
+    pub items: ItemsOptional,
+    pub position: PositionOptional,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
 pub struct Attacker {
-    ship_type_id: IntOptional,
-    character_id: IntOptional,
-    corporation_id: IntOptional,
-    alliance_id: IntOptional,
-    faction_id: IntOptional,
-    damage_done: IntRequired,    
-    final_blow: BoolRequired,
-    security_status: IntRequired,
-    weapon_type_id: IntOptional,
+    pub ship_type_id: IntOptional,
+    pub character_id: IntOptional,
+    pub corporation_id: IntOptional,
+    pub alliance_id: IntOptional,
+    pub faction_id: IntOptional,
+    pub damage_done: IntRequired,    
+    pub final_blow: BoolRequired,
+    pub security_status: IntRequired,
+    pub weapon_type_id: IntOptional,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
 pub struct Item {
-    item_type_id: IntRequired,
-    singleton: IntRequired,
-    flag: IntRequired,
-    quantity_destroyed: LongOptional,
-    quantity_dropped: LongOptional,
-    //items: ItemsOptional,
+    pub item_type_id: IntRequired,
+    pub singleton: IntRequired,
+    pub flag: IntRequired,
+    pub quantity_destroyed: LongOptional,
+    pub quantity_dropped: LongOptional,
+    pub items: ItemsOptional,
 }
 
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
 pub struct Position {
-    x: f64,
-    y: f64,
-    z: f64,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 #[cfg(test)]
@@ -205,7 +202,6 @@ mod tests {
             
             let json = serde_json::to_string(&rec);
             assert!(json.is_ok());
-//            print!("{:?}", &json);
             let val: Result<KillMail, serde_json::Error> = serde_json::from_str(&json.unwrap());
             let record = val.unwrap();
             //assert!(val.is_ok());

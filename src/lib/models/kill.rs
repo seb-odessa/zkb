@@ -1,6 +1,3 @@
-extern crate hex;
-extern crate serde;
-extern crate serde_json;
 
 use std::fmt;
 use serde::{Deserialize, Serialize};

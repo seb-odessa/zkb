@@ -1,5 +1,6 @@
 pub mod date;
 pub mod kill;
+pub mod killdata;
 
 pub use diesel::sqlite::SqliteConnection as Connection;
 
