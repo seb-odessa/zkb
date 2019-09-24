@@ -20,6 +20,6 @@ CREATE TABLE IF NOT EXISTS killmails(
     solar_system_id INTEGER NOT NULL,
     moon_id INTEGER,
     war_id INTEGER,
-    victim_id INTEGER,
-    attackers_id INTEGER
+    victim_id INTEGER NOT NULL,
+    attackers_id INTEGER NOT NULL
 );

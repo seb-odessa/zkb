@@ -14,8 +14,8 @@ table! {
         solar_system_id -> Integer,
         moon_id -> Nullable<Integer>,
         war_id -> Nullable<Integer>,
-        victim_id -> Nullable<Integer>,
-        attackers_id -> Nullable<Integer>,
+        victim_id -> Integer,
+        attackers_id -> Integer,
     }
 }
 

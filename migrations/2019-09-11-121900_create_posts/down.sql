@@ -2,5 +2,6 @@
 
 --DROP TABLE kills;
 --DROP TABLE dates;
+DROP TABLE killmails;
 DROP INDEX dates_idx;
 
