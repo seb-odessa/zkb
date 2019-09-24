@@ -1,11 +1,8 @@
 extern crate diesel;
 extern crate lib;
 
-
-//use diesel::prelude::*;
 use lib::database::*;
-use lib::models::{Kill, Date};
-//use lib::schema::kills::dsl::*;
+use lib::models::Date;
 
 fn perform_action(year: i32, month: i32, day: i32) {
 
