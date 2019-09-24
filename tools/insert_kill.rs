@@ -2,6 +2,8 @@ extern crate diesel;
 extern crate hex;
 extern crate lib;
 
+use lib::models::kill::Kill;
+
 fn main() {
     let args: Vec<_> = std::env::args().collect();
 
@@ -21,7 +23,7 @@ fn main() {
         let conn = establish_connection();
         
         let hash = hex::decode(hash_str).expect("Decoding failed");
-        let r = insert_kill(&conn, &lib::models::Kill::new(&id, &hash, &date_id));
+        let r = insert_kill(&conn, &Kill::new(&id, &hash, &date_id));
         println!("Res = {:?}", r);
     }
 }

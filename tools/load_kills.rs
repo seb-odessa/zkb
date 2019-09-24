@@ -4,7 +4,8 @@ extern crate hex;
 
 use lib::curl;
 use lib::database::*;
-use lib::models::{Date, Kill};
+use lib::models::date::Date;
+use lib::models::kill::Kill;
 use std::collections::HashMap;
 use chrono::{Duration, TimeZone, Datelike, Utc};
 

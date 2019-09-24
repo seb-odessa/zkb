@@ -2,7 +2,7 @@ extern crate diesel;
 extern crate lib;
 
 use lib::database::*;
-use lib::models::Date;
+use lib::models::date::Date;
 
 fn perform_action(year: i32, month: i32, day: i32) {
 

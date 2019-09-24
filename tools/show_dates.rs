@@ -3,7 +3,7 @@ extern crate lib;
 
 use diesel::prelude::*;
 use lib::database::*;
-use lib::models::DateRow;
+use lib::models::date::DateRow;
 use lib::schema::dates::dsl::*;
 
 fn main() {

@@ -1,7 +1,7 @@
 //extern crate diesel;
 extern crate lib;
 
-use lib::models::Date;
+use lib::models::date::Date;
 
 
 fn main() {
