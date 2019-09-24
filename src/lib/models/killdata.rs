@@ -1,12 +1,11 @@
 use diesel::prelude::*;
 use crate::killmail::KillMail;
-use crate::schema::killmails as schema;
+use crate::schema::killmails;
 use super::{Integer, Connection, QueryResult};
 
-
 #[derive(Queryable, Insertable)]
-#[table_name = "schema"]
-pub struct KillDetails {
+#[table_name = "killmails"]
+pub struct KillMailHeader {
     pub killmail_id: Integer,
     pub killmail_time: String,
     pub solar_system_id: Integer,
@@ -15,7 +14,7 @@ pub struct KillDetails {
     pub victim_id: Integer,
     pub attackers_id: Integer,
 }
-impl KillDetails {
+impl KillMailHeader {
     pub fn new(src: &KillMail) -> Self {
         Self {
             killmail_id: src.killmail_id,
@@ -27,11 +26,15 @@ impl KillDetails {
             attackers_id: 0,
         }
     }
+}
+
+struct Gate;
+impl Gate {
     
-    /** Saves current killmail into DB */
-    pub fn save(&self, conn: &Connection) -> QueryResult<usize> {
+    /** Saves killmail into DB */
+    pub fn save(&self, conn: &Connection, src: &KillMail) -> QueryResult<usize> {
         diesel::insert_into(schema::table)
-            .values(self)
+            .values(&KillMailHeader::new(src))
             // .on_conflict_do_nothing() on diesel 2.0
             .execute(conn)
     }
