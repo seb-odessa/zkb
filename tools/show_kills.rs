@@ -5,10 +5,9 @@ use lib::database::*;
 use lib::models::date::Date;
 
 fn perform_action(year: i32, month: i32, day: i32) {
-
-    let date = Date::new(&year, &month, &day);
     let conn = establish_connection();
-    let id = get_date_id(&conn, &date).expect("Failed to find records by date");
+    let date = Date::new(&year, &month, &day);
+    let id = date.load_id(&conn).expect("Failed to find records by date");
     let kills = get_kills(&conn, id).expect("Failed to query Kills");    
     for kill in kills {
         print!("{:?}\n", kill);

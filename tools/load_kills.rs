@@ -17,11 +17,12 @@ fn query_history(year: i32, month: i32, day: i32) -> String {
 }
 
 fn load_day_kills(year: i32, month: i32, day: i32) -> usize {
-    let date = Date::new(&year, &month, &day);
     let conn = establish_connection();
-    let date_id = get_date_id(&conn, &date)
-                    .or(insert_date(&conn, &date))
-                    .expect(&format!("Failed to fine or create date record {:?}", date));
+
+    let date = Date::new(&year, &month, &day);
+    let date_id = date.load_id(&conn)
+                      .or(date.save(&conn))
+                      .expect(&format!("Failed to fine or create date record {:?}", date));
 
     let json = query_history(year, month, day);
     let map: HashMap<i32, String> = serde_json::from_str(&json).expect("Cant parse json");

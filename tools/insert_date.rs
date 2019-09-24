@@ -22,7 +22,7 @@ fn main() {
             .expect("Can't convert third argument to the Day number");
         let conn = establish_connection();
         let date = Date::new(&year, &month, &day);
-        let r = insert_date(&conn, &date);
+        let r = &date.save(&conn);
         println!("Res = {:?}", r);
     }
 }

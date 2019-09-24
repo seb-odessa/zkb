@@ -23,7 +23,7 @@ fn main() {
         let conn = establish_connection();
         
         let hash = hex::decode(hash_str).expect("Decoding failed");
-        let r = insert_kill(&conn, &Kill::new(&id, &hash, &date_id));
+        let r = Kill::new(&id, &hash, &date_id).save(&conn).expect("Failed to store Kill into DB");
         println!("Res = {:?}", r);
     }
 }
