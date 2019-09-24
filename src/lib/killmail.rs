@@ -1,7 +1,9 @@
+use std::convert::{TryFrom, TryInto};
 use serde::{Deserialize, Serialize};
 
 pub type BoolRequired = bool;
 pub type IntRequired = i32;
+pub type FloatRequired = f32;
 pub type IntOptional = Option<i32>;
 pub type LongOptional = Option<i64>;
 pub type StrRequired = String;
@@ -20,6 +22,13 @@ pub struct KillMail {
     pub victim: Option<Victim>, //@todo it's requred field, revert when DB iface will ready 
     pub attackers: Vec<Attacker>,
 }
+impl TryFrom<String> for KillMail {
+    type Error = serde_json::Error;
+    fn try_from(json: String) -> Result<Self, Self::Error> {
+        serde_json::from_str(&json)
+    }
+}
+
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
@@ -44,7 +53,7 @@ pub struct Attacker {
     pub faction_id: IntOptional,
     pub damage_done: IntRequired,    
     pub final_blow: BoolRequired,
-    pub security_status: IntRequired,
+    pub security_status: FloatRequired,
     pub weapon_type_id: IntOptional,
 }
 

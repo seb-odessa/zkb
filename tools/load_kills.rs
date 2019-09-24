@@ -2,19 +2,12 @@ extern crate serde_json;
 extern crate chrono;
 extern crate hex;
 
-use lib::curl;
+use lib::api;
 use lib::database::*;
 use lib::models::date::Date;
 use lib::models::kill::Kill;
 use std::collections::HashMap;
 use chrono::{Duration, TimeZone, Datelike, Utc};
-
-const HISTORY_URL: &str = "https://zkillboard.com/api/history/";
-
-fn query_history(year: i32, month: i32, day: i32) -> String {
-    let url = format!("{}{}{:02}{:02}.json", HISTORY_URL, year, month, day);
-    String::from_utf8_lossy(&curl::query(&url)).to_string()
-}
 
 fn load_day_kills(year: i32, month: i32, day: i32) -> usize {
     let conn = establish_connection();
@@ -24,7 +17,7 @@ fn load_day_kills(year: i32, month: i32, day: i32) -> usize {
                       .or(date.save(&conn))
                       .expect(&format!("Failed to fine or create date record {:?}", date));
 
-    let json = query_history(year, month, day);
+    let json = api::get_history(year, month, day);
     let map: HashMap<i32, String> = serde_json::from_str(&json).expect("Cant parse json");
     let mut kills = Vec::new();
     for (kill_id, kill_hash) in map.iter() {
