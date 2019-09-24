@@ -1,6 +1,7 @@
 use super::models;
 use super::schema;
-use models::{Date, Kill};
+use models::date::{Date, DateRow};
+use models::kill::Kill;
 use diesel::prelude::*;
 
 use diesel::sqlite::SqliteConnection as Connection;
@@ -21,8 +22,8 @@ pub fn insert_date(conn: &Connection, date: &Date) -> QueryResult<Integer> {
         .and_then(|_|{ get_date_id(conn, date) })
 }
 
-pub fn get_date(conn: &Connection, id: Integer) -> QueryResult<models::DateRow> {
-    schema::dates::dsl::dates.find(id).first::<models::DateRow>(conn)
+pub fn get_date(conn: &Connection, id: Integer) -> QueryResult<DateRow> {
+    schema::dates::dsl::dates.find(id).first::<DateRow>(conn)
 }
 
 pub fn get_date_id(conn: &Connection, date: &Date) -> QueryResult<Integer> {
@@ -49,7 +50,7 @@ pub fn insert_kills(conn: &Connection, kills: &Vec<Kill>) -> QueryResult<usize> 
             .execute(conn)
 }
 
-pub fn get_kills(conn: &Connection, date_id: Integer) -> QueryResult<Vec<models::Kill>> {
+pub fn get_kills(conn: &Connection, date_id: Integer) -> QueryResult<Vec<Kill>> {
     use schema::kills::dsl as table;
     table::kills
         .filter(table::date_id.eq(&date_id))
