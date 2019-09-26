@@ -6,9 +6,8 @@ pub type BoolRequired = bool;
 pub type IntRequired = i32;
 pub type FloatRequired = f32;
 pub type IntOptional = Option<i32>;
-pub type LongOptional = Option<i64>;
 pub type TimeRequired = DateTime<Utc>;
-pub type ItemsOptional = Vec<Item>;
+pub type ItemsOptional = Option<Vec<Item>>;
 pub type PositionOptional = Option<Position>;
 
 //https://esi.evetech.net/latest/swagger.json
@@ -20,7 +19,7 @@ pub struct KillMail {
     pub solar_system_id: IntRequired,
     pub moon_id: IntOptional,
     pub war_id: IntOptional,
-    pub victim: Option<Victim>, //@todo it's required field, revert when DB iface will ready 
+    pub victim: Victim,
     pub attackers: Vec<Attacker>,
 }
 impl TryFrom<String> for KillMail {
@@ -29,7 +28,6 @@ impl TryFrom<String> for KillMail {
         serde_json::from_str(&json)
     }
 }
-
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 #[serde(default)]
@@ -64,8 +62,8 @@ pub struct Item {
     pub item_type_id: IntRequired,
     pub singleton: IntRequired,
     pub flag: IntRequired,
-    pub quantity_destroyed: LongOptional,
-    pub quantity_dropped: LongOptional,
+    pub quantity_destroyed: IntOptional,
+    pub quantity_dropped: IntOptional,
     pub items: ItemsOptional,
 }
 
@@ -163,8 +161,10 @@ mod tests {
         assert_eq!(Some(98605751), record.corporation_id);
         assert_eq!(1431, record.damage_taken);
         assert_eq!(598, record.ship_type_id);
-        assert_eq!(266, record.items[0].item_type_id);
-        assert_eq!(27333, record.items[1].item_type_id);
+        assert!(record.items.is_some());
+        let items = record.items.unwrap();
+        assert_eq!(266, items[0].item_type_id);
+        assert_eq!(27333, items[1].item_type_id);
         assert!(record.position.is_some());
         assert_eq!(337540581410.30054, record.position.unwrap().z);
     }

@@ -17,8 +17,7 @@ table! {
 table! {
     items (item_id) {
         item_id -> Integer,
-        parent_id -> Nullable<Integer>,
-        victim_id -> Integer,
+        killmail_id -> Integer,
         item_type_id -> Integer,
         singleton -> Integer,
         flag -> Integer,
@@ -59,7 +58,7 @@ table! {
 }
 
 joinable!(attackers -> killmails (killmail_id));
-joinable!(items -> victims (victim_id));
+joinable!(items -> killmails (killmail_id));
 joinable!(victims -> killmails (killmail_id));
 
 allow_tables_to_appear_in_same_query!(

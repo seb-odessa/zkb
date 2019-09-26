@@ -4,18 +4,18 @@ extern crate hex;
 
 use lib::api;
 use lib::database::*;
+use lib::models::DB;
 use lib::models::kill::Kill;
 use std::collections::HashMap;
 use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};
 
 fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
-    let conn = establish_connection();
+    let conn = DB::connection();
 
     let json = api::gw::get_history(year, month, day);
     let map: HashMap<i32, String> = serde_json::from_str(&json).expect("Cant parse json");
     let mut kills = Vec::new();
     for (kill_id, kill_hash) in map.iter() {
-//        let hash = hex::decode(kill_hash).expect("Decoding failed");
         let date = NaiveDate::from_ymd(year, month, day);
         kills.push(Kill::new(kill_id, kill_hash, &date));        
     }    

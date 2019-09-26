@@ -42,13 +42,11 @@ CREATE TABLE IF NOT EXISTS victims(
 
 CREATE TABLE IF NOT EXISTS items(
     item_id INTEGER NOT NULL PRIMARY KEY,
-    parent_id INTEGER,
-    victim_id INTEGER NOT NULL,
+    killmail_id INTEGER NOT NULL,
     item_type_id INTEGER NOT NULL,
-	singleton INTEGER NOT NULL,
-	flag INTEGER NOT NULL,
+    singleton INTEGER NOT NULL,
+    flag INTEGER NOT NULL,
     quantity_destroyed INTEGER,
     quantity_dropped INTEGER,
-    FOREIGN KEY(victim_id) REFERENCES victims(victim_id)
-    FOREIGN KEY(parent_id) REFERENCES items(item_id)
+    FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
 );

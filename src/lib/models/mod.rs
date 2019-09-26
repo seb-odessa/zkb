@@ -1,8 +1,59 @@
+use crate::api;
+
 pub mod kill;
-pub mod killdata;
+pub mod killmail;
+pub mod attacker;
+pub mod victim;
+pub mod item;
 
 pub use diesel::sqlite::SqliteConnection as Connection;
 
+pub type Bool = bool;
 pub type Integer = i32;
+pub type OptInteger = Option<Integer>;
+pub type Float = f32;
 pub type Hash = String;
+pub type DateTime = chrono::NaiveDateTime;
 pub type QueryResult<T> = std::result::Result<T, diesel::result::Error>;
+
+pub struct DB;
+impl DB {
+    pub fn connection() -> Connection {
+        use crate::diesel::Connection;
+        let url = std::env::var("DATABASE_URL").expect("DB_URL environment variable required");
+        Connection::establish(&url).expect(&format!("Error connection to {}", url))
+    }
+
+    /** Saves killmail into DB */
+    pub fn save(&self, conn: &Connection, src: &api::killmail::KillMail) -> QueryResult<()> {
+        use super::schema;
+        use diesel::connection::Connection;
+        use diesel::RunQueryDsl;
+
+        conn.transaction::<_, _, _>(|| {
+            diesel::insert_into(schema::killmails::table)
+                   .values(&killmail::KillMail::from(src))
+                   .execute(conn)?;
+            diesel::insert_into(schema::attackers::table)
+                   .values(&attacker::Attacker::load(src))
+                   .execute(conn)?;
+            diesel::insert_into(schema::victims::table)
+                   .values(&victim::Victim::from(src))
+                   .execute(conn)?;
+            let items = item::Item::load(src);
+            diesel::insert_into(schema::items::table)
+                   .values(&items)
+                   .execute(conn)?;
+            Ok(())
+        })
+    }
+
+    // Loads killmail from DB
+
+    // pub fn load(conn: &Connection, id: &Integer) -> QueryResult<KillMail> {
+    //     use killmails::dsl as table;
+    //     table::killmails.find(*id)
+    //                     .first::<KillMailHeader>(conn)
+    //                     .and_then(|header| Ok(header.into()))
+    // }
+}

@@ -1,7 +1,5 @@
 
 use chrono::NaiveDate;
-use serde::{Deserialize, Serialize};
-use diesel::prelude::*;
 use crate::schema::kills;
 use super::{Integer, Hash, Connection, QueryResult};
 
@@ -27,6 +25,8 @@ impl Kill {
 
     /** Saves current kill into DB */
     pub fn save(&self, conn: &Connection) -> QueryResult<usize> {
+        use diesel::prelude::*;
+
         diesel::insert_into(crate::schema::kills::table)
             .values(self)
             // .on_conflict_do_nothing() on diesel 2.0
@@ -35,6 +35,8 @@ impl Kill {
 
     /** Loads kill by id */
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
+        use diesel::prelude::*;
+        
         use crate::schema::kills::dsl as table;
         table::kills.find(id).first::<Self>(conn)
     }

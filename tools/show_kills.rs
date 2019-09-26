@@ -2,7 +2,7 @@ extern crate diesel;
 extern crate lib;
 
 use lib::database::*;
-/*
+
 fn perform_action(year: i32, month: i32, day: i32) {
     let conn = establish_connection();
     let date = Date::new(&year, &month, &day);
@@ -12,7 +12,7 @@ fn perform_action(year: i32, month: i32, day: i32) {
         print!("{:?}\n", kill);
     }     
 }
-*/
+
 fn main() {
     let args: Vec<_> = std::env::args().collect();
 
@@ -27,8 +27,8 @@ fn main() {
             .expect("Can't convert second argument to the Month");
         let day: i32 = args[3]
             .parse()
-            .expect("Can't convert third argument to the Day number");
-        //perform_action(year, month, day);
+            .expect("Can't convert third argument to the Day");
+        perform_action(year, month, day);
     }
 
 }
