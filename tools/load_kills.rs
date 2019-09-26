@@ -4,34 +4,29 @@ extern crate hex;
 
 use lib::api;
 use lib::database::*;
-use lib::models::date::Date;
 use lib::models::kill::Kill;
 use std::collections::HashMap;
-use chrono::{Duration, TimeZone, Datelike, Utc};
+use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};
 
-fn load_day_kills(year: i32, month: i32, day: i32) -> usize {
+fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
     let conn = establish_connection();
-
-    let date = Date::new(&year, &month, &day);
-    let date_id = date.load_id(&conn)
-                      .or(date.save(&conn))
-                      .expect(&format!("Failed to fine or create date record {:?}", date));
 
     let json = api::get_history(year, month, day);
     let map: HashMap<i32, String> = serde_json::from_str(&json).expect("Cant parse json");
     let mut kills = Vec::new();
     for (kill_id, kill_hash) in map.iter() {
-        let hash = hex::decode(kill_hash).expect("Decoding failed");
-        kills.push(Kill::new(kill_id, &hash, &date_id));        
+//        let hash = hex::decode(kill_hash).expect("Decoding failed");
+        let date = NaiveDate::from_ymd(year, month, day);
+        kills.push(Kill::new(kill_id, kill_hash, &date));        
     }    
     insert_kills(&conn, &kills).expect("Can't insert kills")
 }
 
-fn load_month_kills(year: i32, month: i32) -> usize {
+fn load_month_kills(year: i32, month: u32) -> usize {
     let mut total = 0;
-    let mut date = Utc.ymd(year, month as u32, 1);
+    let mut date = Utc.ymd(year, month, 1);
     while date.month() == month as u32 {
-        let kills = load_day_kills(year, month, date.day() as i32);
+        let kills = load_day_kills(year, month, date.day());
         println!("Loaded {} kill mails for {:}", kills, date);
         date = date + Duration::days(1);
         total = total + kills
@@ -56,10 +51,10 @@ fn main() {
         let year: i32 = args[1]
             .parse()
             .expect("Can't convert first argument to the Year");
-        let month: i32 = args[2]
+        let month: u32 = args[2]
             .parse()
-            .expect("Can't convert second argument to the Month");
-        let day: i32 = args[3]
+            .expect("Can't convert second argument to the Month number");
+        let day: u32 = args[3]
             .parse()
             .expect("Can't convert third argument to the Day number");
         total_kills = load_day_kills(year, month, day);
@@ -67,7 +62,7 @@ fn main() {
         let year: i32 = args[1]
             .parse()
             .expect("Can't convert first argument to the Year");
-        let month: i32 = args[2]
+        let month: u32 = args[2]
             .parse()
             .expect("Can't convert second argument to the Month");
         total_kills = load_month_kills(year, month);

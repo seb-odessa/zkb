@@ -16,21 +16,8 @@ name = "zkb"
 path = "src/main.rs"
 
 [[bin]]
-name = "show_dates"
-path = "tools/show_dates.rs"
-
-[[bin]]
 name = "show_kills"
 path = "tools/show_kills.rs"
-
-
-[[bin]]
-name = "insert_date"
-path = "tools/insert_date.rs"
-
-[[bin]]
-name = "insert_kill"
-path = "tools/insert_kill.rs"
 
 [[bin]]
 name = "load_kills"
@@ -40,7 +27,7 @@ path = "tools/load_kills.rs"
 [dependencies]
     serde = { version = "1.0", features = ["derive"]}
     serde_json = "*"
-    diesel = {version = "1.4", features = ["sqlite"]}
+    diesel = {version = "1.4", features = ["sqlite", "chrono"]}
     diesel_codegen = "0.16"
     dotenv = "0.10"
     time ="0.1"

@@ -2,8 +2,7 @@ extern crate diesel;
 extern crate lib;
 
 use lib::database::*;
-use lib::models::date::Date;
-
+/*
 fn perform_action(year: i32, month: i32, day: i32) {
     let conn = establish_connection();
     let date = Date::new(&year, &month, &day);
@@ -11,11 +10,9 @@ fn perform_action(year: i32, month: i32, day: i32) {
     let kills = get_kills(&conn, id).expect("Failed to query Kills");    
     for kill in kills {
         print!("{:?}\n", kill);
-    }
-    
-     
+    }     
 }
-
+*/
 fn main() {
     let args: Vec<_> = std::env::args().collect();
 
@@ -31,7 +28,7 @@ fn main() {
         let day: i32 = args[3]
             .parse()
             .expect("Can't convert third argument to the Day number");
-        perform_action(year, month, day);
+        //perform_action(year, month, day);
     }
 
 }

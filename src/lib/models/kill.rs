@@ -1,25 +1,26 @@
 
 use std::fmt;
+use chrono::{DateTime, NaiveDateTime, NaiveDate};
 use serde::{Deserialize, Serialize};
 use diesel::prelude::*;
 use crate::schema::kills;
 use super::{Integer, Hash, Connection, QueryResult};
 
 
-#[derive(Queryable, Insertable, Serialize, Deserialize)]
+#[derive(Debug, Queryable, Insertable)]
 #[table_name = "kills"]
 pub struct Kill {
-    pub id: Integer,
-    pub hash: Hash,
-    pub date_id: Integer,
+    pub killmail_id: Integer,
+    pub killmail_hash: Hash,
+    pub killmail_date: NaiveDate,
 }
 impl Kill {
     /** Constructor */
-    pub fn new(id: &Integer, hash: &Hash, date_id: &Integer) -> Self {
+    pub fn new(id: &Integer, hash: &Hash, date: &NaiveDate) -> Self {        
         Self {
-            id: *id,
-            hash: hash.clone(),
-            date_id: *date_id,
+            killmail_id: *id,
+            killmail_hash: hash.clone(),
+            killmail_date: date.clone(),
         }
     }
 
@@ -37,9 +38,12 @@ impl Kill {
         table::kills.find(id).first::<Self>(conn)
     }
 }
-impl fmt::Debug for Kill {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{{ {}, {}, {} }}", self.id, hex::encode(&self.hash), self.date_id)
-    }
-}
+// impl fmt::Debug for Kill {
+//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+//         write!(f, "{{ {}, {}, {} }}", 
+//             self.killmail_id, 
+//             hex::encode(&self.killmail_hash), 
+//             self.killmail_date)
+//     }
+// }
 

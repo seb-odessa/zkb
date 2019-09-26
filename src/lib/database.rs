@@ -10,7 +10,7 @@ pub type QueryResult<T> = std::result::Result<T, diesel::result::Error>;
 
 pub fn establish_connection() -> Connection {
     use crate::diesel::Connection;
-    let url = std::env::var("DATABASE_URL").expect("DATABASE_URL environment variable required");
+    let url = std::env::var("DB_URL").expect("DB_URL environment variable required");
     Connection::establish(&url).expect(&format!("Error connection to {}", url))
 }
 
@@ -24,6 +24,6 @@ pub fn insert_kills(conn: &Connection, kills: &Vec<Kill>) -> QueryResult<usize> 
 pub fn get_kills(conn: &Connection, date_id: Integer) -> QueryResult<Vec<Kill>> {
     use schema::kills::dsl as table;
     table::kills
-        .filter(table::date_id.eq(&date_id))
+//        .filter(table::date_id.eq(&date_id))
         .load(conn)
 }

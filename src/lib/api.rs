@@ -20,7 +20,7 @@ fn get(url: &str) -> Vec<u8> {
 }
 
 
-pub fn get_history(year: i32, month: i32, day: i32) -> String {
+pub fn get_history(year: i32, month: u32, day: u32) -> String {
     let url = format!("https://zkillboard.com/api/history/{}{:02}{:02}.json", year, month, day);
     String::from_utf8_lossy(&get(&url)).to_string()
 }
