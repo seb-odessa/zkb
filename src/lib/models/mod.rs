@@ -32,6 +32,13 @@ impl DB {
         table::kills.filter(table::killmail_date.eq(&date)).load(conn)
     }
 
+    /** Saves kills into DB */
+    pub fn insert_kills(conn: &Connection, kills: &Vec<kill::Kill>) -> QueryResult<usize> {
+        use diesel::prelude::*;
+        use super::schema;
+        diesel::insert_into(schema::kills::table).values(kills).execute(conn)
+    }
+
     /** Saves killmail into DB */
     pub fn save(conn: &Connection, src: &api::killmail::KillMail) -> QueryResult<()> {
         use super::schema;
@@ -56,12 +63,14 @@ impl DB {
         })
     }
 
-    // Loads killmail from DB
 
-    // pub fn load(conn: &Connection, id: &Integer) -> QueryResult<KillMail> {
-    //     use killmails::dsl as table;
-    //     table::killmails.find(*id)
-    //                     .first::<KillMailHeader>(conn)
-    //                     .and_then(|header| Ok(header.into()))
+
+    // pub fn load(conn: &Connection, id: &Integer) -> QueryResult<api::killmail::KillMail> {
+    //     let mut killmail;
+    //     // use killmails::dsl as table;
+    //     // table::killmails.find(*id)
+    //     //                 .first::<KillMailHeader>(conn)
+    //     //                 .and_then(|header| Ok(header.into()))
+    //     Ok(killmail)
     // }
 }

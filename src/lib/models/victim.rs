@@ -42,4 +42,3 @@ impl From<&api::killmail::KillMail> for Victim{
 
 
 
-

@@ -1,7 +1,7 @@
 use std::convert::From;
 use crate::api;
 use crate::schema::killmails;
-use super::{Integer, DateTime};
+use super::{Integer, DateTime, Connection, QueryResult};
 
 // CREATE TABLE IF NOT EXISTS killmails(
 //     killmail_id INTEGER NOT NULL PRIMARY KEY,
@@ -31,7 +31,21 @@ impl From<&api::killmail::KillMail> for KillMail{
         }
     }
 }
+impl KillMail {
+    /** Saves object into DB */
+    pub fn save(&self, conn: &Connection) -> QueryResult<usize> {
+        use diesel::prelude::*;
+        diesel::insert_into(killmails::table)
+            .values(self)
+            .execute(conn)
+    }
 
+    /** Loads object from DB by id */
+    pub fn load(conn: &Connection, killmail_id: Integer) -> QueryResult<Self> {
+        use diesel::prelude::*;        
+        killmails::dsl::killmails.find(killmail_id).first::<Self>(conn)
+    }    
+}
 
 
 

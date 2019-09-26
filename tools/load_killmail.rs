@@ -1,23 +1,16 @@
 extern crate serde_json;
 
 use lib::api;
-use lib::models::Connection;
-use lib::models::DB;
-use lib::models::Hash;
-use lib::models::kill::Kill;
-use std::collections::HashMap;
-use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};
+use lib::models::{Connection, DB, Hash, kill::Kill};
 
 fn load_killmail(conn: &Connection, killmail_id: i32, killmail_hash: &Hash){
     let killmail = api::gw::get_killamil(killmail_id, killmail_hash).expect("Failed to query Killmail from API");
-    print!("{:?}\n", &killmail);
     DB::save(&conn, &killmail).expect("Failed to save killmail into DB");
 }
 
 fn perform_action(killmail_id: i32) {
     let conn = DB::connection();
-    let kill = Kill::load(&conn, killmail_id).expect("Filed to query hash for killmail id");    
-    print!("{:?}\n", &kill);    
+    let kill = Kill::load(&conn, killmail_id).expect("Filed to query hash for killmail id");
     load_killmail(&conn, killmail_id, &kill.killmail_hash);
 }
 

@@ -1,7 +1,6 @@
 extern crate serde_json;
 
 use lib::api;
-use lib::database::*;
 use lib::models::DB;
 use lib::models::kill::Kill;
 use std::collections::HashMap;
@@ -17,7 +16,7 @@ fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
         let date = NaiveDate::from_ymd(year, month, day);
         kills.push(Kill::new(kill_id, kill_hash, &date));        
     }    
-    insert_kills(&conn, &kills).expect("Can't insert kills")
+    DB::insert_kills(&conn, &kills).expect("Can't insert kills")
 }
 
 fn load_month_kills(year: i32, month: u32) -> usize {

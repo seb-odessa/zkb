@@ -15,7 +15,7 @@ pub struct Kill {
 impl Kill {
 
     /** Constructor */
-    pub fn new(id: &Integer, hash: &Hash, date: &NaiveDate) -> Self {        
+    pub fn new(id: &Integer, hash: &Hash, date: &NaiveDate) -> Self {
         Self {
             killmail_id: *id,
             killmail_hash: hash.clone(),
@@ -23,7 +23,7 @@ impl Kill {
         }
     }
 
-    /** Saves current kill into DB */
+    /** Saves object into DB */
     pub fn save(&self, conn: &Connection) -> QueryResult<usize> {
         use diesel::prelude::*;
 
@@ -33,9 +33,9 @@ impl Kill {
             .execute(conn)
     }
 
-    /** Loads kill by id */
+    /** Loads object from DB by killmail_id */
     pub fn load(conn: &Connection, killmail_id: Integer) -> QueryResult<Self> {
-        use diesel::prelude::*;        
+        use diesel::prelude::*;
         use crate::schema::kills::dsl as table;
         table::kills.find(killmail_id).first::<Self>(conn)
     }

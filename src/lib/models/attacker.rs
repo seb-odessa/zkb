@@ -50,7 +50,7 @@ impl From<&api::killmail::Attacker> for Attacker{
     }
 }
 
-impl Attacker{
+impl Attacker {
     pub fn load(src: &api::killmail::KillMail) -> Vec<Self> {
         let mut res = Vec::new();
         for i in 0..src.attackers.len()
@@ -61,8 +61,28 @@ impl Attacker{
         }
         return res;
     }
+
+
+
+
+//     pub fn load(conn: &Connection, killmail_id: Integer) -> QueryResult<Vec<Self>> {
+//         use diesel::prelude::*;
+//         use schema::attackers::dsl as table;
+// //        attackers::dsl::attackers.filter(table::killmail_id.eq(&killmail_id)).load(conn)
+
+//         table::attackers
+//             .select(table::killmail_id)
+//             .select(table::security_status)
+//             .select(table::final_blow)
+//             .select(table::damage_done)
+//             .select(table::ship_type_id)
+//             .select(table::alliance_id)
+//             .select(table::character_id)
+//             .select(table::corporation_id)
+//             .select(table::faction_id)
+//             .select(table::weapon_type_id)
+//             .filter(table::killmail_id.eq(&killmail_id)).load(conn)
+
+//         //attackers::dsl::attackers.find(killmail_id).first::<Self>(conn)
+//     }
 }
-
-
-
-
