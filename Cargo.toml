@@ -23,6 +23,10 @@ path = "tools/show_kills.rs"
 name = "load_kills"
 path = "tools/load_kills.rs"
 
+[[bin]]
+name = "load_killmail"
+path = "tools/load_killmail.rs"
+
 
 [dependencies]
     serde = { version = "1.0", features = ["derive"]}
@@ -30,10 +34,8 @@ path = "tools/load_kills.rs"
     diesel = {version = "1.4", features = ["sqlite", "chrono"]}
     diesel_codegen = "0.16"
     dotenv = "0.10"
-    time ="0.1"
     curl = "0.4"
     chrono = { version = "0.4", features = ["serde"]}
-    hex = "0.4"
 
 
 

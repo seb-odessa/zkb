@@ -34,11 +34,10 @@ impl Kill {
     }
 
     /** Loads kill by id */
-    pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
-        use diesel::prelude::*;
-        
+    pub fn load(conn: &Connection, killmail_id: Integer) -> QueryResult<Self> {
+        use diesel::prelude::*;        
         use crate::schema::kills::dsl as table;
-        table::kills.find(id).first::<Self>(conn)
+        table::kills.find(killmail_id).first::<Self>(conn)
     }
 }
 

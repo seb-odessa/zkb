@@ -25,6 +25,7 @@ impl DB {
         Connection::establish(&url).expect(&format!("Error connection to {}", url))
     }
 
+    /** Loads kills from DB by the date */
     pub fn load_kills(conn: &Connection, date: &Date) -> QueryResult<Vec<kill::Kill>> {
         use diesel::prelude::*;
         use super::schema::kills::dsl as table;
@@ -32,7 +33,7 @@ impl DB {
     }
 
     /** Saves killmail into DB */
-    pub fn save(&self, conn: &Connection, src: &api::killmail::KillMail) -> QueryResult<()> {
+    pub fn save(conn: &Connection, src: &api::killmail::KillMail) -> QueryResult<()> {
         use super::schema;
         use diesel::connection::Connection;
         use diesel::RunQueryDsl;
