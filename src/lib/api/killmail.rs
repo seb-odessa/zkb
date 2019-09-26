@@ -20,7 +20,7 @@ pub struct KillMail {
     pub solar_system_id: IntRequired,
     pub moon_id: IntOptional,
     pub war_id: IntOptional,
-    pub victim: Option<Victim>, //@todo it's requred field, revert when DB iface will ready 
+    pub victim: Option<Victim>, //@todo it's required field, revert when DB iface will ready 
     pub attackers: Vec<Attacker>,
 }
 impl TryFrom<String> for KillMail {

@@ -1,7 +1,7 @@
 use std::convert::From;
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use crate::killmail::KillMail;
+use crate::api::killmail::KillMail;
 use crate::schema::killmails;
 use super::{Integer, Connection, QueryResult};
 

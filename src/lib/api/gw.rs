@@ -1,5 +1,5 @@
 use curl::easy::Easy;
-use crate::killmail::KillMail;
+use super::killmail::KillMail;
 use std::convert::TryFrom;
 
 // https://esi.evetech.net/latest/swagger.json

@@ -11,7 +11,7 @@ use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};
 fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
     let conn = establish_connection();
 
-    let json = api::get_history(year, month, day);
+    let json = api::gw::get_history(year, month, day);
     let map: HashMap<i32, String> = serde_json::from_str(&json).expect("Cant parse json");
     let mut kills = Vec::new();
     for (kill_id, kill_hash) in map.iter() {
