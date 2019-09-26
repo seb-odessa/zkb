@@ -3,4 +3,5 @@
 .vscode
 *.db
 *.db-journal
+*.bz2
 

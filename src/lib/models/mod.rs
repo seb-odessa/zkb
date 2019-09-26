@@ -1,4 +1,3 @@
-//pub mod date;
 pub mod kill;
 pub mod killdata;
 

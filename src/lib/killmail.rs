@@ -1,4 +1,5 @@
-use std::convert::{TryFrom, TryInto};
+use std::convert::TryFrom;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 pub type BoolRequired = bool;
@@ -6,16 +7,16 @@ pub type IntRequired = i32;
 pub type FloatRequired = f32;
 pub type IntOptional = Option<i32>;
 pub type LongOptional = Option<i64>;
-pub type StrRequired = String;
+pub type TimeRequired = DateTime<Utc>;
 pub type ItemsOptional = Vec<Item>;
 pub type PositionOptional = Option<Position>;
 
 //https://esi.evetech.net/latest/swagger.json
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct KillMail {
     pub killmail_id: IntRequired,
-    pub killmail_time: StrRequired,
+    pub killmail_time: TimeRequired,
     pub solar_system_id: IntRequired,
     pub moon_id: IntOptional,
     pub war_id: IntOptional,
@@ -211,10 +212,10 @@ mod tests {
             
             let json = serde_json::to_string(&rec);
             assert!(json.is_ok());
-            let val: Result<KillMail, serde_json::Error> = serde_json::from_str(&json.unwrap());
-            let record = val.unwrap();
-            //assert!(val.is_ok());
-            //let record = val.unwrap();
+            
+            let val = KillMail::try_from(json.unwrap());
+            assert!(val.is_ok());
+            let record = val.unwrap();            
             assert_eq!(2, record.attackers.len());
             assert_eq!(Some(3019582), record.attackers[0].character_id);
             assert_eq!(Some(500024), record.attackers[1].faction_id);
