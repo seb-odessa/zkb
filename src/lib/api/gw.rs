@@ -32,8 +32,6 @@ pub fn get_killamil(killmail_id: i32, hash: &str) -> Option<KillMail> {
     KillMail::try_from(json).ok()
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;

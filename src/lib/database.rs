@@ -20,10 +20,3 @@ pub fn insert_kills(conn: &Connection, kills: &Vec<Kill>) -> QueryResult<usize> 
             // .on_conflict_do_nothing() on diesel 2.0
             .execute(conn)
 }
-
-pub fn get_kills(conn: &Connection, date_id: Integer) -> QueryResult<Vec<Kill>> {
-    use schema::kills::dsl as table;
-    table::kills
-//        .filter(table::date_id.eq(&date_id))
-        .load(conn)
-}

@@ -3,6 +3,7 @@ CREATE TABLE kills(
     killmail_hash TEXT NOT NULL,
     killmail_date DATE NOT NULL
 );
+CREATE INDEX IF NOT EXISTS dates_ids ON kills(killmail_date);
 
 
 CREATE TABLE IF NOT EXISTS killmails(

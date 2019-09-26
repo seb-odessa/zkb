@@ -13,6 +13,7 @@ pub type Integer = i32;
 pub type OptInteger = Option<Integer>;
 pub type Float = f32;
 pub type Hash = String;
+pub type Date = chrono::NaiveDate;
 pub type DateTime = chrono::NaiveDateTime;
 pub type QueryResult<T> = std::result::Result<T, diesel::result::Error>;
 
@@ -22,6 +23,12 @@ impl DB {
         use crate::diesel::Connection;
         let url = std::env::var("DATABASE_URL").expect("DB_URL environment variable required");
         Connection::establish(&url).expect(&format!("Error connection to {}", url))
+    }
+
+    pub fn load_kills(conn: &Connection, date: &Date) -> QueryResult<Vec<kill::Kill>> {
+        use diesel::prelude::*;
+        use super::schema::kills::dsl as table;
+        table::kills.filter(table::killmail_date.eq(&date)).load(conn)
     }
 
     /** Saves killmail into DB */
