@@ -2,7 +2,7 @@
 use lib::api;
 use lib::models::{Connection, DB, Hash};
 use std::collections::HashMap;
-use chrono::{Duration, TimeZone, Datelike, Utc};
+use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};
 use std::io::Write;
 
 fn load_killmail(conn: &Connection, killmail_id: i32, killmail_hash: &Hash)->usize{
@@ -19,12 +19,13 @@ fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
     let conn = DB::connection();
     let json = api::gw::get_history(year, month, day);
     let map: HashMap<i32, String> = serde_json::from_str(&json).expect("Cant parse json");
-    let mut counter = 0;
+    let done = DB::get_saved_killmails(&conn, &NaiveDate::from_ymd(year, month, day));
+    let mut counter = done.len();
     let total = map.len();
     std::io::stdout().flush().unwrap();
     print!("{:4}-{:02}-{:02}", year, month, day);
     for (killmail_id, killmail_hash) in map.iter() {
-        if !DB::exists(&conn, *killmail_id) {
+        if !done.contains(killmail_id) {
             counter = counter + load_killmail(&conn, *killmail_id, killmail_hash);
         } else {
             counter = counter + 1;
@@ -33,7 +34,7 @@ fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
         std::io::stdout().flush().unwrap();
 
     }
-    println!("\nDone. Loaded {} killmails.", counter);
+    println!("Done.");
     return counter;
 }
 
@@ -91,5 +92,5 @@ fn main() {
         println!("\n\t {} YYYY MM", args[0]);
         println!("\n\t {} YYYY", args[0]);
     }
-    println!("Total loaded {} kill mails", total_kills);
+    println!("Total loaded {} killmails", total_kills);
 }

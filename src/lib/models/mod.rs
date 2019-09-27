@@ -1,4 +1,5 @@
 use crate::api;
+use std::collections::HashSet;
 
 pub mod kill;
 pub mod killmail;
@@ -37,6 +38,19 @@ impl DB {
         use diesel::prelude::*;
         use super::schema;
         diesel::insert_into(schema::kills::table).values(kills).execute(conn)
+    }
+
+    pub fn get_saved_killmails(conn: &Connection, date: &Date) -> HashSet<Integer> {
+        let start =date.and_hms(0, 0, 0);
+        let end =date.and_hms(23, 59, 59);
+
+        use diesel::prelude::*;
+        use std::iter::FromIterator;
+        use super::schema::killmails::dsl as table;
+        let vector = table::killmails
+                    .filter(table::killmail_time.between(&start, &end))
+                    .select(table::killmail_id).load(conn).unwrap();
+        HashSet::from_iter(vector.iter().cloned())
     }
 
     pub fn exists(conn: &Connection, killmail_id: Integer) -> bool {
