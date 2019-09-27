@@ -40,7 +40,9 @@ impl DB {
     }
 
     pub fn exists(conn: &Connection, killmail_id: Integer) -> bool {
-        killmail::KillMail::load(conn, killmail_id).is_ok()
+        use diesel::prelude::*;
+        use super::schema::killmails::dsl as table;
+        table::killmails.find(killmail_id).select(table::killmail_id).first(conn) == Ok(killmail_id)
     }
 
     /** Saves killmail into DB */
