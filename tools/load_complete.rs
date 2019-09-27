@@ -34,7 +34,7 @@ fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
         std::io::stdout().flush().unwrap();
 
     }
-    println!("Done.");
+    println!(". Done.");
     return counter;
 }
 
