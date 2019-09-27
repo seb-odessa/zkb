@@ -5,9 +5,14 @@ use std::collections::HashMap;
 use chrono::{Duration, TimeZone, Datelike, Utc};
 use std::io::Write;
 
-fn load_killmail(conn: &Connection, killmail_id: i32, killmail_hash: &Hash){
-    let killmail = api::gw::get_killamil(killmail_id, killmail_hash).expect("Failed to query Killmail from API");
-    DB::save(&conn, &killmail).expect("Failed to save killmail into DB");
+fn load_killmail(conn: &Connection, killmail_id: i32, killmail_hash: &Hash)->usize{
+    let response = api::gw::get_killamil(killmail_id, killmail_hash);
+    if let Some(killmail) = response {
+        DB::save(&conn, &killmail).expect("Failed to save killmail into DB");
+        1
+    } else {
+        0
+    }
 }
 
 fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
@@ -20,11 +25,13 @@ fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
     print!("{:4}-{:02}-{:02}", year, month, day);
     for (killmail_id, killmail_hash) in map.iter() {
         if !DB::exists(&conn, *killmail_id) {
-            load_killmail(&conn, *killmail_id, killmail_hash);
+            counter = counter + load_killmail(&conn, *killmail_id, killmail_hash);
+        } else {
+            counter = counter + 1;
         }
         print!("\r{:4}-{:02}-{:02} Loading {:5}/{:5}", year, month, day, counter, total);
         std::io::stdout().flush().unwrap();
-        counter = counter + 1;
+
     }
     println!("\nDone. Loaded {} killmails.", counter);
     return counter;

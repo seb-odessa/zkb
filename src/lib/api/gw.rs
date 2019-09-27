@@ -29,8 +29,7 @@ pub fn get_killamil(killmail_id: i32, hash: &str) -> Option<KillMail> {
     let json = String::from_utf8_lossy(&get(&url)).to_string();
     let result = KillMail::try_from(json.clone());
     if result.is_err() {
-        println!("{}", killmail_id);
-        println!("{}", json);
+        println!("\n{} {}", killmail_id, json);
     }
     result.ok()
 }
