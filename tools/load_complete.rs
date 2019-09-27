@@ -27,8 +27,6 @@ fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
     for (killmail_id, killmail_hash) in map.iter() {
         if !done.contains(killmail_id) {
             counter = counter + load_killmail(&conn, *killmail_id, killmail_hash);
-        } else {
-            counter = counter + 1;
         }
         print!("\r{:4}-{:02}-{:02} Loading {:5}/{:5}", year, month, day, counter, total);
         std::io::stdout().flush().unwrap();
