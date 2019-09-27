@@ -28,9 +28,6 @@ pub fn get_killamil(killmail_id: i32, hash: &str) -> Option<KillMail> {
     let url = format!("https://esi.evetech.net/latest/killmails/{}/{}/?datasource=tranquility", killmail_id, hash);
     let json = String::from_utf8_lossy(&get(&url)).to_string();
     let result = KillMail::try_from(json.clone());
-    if result.is_err() {
-        println!("\n{} {}", killmail_id, json);
-    }
     result.ok()
 }
 
