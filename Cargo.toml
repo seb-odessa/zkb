@@ -28,8 +28,8 @@ name = "load_killmail"
 path = "tools/load_killmail.rs"
 
 [[bin]]
-name = "load_complete"
-path = "tools/load_complete.rs"
+name = "load"
+path = "tools/load.rs"
 
 
 [dependencies]
