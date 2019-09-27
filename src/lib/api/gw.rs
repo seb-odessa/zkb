@@ -27,7 +27,12 @@ pub fn get_killamil(killmail_id: i32, hash: &str) -> Option<KillMail> {
     // https://esi.evetech.net/latest/killmails/78146996/4ceed992204ea5cab36f9543e80b90f0417534f5/?datasource=tranquility
     let url = format!("https://esi.evetech.net/latest/killmails/{}/{}/?datasource=tranquility", killmail_id, hash);
     let json = String::from_utf8_lossy(&get(&url)).to_string();
-    KillMail::try_from(json).ok()
+    let result = KillMail::try_from(json.clone());
+    if result.is_err() {
+        println!("{}", killmail_id);
+        println!("{}", json);
+    }
+    result.ok()
 }
 
 #[cfg(test)]
@@ -53,5 +58,5 @@ mod tests {
         let killamil = km.unwrap();
         assert_eq!(78146996, killamil.killmail_id);
         assert_eq!(30045352, killamil.solar_system_id);
-    }    
+    }
 }
