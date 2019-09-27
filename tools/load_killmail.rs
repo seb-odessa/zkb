@@ -1,5 +1,3 @@
-extern crate serde_json;
-
 use lib::api;
 use lib::models::{Connection, DB, Hash, kill::Kill};
 

@@ -33,10 +33,14 @@ impl DB {
     }
 
     /** Saves kills into DB */
-    pub fn insert_kills(conn: &Connection, kills: &Vec<kill::Kill>) -> QueryResult<usize> {
+    pub fn save_kills(conn: &Connection, kills: &Vec<kill::Kill>) -> QueryResult<usize> {
         use diesel::prelude::*;
         use super::schema;
         diesel::insert_into(schema::kills::table).values(kills).execute(conn)
+    }
+
+    pub fn exists(conn: &Connection, killmail_id: Integer) -> bool {
+        killmail::KillMail::load(conn, killmail_id).is_ok()
     }
 
     /** Saves killmail into DB */

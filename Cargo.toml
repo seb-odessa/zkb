@@ -27,6 +27,10 @@ path = "tools/load_kills.rs"
 name = "load_killmail"
 path = "tools/load_killmail.rs"
 
+[[bin]]
+name = "load_complete"
+path = "tools/load_complete.rs"
+
 
 [dependencies]
     serde = { version = "1.0", features = ["derive"]}
@@ -36,6 +40,8 @@ path = "tools/load_killmail.rs"
     dotenv = "0.10"
     curl = "0.4"
     chrono = { version = "0.4", features = ["serde"]}
+    crossbeam = "0.7"
+
 
 
 
