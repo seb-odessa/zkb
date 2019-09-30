@@ -12,7 +12,7 @@ pub type PositionOptional = Option<Position>;
 
 //https://esi.evetech.net/latest/swagger.json
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct KillMail {
     pub killmail_id: IntRequired,
     pub killmail_time: TimeRequired,
@@ -29,7 +29,7 @@ impl TryFrom<String> for KillMail {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
 #[serde(default)]
 pub struct Victim {
     pub ship_type_id: IntRequired,
@@ -42,7 +42,7 @@ pub struct Victim {
     pub position: PositionOptional,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
 #[serde(default)]
 pub struct Attacker {
     pub ship_type_id: IntOptional,
@@ -50,13 +50,13 @@ pub struct Attacker {
     pub corporation_id: IntOptional,
     pub alliance_id: IntOptional,
     pub faction_id: IntOptional,
-    pub damage_done: IntRequired,    
+    pub damage_done: IntRequired,
     pub final_blow: BoolRequired,
     pub security_status: FloatRequired,
     pub weapon_type_id: IntOptional,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
 #[serde(default)]
 pub struct Item {
     pub item_type_id: IntRequired,
@@ -68,7 +68,7 @@ pub struct Item {
 }
 
 
-#[derive(Serialize, Deserialize, Debug, Default)]
+#[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
 #[serde(default)]
 pub struct Position {
     pub x: f64,
@@ -209,13 +209,13 @@ mod tests {
             "killmail_time": "2019-08-22T01:26:53Z",
             "solar_system_id": 30002384,
             });
-            
+
             let json = serde_json::to_string(&rec);
             assert!(json.is_ok());
-            
+
             let val = KillMail::try_from(json.unwrap());
             assert!(val.is_ok());
-            let record = val.unwrap();            
+            let record = val.unwrap();
             assert_eq!(2, record.attackers.len());
             assert_eq!(Some(3019582), record.attackers[0].character_id);
             assert_eq!(Some(500024), record.attackers[1].faction_id);

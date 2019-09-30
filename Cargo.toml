@@ -41,6 +41,10 @@ path = "tools/load.rs"
     curl = "0.4"
     chrono = { version = "0.4", features = ["serde"]}
     crossbeam = "0.7"
+    crossbeam-queue = "0.1"
+    crossbeam-utils = "0.6"
+
+
 
 
 

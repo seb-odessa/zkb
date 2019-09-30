@@ -1,38 +1,90 @@
 
 use lib::api;
-use lib::models::{Connection, DB, Hash};
+use lib::api::killmail::KillMail;
+use lib::models::{DB, Hash};
 use std::collections::HashMap;
 use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};
 use std::io::Write;
 
-fn load_killmail(conn: &Connection, killmail_id: i32, killmail_hash: &Hash)->usize{
-    let response = api::gw::get_killamil(killmail_id, killmail_hash);
-    if let Some(killmail) = response {
-        DB::save(&conn, &killmail).expect("Failed to save killmail into DB");
-        1
-    } else {
-        0
+use crossbeam_queue::SegQueue;
+use crossbeam_utils::thread::scope;
+
+#[derive(Debug, PartialEq, Clone)]
+struct Id {
+    id: i32,
+    hash: Hash,
+}
+
+fn receiver(src: &SegQueue<Id>, dst: &SegQueue<KillMail>) {
+    loop {
+        if let Ok(id) = src.pop() {
+            let response = api::gw::get_killamil(id.id, &id.hash);
+            if let Some(killmail) = response {
+                dst.push(killmail);
+            } else {
+                src.push(id);
+            }
+        }
+        if src.is_empty() {
+            break;
+        }
     }
 }
 
-fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
+fn saver(src: &SegQueue<KillMail>, queue: &SegQueue<Id>, year: i32, month: u32, day: u32, start: usize, total: usize) {
     let conn = DB::connection();
+    let mut counter = start;
+    loop {
+        if let Ok(killmail) = src.pop() {
+            DB::save(&conn, &killmail).expect("Failed to save killmail into DB");
+            counter = counter + 1;
+            print!("\r{:4}-{:02}-{:02} Loading {:5}/{:5}", year, month, day, counter, total);
+            std::io::stdout().flush().unwrap();
+        }
+        if queue.is_empty() {
+            break;
+        }
+    }
+}
+
+fn load_day(year: i32, month: u32, day: u32) -> usize {
     let json = api::gw::get_history(year, month, day);
     let map: HashMap<i32, String> = serde_json::from_str(&json).expect("Cant parse json");
-    let done = DB::get_saved_killmails(&conn, &NaiveDate::from_ymd(year, month, day));
+    let done = DB::get_saved_killmails(&DB::connection(), &NaiveDate::from_ymd(year, month, day));
+    let counter = done.len();
+    let total = map.len();
+    let rest = map.into_iter()
+                  .filter(|row|{ !done.contains(&row.0)})
+                  .map(|row| { Id{ id: row.0, hash: row.1.clone()} })
+                  .collect::<Vec<Id>>();
+    let todo = rest.len();
+
+    let tasks = SegQueue::new();
+    for id in rest.iter() {
+        tasks.push(id.clone());
+    }
+    let results = SegQueue::new();
+        scope(|scope| {
+        scope.spawn(|_| receiver(&tasks, &results));
+        scope.spawn(|_| receiver(&tasks, &results));
+        scope.spawn(|_| receiver(&tasks, &results));
+        scope.spawn(|_| receiver(&tasks, &results));
+        scope.spawn(|_| saver(&results, &tasks, year, month, day, counter, total));
+    })
+    .unwrap();
+    return todo;
+}
+
+fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
+    let json = api::gw::get_history(year, month, day);
+    let map: HashMap<i32, String> = serde_json::from_str(&json).expect("Cant parse json");
+    let done = DB::get_saved_killmails(&DB::connection(), &NaiveDate::from_ymd(year, month, day));
     let mut counter = done.len();
     let total = map.len();
-    std::io::stdout().flush().unwrap();
-    print!("{:4}-{:02}-{:02}", year, month, day);
-    for (killmail_id, killmail_hash) in map.iter() {
-        if !done.contains(killmail_id) {
-            counter = counter + load_killmail(&conn, *killmail_id, killmail_hash);
-        }
-        print!("\r{:4}-{:02}-{:02} Loading {:5}/{:5}", year, month, day, counter, total);
-        std::io::stdout().flush().unwrap();
 
-    }
-    println!(". Done.");
+    print!("{:4}-{:02}-{:02} Loading {:5}/{:5}", year, month, day, counter, total);
+    std::io::stdout().flush().unwrap();
+    counter = counter + load_day(year, month, day);
     return counter;
 }
 
