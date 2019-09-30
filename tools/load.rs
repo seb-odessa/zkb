@@ -38,7 +38,7 @@ fn saver(src: &SegQueue<KillMail>, queue: &SegQueue<Id>, year: i32, month: u32, 
         if let Ok(killmail) = src.pop() {
             DB::save(&conn, &killmail).expect("Failed to save killmail into DB");
             counter = counter + 1;
-            print!("\r{:4}-{:02}-{:02} Loading {:5}/{:5}", year, month, day, counter, total);
+            print!("\r{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
             std::io::stdout().flush().unwrap();
         }
         if queue.is_empty() {
