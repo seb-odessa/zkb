@@ -38,7 +38,7 @@ fn saver(src: &SegQueue<KillMail>, queue: &SegQueue<Id>, year: i32, month: u32, 
         if let Ok(killmail) = src.pop() {
             DB::save(&conn, &killmail).expect("Failed to save killmail into DB");
             counter = counter + 1;
-            print!("\r{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
+            print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
             std::io::stdout().flush().unwrap();
         }
         if queue.is_empty() {
@@ -47,7 +47,7 @@ fn saver(src: &SegQueue<KillMail>, queue: &SegQueue<Id>, year: i32, month: u32, 
     }
 }
 
-fn load_day(year: i32, month: u32, day: u32) -> usize {
+fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
     let json = api::gw::get_history(year, month, day);
     let map: HashMap<i32, String> = serde_json::from_str(&json).expect("Cant parse json");
     let done = DB::get_saved_killmails(&DB::connection(), &NaiveDate::from_ymd(year, month, day));
@@ -73,19 +73,6 @@ fn load_day(year: i32, month: u32, day: u32) -> usize {
     })
     .unwrap();
     return todo;
-}
-
-fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
-    let json = api::gw::get_history(year, month, day);
-    let map: HashMap<i32, String> = serde_json::from_str(&json).expect("Cant parse json");
-    let done = DB::get_saved_killmails(&DB::connection(), &NaiveDate::from_ymd(year, month, day));
-    let mut counter = done.len();
-    let total = map.len();
-
-    print!("{:4}-{:02}-{:02} Loading {:5}/{:5}", year, month, day, counter, total);
-    std::io::stdout().flush().unwrap();
-    counter = counter + load_day(year, month, day);
-    return counter;
 }
 
 fn load_month_kills(year: i32, month: u32) -> usize {
