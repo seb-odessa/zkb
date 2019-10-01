@@ -83,6 +83,7 @@ fn load_month_kills(year: i32, month: u32) -> usize {
         date = date + Duration::days(1);
         total = total + kills
     }
+    println!("\n\tLoaded {} kill mails for {}-{:02}", total, year, month);
     return total;
 }
 
@@ -90,9 +91,9 @@ fn load_year_kills(year: i32) -> usize {
     let mut total = 0;
     for month in 1..13 {
         let kills = load_month_kills(year, month);
-        println!("\tLoaded {} kill mails for {}-{:02}", kills, year, month);
         total = total + kills
     }
+    println!("\n\tLoaded {} kill mails for {}", total, year);
     return total;
 }
 
