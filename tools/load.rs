@@ -22,7 +22,7 @@ fn receiver(src: &SegQueue<Id>, dst: &SegQueue<KillMail>) {
             if let Some(killmail) = response {
                 dst.push(killmail);
             } else {
-//                src.push(id);
+                src.push(id);
             }
         }
         if src.is_empty() {
