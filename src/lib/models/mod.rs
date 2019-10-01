@@ -1,6 +1,7 @@
 use crate::api;
 use std::collections::HashSet;
 
+
 pub mod kill;
 pub mod killmail;
 pub mod attacker;
@@ -83,6 +84,46 @@ impl DB {
         })
     }
 
+    /** Saves vector of killmail into DB */
+    pub fn save_all(conn: &Connection, src: &Vec<api::killmail::KillMail>) -> QueryResult<()> {
+        use super::schema;
+        use diesel::connection::Connection;
+        use diesel::RunQueryDsl;
+
+        let mut killmails = Vec::new();
+        for value in src.iter() {
+            killmails.push(killmail::KillMail::from(value));
+        }
+        let mut attackers = Vec::new();
+        for value in src.iter() {
+            attackers.append(&mut attacker::Attacker::load(value));
+        }
+        let mut victims = Vec::new();
+        for value in src.iter() {
+            victims.push(victim::Victim::from(value));
+        }
+
+        let mut items = Vec::new();
+        for value in src.iter() {
+            items.append(&mut item::Item::load(value));
+        }
+
+        conn.transaction::<_, _, _>(|| {
+            diesel::insert_into(schema::killmails::table)
+                   .values(&killmails)
+                   .execute(conn)?;
+            diesel::insert_into(schema::attackers::table)
+                   .values(&attackers)
+                   .execute(conn)?;
+            diesel::insert_into(schema::victims::table)
+                   .values(&victims)
+                   .execute(conn)?;
+            diesel::insert_into(schema::items::table)
+                   .values(&items)
+                   .execute(conn)?;
+            Ok(())
+        })
+    }
 
 
     // pub fn load(conn: &Connection, id: &Integer) -> QueryResult<api::killmail::KillMail> {

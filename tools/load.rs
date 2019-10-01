@@ -1,7 +1,7 @@
 
 use lib::api;
 use lib::api::killmail::KillMail;
-use lib::models::{DB, Hash};
+use lib::models::{DB, Connection, Hash};
 use std::collections::HashMap;
 use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};
 use std::io::Write;
@@ -31,20 +31,38 @@ fn receiver(src: &SegQueue<Id>, dst: &SegQueue<KillMail>) {
     }
 }
 
+fn flush(conn: &Connection, records: &mut Vec<KillMail>) -> usize {
+    DB::save_all(&conn, &records).expect("Failed to save killmail into DB");
+    let count = records.len();
+    records.clear();
+    return count;
+}
+
 fn saver(src: &SegQueue<KillMail>, queue: &SegQueue<Id>, year: i32, month: u32, day: u32, start: usize, total: usize) {
     let conn = DB::connection();
     let mut counter = start;
+    let mut records = Vec::new();
     loop {
         if let Ok(killmail) = src.pop() {
+            records.push(killmail);
+            if records.len() > 50 {
+                counter = counter + flush(&conn, &mut records);
+                print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
+                std::io::stdout().flush().unwrap();
+            }
+
+/*
             DB::save(&conn, &killmail).expect("Failed to save killmail into DB");
             counter = counter + 1;
-            print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
-            std::io::stdout().flush().unwrap();
+*/
         }
         if queue.is_empty() {
             break;
         }
     }
+    counter = counter + flush(&conn, &mut records);
+    print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
+    std::io::stdout().flush().unwrap();
 }
 
 fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
