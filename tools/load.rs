@@ -72,6 +72,7 @@ fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
         scope.spawn(|_| saver(&results, &tasks, year, month, day, counter, total));
     })
     .unwrap();
+    println!("");
     return todo;
 }
 
@@ -83,7 +84,7 @@ fn load_month_kills(year: i32, month: u32) -> usize {
         date = date + Duration::days(1);
         total = total + kills
     }
-    println!("\n\tLoaded {} kill mails for {}-{:02}", total, year, month);
+    println!("\tLoaded {} kill mails for {}-{:02}", total, year, month);
     return total;
 }
 
@@ -93,7 +94,7 @@ fn load_year_kills(year: i32) -> usize {
         let kills = load_month_kills(year, month);
         total = total + kills
     }
-    println!("\n\tLoaded {} kill mails for {}", total, year);
+    println!("\tLoaded {} kill mails for {}", total, year);
     return total;
 }
 
