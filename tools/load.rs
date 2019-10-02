@@ -72,14 +72,13 @@ fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
                   .filter(|row|{ !done.contains(&row.0)})
                   .map(|row| { Id{ id: row.0, hash: row.1.clone()} })
                   .collect::<Vec<Id>>();
-    let todo = rest.len();
 
     let tasks = SegQueue::new();
     for id in rest.iter() {
         tasks.push(id.clone());
     }
     let results = SegQueue::new();
-        scope(|scope| {
+    scope(|scope| {
         scope.spawn(|_| receiver(&tasks, &results));
         scope.spawn(|_| receiver(&tasks, &results));
         scope.spawn(|_| receiver(&tasks, &results));
@@ -87,8 +86,7 @@ fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
         scope.spawn(|_| saver(&results, &tasks, year, month, day, counter, total));
     })
     .unwrap();
-    println!("");
-    return todo;
+    return DB::get_saved_killmails(&DB::connection(), &NaiveDate::from_ymd(year, month, day)).len();
 }
 
 fn load_month_kills(year: i32, month: u32) -> usize {
