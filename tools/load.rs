@@ -24,7 +24,7 @@ fn receiver(src: &SegQueue<Id>, dst: &SegQueue<KillMail>) {
                 dst.push(killmail);
             } else {
                 thread::sleep(std::time::Duration::from_millis(600));
-                src.push(id);
+//                src.push(id);
             }
         }
         if src.is_empty() {
