@@ -5,6 +5,7 @@ use lib::models::{DB, Connection, Hash};
 use std::collections::HashMap;
 use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};
 use std::io::Write;
+use std::thread;
 
 use crossbeam_queue::SegQueue;
 use crossbeam_utils::thread::scope;
@@ -22,6 +23,7 @@ fn receiver(src: &SegQueue<Id>, dst: &SegQueue<KillMail>) {
             if let Some(killmail) = response {
                 dst.push(killmail);
             } else {
+                thread::sleep(std::time::Duration::from_millis(600));
                 src.push(id);
             }
         }

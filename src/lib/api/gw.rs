@@ -1,34 +1,40 @@
 use curl::easy::Easy;
+use curl::Error;
 use super::killmail::KillMail;
 use std::convert::TryFrom;
 
-fn get(url: &str) -> Vec<u8> {
+fn get(url: &str) -> Result<Vec<u8>, Error> {
+    let mut easy = Easy::new();
+    easy.url(url)?;
     let mut content = Vec::new();
     {
-        let mut easy = Easy::new();
-        easy.url(url).expect(&format!("Can't open {}", url));
         let mut transfer = easy.transfer();
-        transfer.write_function(|data| {
-            content.extend_from_slice(data);
-            Ok(data.len())
-        }).expect("Can't receive data from server");
-        transfer.perform().expect("Can't complete request");
+        transfer.write_function(|data| {content.extend_from_slice(data); Ok(data.len())})?;
+        transfer.perform()?;
     }
-    return content;
+    return Ok(content);
 }
 
 
 pub fn get_history(year: i32, month: u32, day: u32) -> String {
     let url = format!("https://zkillboard.com/api/history/{}{:02}{:02}.json", year, month, day);
-    String::from_utf8_lossy(&get(&url)).to_string()
+    if let Some(response) = get(&url).ok() {
+        String::from_utf8_lossy(&response).to_string()
+    } else {
+        String::new()
+    }
+
 }
 
 pub fn get_killamil(killmail_id: i32, hash: &str) -> Option<KillMail> {
     // https://esi.evetech.net/latest/killmails/78146996/4ceed992204ea5cab36f9543e80b90f0417534f5/?datasource=tranquility
     let url = format!("https://esi.evetech.net/latest/killmails/{}/{}/?datasource=tranquility", killmail_id, hash);
-    let json = String::from_utf8_lossy(&get(&url)).to_string();
-    let result = KillMail::try_from(json.clone());
-    result.ok()
+    if let Some(response) = get(&url).ok() {
+        let json = String::from_utf8_lossy(&response).to_string();
+        KillMail::try_from(json.clone()).ok()
+    } else {
+        None
+    }
 }
 
 #[cfg(test)]
