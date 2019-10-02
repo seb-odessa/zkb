@@ -47,7 +47,7 @@ fn saver(src: &SegQueue<KillMail>, queue: &SegQueue<Id>, year: i32, month: u32, 
     loop {
         if let Ok(killmail) = src.pop() {
             records.push(killmail);
-            if records.len() > 150 {
+            if records.len() > 15 {
                 counter = counter + flush(&conn, &mut records);
                 print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
                 std::io::stdout().flush().unwrap();
@@ -81,8 +81,8 @@ fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
     scope(|scope| {
         scope.spawn(|_| receiver(&tasks, &results));
         scope.spawn(|_| receiver(&tasks, &results));
-        scope.spawn(|_| receiver(&tasks, &results));
-        scope.spawn(|_| receiver(&tasks, &results));
+        // scope.spawn(|_| receiver(&tasks, &results));
+        // scope.spawn(|_| receiver(&tasks, &results));
         scope.spawn(|_| saver(&results, &tasks, year, month, day, counter, total));
     })
     .unwrap();
