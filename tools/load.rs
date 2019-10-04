@@ -28,6 +28,7 @@ fn receiver(src: &SegQueue<Message<Id>>, dst: &SegQueue<Message<KillMail>>) {
             match msg {
                 Message::Quit => {
                     src.push(Message::Quit);
+                    dst.push(Message::Quit);
                     break;
                 },
                 Message::Work(id) => {
