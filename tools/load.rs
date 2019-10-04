@@ -16,19 +16,30 @@ struct Id {
     hash: Hash,
 }
 
-fn receiver(src: &SegQueue<Id>, dst: &SegQueue<KillMail>) {
+#[derive(Debug, PartialEq)]
+pub enum Message<T> {
+    Quit,
+    Work(T),
+}
+
+fn receiver(src: &SegQueue<Message<Id>>, dst: &SegQueue<Message<KillMail>>) {
     loop {
-        if let Ok(id) = src.pop() {
-            let response = api::gw::get_killamil(id.id, &id.hash);
-            if let Some(killmail) = response {
-                dst.push(killmail);
-            } else {
-                thread::sleep(std::time::Duration::from_millis(600));
-//                src.push(id);
+        if let Ok(msg) = src.pop() {
+            match msg {
+                Message::Quit => {
+                    src.push(Message::Quit);
+                    break;
+                },
+                Message::Work(id) => {
+                    let response = api::gw::get_killamil(id.id, &id.hash);
+                    if let Some(killmail) = response {
+                        dst.push(Message::Work(killmail));
+                    } else {
+                        src.push(Message::Work(id));
+                       thread::sleep(std::time::Duration::from_millis(600));
+                    }
+                }
             }
-        }
-        if src.is_empty() {
-            break;
         }
     }
 }
@@ -40,20 +51,28 @@ fn flush(conn: &Connection, records: &mut Vec<KillMail>) -> usize {
     return count;
 }
 
-fn saver(src: &SegQueue<KillMail>, queue: &SegQueue<Id>, year: i32, month: u32, day: u32, start: usize, total: usize) {
+fn saver(src: &SegQueue<Message<KillMail>>, year: i32, month: u32, day: u32, start: usize, total: usize) {
     let conn = DB::connection();
     let mut counter = start;
+    print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
+    std::io::stdout().flush().unwrap_or_default();
+
     let mut records = Vec::new();
     loop {
-        if let Ok(killmail) = src.pop() {
-            records.push(killmail);
-            if records.len() >= 100 {
-                counter = counter + flush(&conn, &mut records);
-                print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
-                std::io::stdout().flush().unwrap_or_default();
-            }
-            if queue.is_empty() && src.is_empty() {
-                break;
+        if let Ok(msg) = src.pop() {
+            match msg {
+                Message::Quit => {
+                    src.push(Message::Quit);
+                    break;
+                },
+                Message::Work(killmail) => {
+                    records.push(killmail);
+                    if records.len() >= 10 {
+                        counter = counter + flush(&conn, &mut records);
+                        print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
+                        std::io::stdout().flush().unwrap_or_default();
+                    }
+                }
             }
         }
     }
@@ -75,15 +94,16 @@ fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
 
     let tasks = SegQueue::new();
     for id in rest.iter() {
-        tasks.push(id.clone());
+        tasks.push(Message::Work(id.clone()));
     }
+    tasks.push(Message::Quit);
     let results = SegQueue::new();
     scope(|scope| {
         scope.spawn(|_| receiver(&tasks, &results));
         scope.spawn(|_| receiver(&tasks, &results));
-        // scope.spawn(|_| receiver(&tasks, &results));
-        // scope.spawn(|_| receiver(&tasks, &results));
-        scope.spawn(|_| saver(&results, &tasks, year, month, day, counter, total));
+        scope.spawn(|_| receiver(&tasks, &results));
+        scope.spawn(|_| receiver(&tasks, &results));
+        scope.spawn(|_| saver(&results, year, month, day, counter, total));
     })
     .unwrap();
     return DB::get_saved_killmails(&DB::connection(), &NaiveDate::from_ymd(year, month, day)).len();
