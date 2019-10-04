@@ -27,6 +27,7 @@ fn receiver(src: &SegQueue<Message<Id>>, dst: &SegQueue<Message<KillMail>>) {
         if let Ok(msg) = src.pop() {
             match msg {
                 Message::Quit => {
+                    thread::sleep(std::time::Duration::from_millis(1000));
                     src.push(Message::Quit);
                     dst.push(Message::Quit);
                     break;

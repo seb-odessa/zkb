@@ -6,29 +6,41 @@ use lib::models::kill::Kill;
 use std::collections::HashMap;
 use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};
 use std::io::Write;
+use std::thread;
 
 use crossbeam::atomic::AtomicCell;
 use crossbeam_queue::SegQueue;
 use crossbeam_utils::thread::scope;
 
 
+#[derive(Debug, PartialEq)]
+pub enum Message<T> {
+    Quit,
+    Work(T),
+}
 
-fn receiver(src: &SegQueue<NaiveDate>, dst: &SegQueue<Kill>) {
+fn receiver(src: &SegQueue<Message<NaiveDate>>, dst: &SegQueue<Message<Kill>>) {
     loop {
-        if let Ok(date) = src.pop() {
-            let json = api::gw::get_history(date.year(), date.month(), date.day());
-            let pairs: Option<HashMap<i32, String>> = serde_json::from_str(&json).ok();
-            if let Some(map) = pairs {
-                for (id, hash) in map.iter() {
-                    dst.push(Kill::new(id, hash, &date));
+        if let Ok(msg) = src.pop() {
+            match msg {
+                Message::Quit => {
+                    thread::sleep(std::time::Duration::from_millis(1000));
+                    src.push(Message::Quit);
+                    dst.push(Message::Quit);
+                    break;
+                },
+                Message::Work(date) => {
+                    let json = api::gw::get_history(date.year(), date.month(), date.day());
+                    let pairs: Option<HashMap<i32, String>> = serde_json::from_str(&json).ok();
+                    if let Some(map) = pairs {
+                        for (id, hash) in map.iter() {
+                            dst.push(Message::Work(Kill::new(id, hash, &date)));
+                        }
+                    } else {
+                        src.push(Message::Work(date));
+                    }
                 }
-            } else {
-//                thread::sleep(std::time::Duration::from_millis(600));
-                src.push(date);
             }
-        }
-        if src.is_empty() {
-            break;
         }
     }
 }
@@ -40,21 +52,26 @@ fn flush(conn: &Connection, records: &mut Vec<Kill>) -> usize {
     return count;
 }
 
-fn saver(src: &SegQueue<Kill>, queue: &SegQueue<NaiveDate>, counter: &AtomicCell<usize>) {
+fn saver(src: &SegQueue<Message<Kill>>, counter: &AtomicCell<usize>) {
     let conn = DB::connection();
     let mut records = Vec::new();
     let mut count = 0;
     loop {
-        if let Ok(kill) = src.pop() {
-            records.push(kill);
-            if records.len() >= 1000 {
-                count = count + flush(&conn, &mut records);
-                print!("Loaded {:5} records\r", count);
-                std::io::stdout().flush().unwrap_or_default();
-                counter.store(count);
-            }
-            if queue.is_empty() && src.is_empty() {
-                break;
+        if let Ok(msg) = src.pop() {
+            match msg {
+                Message::Quit => {
+                    src.push(Message::Quit);
+                    break;
+                },
+                Message::Work(kill) => {
+                    records.push(kill);
+                    if records.len() >= 1000 {
+                        count = count + flush(&conn, &mut records);
+                        print!("Loaded {:5} records\r", count);
+                        std::io::stdout().flush().unwrap_or_default();
+                        counter.store(count);
+                    }
+                }
             }
         }
     }
@@ -81,10 +98,10 @@ fn load_month_kills(year: i32, month: u32) -> usize {
     let mut date = Utc.ymd(year, month, 1);
     let tasks = SegQueue::new();
     while date.month() == month as u32 {
-        tasks.push(NaiveDate::from_ymd(year, month, date.day()));
+        tasks.push(Message::Work(NaiveDate::from_ymd(year, month, date.day())));
         date = date + Duration::days(1);
     }
-
+    tasks.push(Message::Quit);
     let results = SegQueue::new();
     let total = AtomicCell::new(0);
     scope(|scope| {
@@ -92,7 +109,7 @@ fn load_month_kills(year: i32, month: u32) -> usize {
         scope.spawn(|_| receiver(&tasks, &results));
         // scope.spawn(|_| receiver(&tasks, &results));
         // scope.spawn(|_| receiver(&tasks, &results));
-        scope.spawn(|_| saver(&results, &tasks, &total));
+        scope.spawn(|_| saver(&results, &total));
     })
     .unwrap();
     return total.into_inner();
