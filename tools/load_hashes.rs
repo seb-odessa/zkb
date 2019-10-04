@@ -119,7 +119,7 @@ fn load_year_kills(year: i32) -> usize {
     let mut total = 0;
     for month in 1..13 {
         let kills = load_month_kills(year, month);
-        println!("\tLoaded {} kill mails for {}-{:02}", kills, year, month);
+        println!("      {}-{:02} Loaded {} kill mails", year, month, kills);
         total = total + kills
     }
     return total;
