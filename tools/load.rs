@@ -59,7 +59,7 @@ fn saver(src: &SegQueue<KillMail>, queue: &SegQueue<Id>, year: i32, month: u32, 
     }
     counter = counter + flush(&conn, &mut records);
     println!("{:4}-{:02}-{:02} Loading {:5}/{:5}", year, month, day, counter, total);
-    std::io::stdout().flush().unwrap();
+    std::io::stdout().flush().unwrap_or_default();
 }
 
 fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
