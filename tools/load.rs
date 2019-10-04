@@ -35,7 +35,7 @@ fn receiver(src: &SegQueue<Message<Id>>, dst: &SegQueue<Message<KillMail>>) {
                     if let Some(killmail) = response {
                         dst.push(Message::Work(killmail));
                     } else {
-                        src.push(Message::Work(id));
+//                        src.push(Message::Work(id));
                        thread::sleep(std::time::Duration::from_millis(600));
                     }
                 }
