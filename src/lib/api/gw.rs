@@ -23,7 +23,6 @@ pub fn get_history(year: i32, month: u32, day: u32) -> String {
     } else {
         String::new()
     }
-
 }
 
 pub fn get_killamil(killmail_id: i32, hash: &str) -> Option<KillMail> {

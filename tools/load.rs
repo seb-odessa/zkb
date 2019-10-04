@@ -52,9 +52,9 @@ fn saver(src: &SegQueue<KillMail>, queue: &SegQueue<Id>, year: i32, month: u32, 
                 print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
                 std::io::stdout().flush().unwrap_or_default();
             }
-        }
-        if queue.is_empty() {
-            break;
+            if queue.is_empty() && src.is_empty() {
+                break;
+            }
         }
     }
     counter = counter + flush(&conn, &mut records);

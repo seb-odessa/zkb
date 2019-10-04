@@ -20,8 +20,8 @@ name = "show_kills"
 path = "tools/show_kills.rs"
 
 [[bin]]
-name = "load_kills"
-path = "tools/load_kills.rs"
+name = "load_hashes"
+path = "tools/load_hashes.rs"
 
 [[bin]]
 name = "load_killmail"

@@ -1,10 +1,68 @@
 extern crate serde_json;
 
 use lib::api;
-use lib::models::DB;
+use lib::models::{DB, Connection};
 use lib::models::kill::Kill;
 use std::collections::HashMap;
 use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};
+use std::io::Write;
+
+use crossbeam::atomic::AtomicCell;
+use crossbeam_queue::SegQueue;
+use crossbeam_utils::thread::scope;
+
+
+
+fn receiver(src: &SegQueue<NaiveDate>, dst: &SegQueue<Kill>) {
+    loop {
+        if let Ok(date) = src.pop() {
+            let json = api::gw::get_history(date.year(), date.month(), date.day());
+            let pairs: Option<HashMap<i32, String>> = serde_json::from_str(&json).ok();
+            if let Some(map) = pairs {
+                for (id, hash) in map.iter() {
+                    dst.push(Kill::new(id, hash, &date));
+                }
+            } else {
+//                thread::sleep(std::time::Duration::from_millis(600));
+                src.push(date);
+            }
+        }
+        if src.is_empty() {
+            break;
+        }
+    }
+}
+
+fn flush(conn: &Connection, records: &mut Vec<Kill>) -> usize {
+    DB::save_kills(&conn, &records).expect("Can't insert kills");
+    let count = records.len();
+    records.clear();
+    return count;
+}
+
+fn saver(src: &SegQueue<Kill>, queue: &SegQueue<NaiveDate>, counter: &AtomicCell<usize>) {
+    let conn = DB::connection();
+    let mut records = Vec::new();
+    let mut count = 0;
+    loop {
+        if let Ok(kill) = src.pop() {
+            records.push(kill);
+            if records.len() >= 1000 {
+                count = count + flush(&conn, &mut records);
+                print!("Loaded {:5} records\r", count);
+                std::io::stdout().flush().unwrap_or_default();
+                counter.store(count);
+            }
+            if queue.is_empty() && src.is_empty() {
+                break;
+            }
+        }
+    }
+    count = count + flush(&conn, &mut records);
+    print!("Loaded {:5} records\r", count);
+    std::io::stdout().flush().unwrap_or_default();
+    counter.store(count);
+}
 
 fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
     let conn = DB::connection();
@@ -20,15 +78,24 @@ fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
 }
 
 fn load_month_kills(year: i32, month: u32) -> usize {
-    let mut total = 0;
     let mut date = Utc.ymd(year, month, 1);
+    let tasks = SegQueue::new();
     while date.month() == month as u32 {
-        let kills = load_day_kills(year, month, date.day());
-        println!("Loaded {} kill mails for {:}", kills, date);
+        tasks.push(NaiveDate::from_ymd(year, month, date.day()));
         date = date + Duration::days(1);
-        total = total + kills
     }
-    return total;
+
+    let results = SegQueue::new();
+    let total = AtomicCell::new(0);
+    scope(|scope| {
+        scope.spawn(|_| receiver(&tasks, &results));
+        scope.spawn(|_| receiver(&tasks, &results));
+        // scope.spawn(|_| receiver(&tasks, &results));
+        // scope.spawn(|_| receiver(&tasks, &results));
+        scope.spawn(|_| saver(&results, &tasks, &total));
+    })
+    .unwrap();
+    return total.into_inner();
 }
 
 fn load_year_kills(year: i32) -> usize {

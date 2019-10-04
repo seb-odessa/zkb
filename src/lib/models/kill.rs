@@ -4,7 +4,7 @@ use crate::schema::kills;
 use super::{Integer, Hash, Connection, QueryResult};
 
 
-#[derive(Debug, Queryable, Insertable)]
+#[derive(Debug, Queryable, Insertable, PartialEq, Clone)]
 #[table_name = "kills"]
 pub struct Kill {
     pub killmail_id: Integer,
