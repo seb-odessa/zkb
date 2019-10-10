@@ -45,3 +45,27 @@ CREATE TABLE IF NOT EXISTS items(
     quantity_dropped INTEGER,
     FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
 );
+
+CREATE INDEX IF NOT EXISTS time_idx   ON killmails(killmail_time);
+CREATE INDEX IF NOT EXISTS system_idx ON killmails(solar_system_id);
+CREATE INDEX IF NOT EXISTS moon_idx   ON killmails(moon_id);
+CREATE INDEX IF NOT EXISTS war_idx    ON killmails(war_id);
+
+CREATE INDEX IF NOT EXISTS a_ship_idx        ON attackers(ship_type_id);
+CREATE INDEX IF NOT EXISTS a_alliance_idx    ON attackers(alliance_id);
+CREATE INDEX IF NOT EXISTS a_character_idx   ON attackers(character_id);
+CREATE INDEX IF NOT EXISTS a_corporation_idx ON attackers(corporation_id);
+CREATE INDEX IF NOT EXISTS a_faction_idx     ON attackers(faction_id);
+CREATE INDEX IF NOT EXISTS a_weapon_type_idx ON attackers(weapon_type_id);
+
+CREATE INDEX IF NOT EXISTS a_ship_idx        ON victims(ship_type_id);
+CREATE INDEX IF NOT EXISTS a_alliance_idx    ON victims(alliance_id);
+CREATE INDEX IF NOT EXISTS a_character_idx   ON victims(character_id);
+CREATE INDEX IF NOT EXISTS a_corporation_idx ON victims(corporation_id);
+CREATE INDEX IF NOT EXISTS a_faction_idx     ON victims(faction_id);
+
+CREATE INDEX IF NOT EXISTS items_idx ON items(item_type_id);
+
+
+
+
