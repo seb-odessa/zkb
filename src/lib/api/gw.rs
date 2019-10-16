@@ -5,6 +5,8 @@ use std::convert::TryFrom;
 
 fn get(url: &str) -> Result<Vec<u8>, Error> {
     let mut easy = Easy::new();
+    easy.accept_encoding("gzip")?;
+    easy.useragent("Easy API, Maintainer: seb@ukr.net")?;
     easy.url(url)?;
     let mut content = Vec::new();
     {

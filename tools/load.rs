@@ -79,7 +79,7 @@ fn saver(src: &SegQueue<Message<KillMail>>, year: i32, month: u32, day: u32, sta
         }
     }
     counter = counter + flush(&conn, &mut records);
-    println!("{:4}-{:02}-{:02} Loading {:5}/{:5}", year, month, day, counter, total);
+    println!("{:4}-{:02}-{:02} Loading {:5}/{:5} ({:5} new)", year, month, day, counter, total, (total - start));
     std::io::stdout().flush().unwrap_or_default();
 }
 
