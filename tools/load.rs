@@ -6,6 +6,7 @@ use std::collections::HashMap;
 use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};
 use std::io::Write;
 use std::thread;
+use std::time::Instant;
 
 use crossbeam_queue::SegQueue;
 use crossbeam_utils::thread::scope;
@@ -46,11 +47,14 @@ fn receiver(src: &SegQueue<Message<Id>>, dst: &SegQueue<Message<KillMail>>) {
     }
 }
 
-fn flush(conn: &Connection, records: &mut Vec<KillMail>) -> usize {
-    DB::save_all(&conn, &records).expect("Failed to save killmail into DB");
-    let count = records.len();
-    records.clear();
-    return count;
+fn flush(conn: &Connection, records: &mut Vec<KillMail>) -> Option<usize> {
+    if let Some(_) = DB::save_all(&conn, &records).ok() {
+        let count = records.len();
+        records.clear();
+        Some(count)
+    } else {
+        None
+    }
 }
 
 fn saver(src: &SegQueue<Message<KillMail>>, year: i32, month: u32, day: u32, start: usize, total: usize) {
@@ -60,6 +64,7 @@ fn saver(src: &SegQueue<Message<KillMail>>, year: i32, month: u32, day: u32, sta
     std::io::stdout().flush().unwrap_or_default();
 
     let mut records = Vec::new();
+    let mut timer = Instant::now();
     loop {
         if let Ok(msg) = src.pop() {
             match msg {
@@ -69,18 +74,24 @@ fn saver(src: &SegQueue<Message<KillMail>>, year: i32, month: u32, day: u32, sta
                 },
                 Message::Work(killmail) => {
                     records.push(killmail);
-                    if records.len() >= 10 {
-                        counter = counter + flush(&conn, &mut records);
-                        print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
-                        std::io::stdout().flush().unwrap_or_default();
+                    if timer.elapsed().as_secs() > 2 {
+                        if let Some(added) = flush(&conn, &mut records) {
+                            counter = counter + added;
+                            print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
+                            std::io::stdout().flush().unwrap_or_default();
+                        }
+                        timer = Instant::now();
                     }
                 }
             }
         }
     }
-    counter = counter + flush(&conn, &mut records);
-    println!("{:4}-{:02}-{:02} Loading {:5}/{:5} ({:5} new)", year, month, day, counter, total, (total - start));
-    std::io::stdout().flush().unwrap_or_default();
+
+    if let Some(added) = flush(&conn, &mut records) {
+        counter = counter + added;
+        println!("{:4}-{:02}-{:02} Loading {:5}/{:5} ({:5} new)", year, month, day, counter, total, (total - start));
+        std::io::stdout().flush().unwrap_or_default();
+    }
 }
 
 fn load_day_kills(year: i32, month: u32, day: u32) -> usize {

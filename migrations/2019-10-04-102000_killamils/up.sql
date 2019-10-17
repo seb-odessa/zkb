@@ -47,10 +47,10 @@ CREATE TABLE IF NOT EXISTS items(
     FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
 );
 
-CREATE INDEX IF NOT EXISTS time_idx   ON killmails(killmail_time);
-CREATE INDEX IF NOT EXISTS system_idx ON killmails(solar_system_id);
-CREATE INDEX IF NOT EXISTS moon_idx   ON killmails(moon_id);
-CREATE INDEX IF NOT EXISTS war_idx    ON killmails(war_id);
+CREATE INDEX IF NOT EXISTS k_time_idx        ON killmails(killmail_time);
+CREATE INDEX IF NOT EXISTS k_system_idx      ON killmails(solar_system_id);
+CREATE INDEX IF NOT EXISTS k_moon_idx        ON killmails(moon_id);
+CREATE INDEX IF NOT EXISTS k_war_idx         ON killmails(war_id);
 
 CREATE INDEX IF NOT EXISTS a_ship_idx        ON attackers(ship_type_id);
 CREATE INDEX IF NOT EXISTS a_alliance_idx    ON attackers(alliance_id);
@@ -67,8 +67,8 @@ CREATE INDEX IF NOT EXISTS v_corporation_idx ON victims(corporation_id);
 CREATE INDEX IF NOT EXISTS v_faction_idx     ON victims(faction_id);
 CREATE INDEX IF NOT EXISTS v_killmail_idx    ON victims(killmail_id);
 
-CREATE INDEX IF NOT EXISTS items_idx          ON items(item_type_id);
-CREATE INDEX IF NOT EXISTS items_killmail_idx ON items(killmail_id);
+CREATE INDEX IF NOT EXISTS i_type_idx        ON items(item_type_id);
+CREATE INDEX IF NOT EXISTS i_killmail_idx    ON items(killmail_id);
 
 
 
