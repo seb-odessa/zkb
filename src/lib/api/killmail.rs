@@ -12,6 +12,7 @@ pub type PositionOptional = Option<Position>;
 
 //https://esi.evetech.net/latest/swagger.json
 
+
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct KillMail {
     pub killmail_id: IntRequired,
