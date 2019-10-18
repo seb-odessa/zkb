@@ -47,6 +47,8 @@ path = "tools/updater.rs"
     crossbeam = "0.7"
     crossbeam-queue = "0.1"
     crossbeam-utils = "0.6"
+    log = "0.4"
+    env_logger = "0.7"
 
 
 
