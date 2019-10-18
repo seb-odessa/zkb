@@ -5,4 +5,8 @@
 *.db-journal
 *.bz2
 *.code-workspace
+*.iml
+*.ipr
+*.iws
+
 
