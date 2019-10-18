@@ -35,6 +35,9 @@ path = "tools/load.rs"
 name = "updater"
 path = "tools/updater.rs"
 
+[[bin]]
+name = "monitor"
+path = "tools/monitor.rs"
 
 [dependencies]
     serde = { version = "1.0", features = ["derive"]}

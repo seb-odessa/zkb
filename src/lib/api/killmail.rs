@@ -1,17 +1,9 @@
 use std::convert::TryFrom;
-use chrono::{DateTime, Utc};
+
 use serde::{Deserialize, Serialize};
+use crate::api::*;
 
-pub type BoolRequired = bool;
-pub type IntRequired = i32;
-pub type FloatRequired = f32;
-pub type IntOptional = Option<i32>;
-pub type TimeRequired = DateTime<Utc>;
 pub type ItemsOptional = Option<Vec<Item>>;
-pub type PositionOptional = Option<Position>;
-
-//https://esi.evetech.net/latest/swagger.json
-
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct KillMail {
@@ -69,13 +61,7 @@ pub struct Item {
 }
 
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
-#[serde(default)]
-pub struct Position {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-}
+
 
 #[cfg(test)]
 mod tests {

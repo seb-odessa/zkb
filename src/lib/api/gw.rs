@@ -4,6 +4,13 @@ use super::killmail::KillMail;
 use super::zkb::Package;
 use std::convert::TryFrom;
 
+//https://esi.evetech.net/latest/swagger.json
+//https://esi.evetech.net/latest/universe/systems/30002659/?datasource=tranquility&language=en-us
+//https://esi.evetech.net/latest/killmails/78146996/4ceed992204ea5cab36f954380b90f0417534f5/?datasource=tranquility
+
+pub const EVE_API: &str = "https://esi.evetech.net/latest";
+pub const EVE_SRV: &str = "?datasource=tranquility";
+
 fn get(url: &str) -> Result<Vec<u8>, Error> {
     let mut easy = Easy::new();
     easy.accept_encoding("gzip")?;
@@ -16,6 +23,15 @@ fn get(url: &str) -> Result<Vec<u8>, Error> {
         transfer.perform()?;
     }
     return Ok(content);
+}
+
+pub fn evetech(cmd: &str) -> Option<String> {
+    let url = format!("{}/{}/{}", EVE_API, cmd, EVE_SRV);
+    if let Some(response) = get(&url).ok() {
+        String::from_utf8(response).ok()
+    } else {
+        None
+    }
 }
 
 pub fn get_history(year: i32, month: u32, day: u32) -> String {

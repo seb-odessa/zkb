@@ -27,9 +27,9 @@ fn flush(records: &Vec<KillMail>) -> Option<usize> {
     }
 }
 
-fn run_updater(timeout: u32) {
+fn run_updater(id: String, timeout: u32) {
     let mut records: Vec<KillMail> = Vec::new();
-    while let Some(response) = api::gw::get_package("54689e7ff0b3cebfa1356bfbc9c7682c") {
+    while let Some(response) = api::gw::get_package(&id) {
         info!("Received response from API");
         if let Some(content) = response.package {
             println!("{} {} {}", content.id, content.zkb.npc, content.zkb.href);
@@ -47,13 +47,16 @@ fn run_updater(timeout: u32) {
 fn main() {
     env_logger::init();
     let args: Vec<_> = std::env::args().collect();
-    if 2 == args.len() {
-        let timeout: u32 = args[1]
+    if 3 == args.len() {
+        let id: String = args[1]
             .parse()
-            .expect("Can't convert first argument to the timeout");
-        run_updater(timeout);
+            .expect("Can't convert first argument to the request id");
+        let timeout: u32 = args[2]
+            .parse()
+            .expect("Can't convert second argument to the timeout");
+        run_updater(id , timeout);
     } else {
         println!("Usage:");
-        println!("\n\t {} timeout", args[0]);
+        println!("\n\t {} id timeout", args[0]);
     }
 }
