@@ -8,12 +8,14 @@ use std::thread;
 
 fn flush(records: &Vec<KillMail>) -> Option<usize> {
     let conn = DB::connection();
-    if let Some(_) = DB::save_all(&conn, &records).ok() {
-        info!("Saved to DB");
-        Some(records.len())
-    } else {
-        error!("Failed to save to DB");
-        None
+    match DB::save_all(&conn, &records) {
+        Ok(()) => {
+            Some(records.len())
+        },
+        Err(err) => {
+            error!("Failed to save to DB {:?}", err);
+            None
+        }
     }
 }
 
