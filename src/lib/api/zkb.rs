@@ -1,3 +1,4 @@
+use super::killmail::KillMail;
 use std::convert::TryFrom;
 use serde::{Deserialize, Serialize};
 
@@ -5,10 +6,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Zkb {
-    pub locationID: i32,
+    #[serde(alias = "locationID")]
+    pub location_id: i32,
     pub hash: String,
-    pub fittedValue: f32,
-    pub totalValue: f32,
+    #[serde(alias = "fittedValue")]
+    pub fitted_value: f32,
+    #[serde(alias = "totalValue")]
+    pub total_value: f32,
     pub points: i32,
     pub npc: bool,
     pub solo: bool,
@@ -22,22 +26,29 @@ impl TryFrom<String> for Zkb {
     }
 }
 
-// #[derive(Serialize, Deserialize, Debug, PartialEq)]
-// pub struct PackageContent {
-//     pub killID: IntRequired,
-//     pub killmail: KillMail,
-//     pub zkb:
-// }
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct PackageContent {
+    #[serde(alias = "killID")]
+    pub id: i32,
+    pub killmail: KillMail,
+    pub zkb: Zkb,
+}
 
-
-//
-
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Package {
+    pub package: Option<PackageContent>,
+}
+impl TryFrom<String> for Package {
+    type Error = serde_json::Error;
+    fn try_from(json: String) -> Result<Self, Self::Error> {
+        serde_json::from_str(&json)
+    }
+}
 
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde::export::Result;
     use serde_json::json;
 
     #[test]
@@ -58,13 +69,11 @@ mod tests {
         let val = Zkb::try_from(json.unwrap());
         assert!(val.is_ok());
         let record = val.unwrap();
-        assert_eq!(40009240, record.locationID);
+        assert_eq!(40009240, record.location_id);
     }
 
-
-
     #[test]
-    fn test_attackers() {
+    fn test_package_content() {
         let rec = json!({
         "package": {
             "killID":79417923,
@@ -96,7 +105,28 @@ mod tests {
             }
         }});
 
+        println!("{:?}", rec);
         let json = serde_json::to_string(&rec);
         assert!(json.is_ok());
+        let val = Package::try_from(json.unwrap());
+        assert!(val.is_ok());
+        let record = val.unwrap();
+        assert!(record.package.is_some());
+        let content = record.package.unwrap();
+        assert_eq!(79417923, content.id);
+        assert_eq!(79417923, content.killmail.killmail_id);
+        assert_eq!(40009240, content.zkb.location_id);
+    }
+
+    #[test]
+    fn test_package_without_content() {
+        let none: Option<PackageContent> = None;
+        let rec = json!({"package": none});
+        let json = serde_json::to_string(&rec);
+        assert!(json.is_ok());
+        let val = Package::try_from(json.unwrap());
+        assert!(val.is_ok());
+        let record = val.unwrap();
+        assert!(record.package.is_none());
     }
 }
