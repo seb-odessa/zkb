@@ -5,25 +5,20 @@ use lib::api;
 use lib::api::killmail::KillMail;
 use lib::models::DB;
 use std::thread;
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 fn flush(records: &Vec<KillMail>) -> Option<usize> {
     let conn = DB::connection();
-    let mut set = HashSet::new();
+    let mut map = HashMap::new();
     for km in records {
         if !DB::exists(&conn, km.killmail_id) {
-            set.insert(km.killmail_id);
+            map.insert(km.killmail_id, km.clone());
         }
     }
-    let mut new = Vec::new();
-    for km in records {
-        if !set.contains(&km.killmail_id) {
-            new.push(km.clone());
-        }
-    }
-    match DB::save_all(&conn, &new) {
+
+    match DB::save_all(&conn, &map.values().map(|kill| kill.clone() ).collect()) {
         Ok(()) => {
-            Some(new.len())
+            Some(map.len())
         },
         Err(err) => {
             error!("Failed to save to DB {:?}", err);
