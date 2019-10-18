@@ -1,6 +1,7 @@
 use curl::easy::Easy;
 use curl::Error;
 use super::killmail::KillMail;
+use super::zkb::Package;
 use std::convert::TryFrom;
 
 fn get(url: &str) -> Result<Vec<u8>, Error> {
@@ -17,7 +18,6 @@ fn get(url: &str) -> Result<Vec<u8>, Error> {
     return Ok(content);
 }
 
-
 pub fn get_history(year: i32, month: u32, day: u32) -> String {
     let url = format!("https://zkillboard.com/api/history/{}{:02}{:02}.json", year, month, day);
     if let Some(response) = get(&url).ok() {
@@ -32,11 +32,24 @@ pub fn get_killamil(killmail_id: i32, hash: &str) -> Option<KillMail> {
     let url = format!("https://esi.evetech.net/latest/killmails/{}/{}/?datasource=tranquility", killmail_id, hash);
     if let Some(response) = get(&url).ok() {
         let json = String::from_utf8_lossy(&response).to_string();
-        KillMail::try_from(json.clone()).ok()
+        KillMail::try_from(json).ok()
     } else {
         None
     }
 }
+
+pub fn get_package(queue_id: &str) -> Option<Package> {
+    // https://redisq.zkillboard.com/listen.php?queueID=54689e7ff0b3cebfa1356bfbc9c7682c
+
+    let url = format!("https://redisq.zkillboard.com/listen.php?queueID={}", queue_id);
+    if let Some(response) = get(&url).ok() {
+        let json = String::from_utf8_lossy(&response).to_string();
+        Package::try_from(json).ok()
+    } else {
+        None
+    }
+}
+
 
 #[cfg(test)]
 mod tests {

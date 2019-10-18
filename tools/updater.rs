@@ -1,28 +1,33 @@
-extern crate crossbeam;
-use std::io;
-use std::io::BufRead;
-use std::{thread, time};
-use crossbeam::crossbeam_channel::bounded;
+use lib::api;
+use lib::api::killmail::KillMail;
+use lib::api::zkb::Package;
+use lib::models::{DB, Connection, Hash};
+use std::thread;
 
+
+fn flush(records: &Vec<KillMail>) -> Option<usize> {
+    let conn = DB::connection();
+    if let Some(_) = DB::save_all(&conn, &records).ok() {
+        Some(records.len())
+    } else {
+        None
+    }
+}
 
 fn main() {
-    println!("Usage:");
-    let (s, r) = bounded::<String>(4);
-    for tid in 0..4 {
-        let recv = r.clone();
-        thread::spawn(move || {
-            for line in recv.iter() {
-                let timeout = time::Duration::from_millis(10);
-                print!("{:?}: {}\n", &tid, line);
-                thread::sleep(timeout);
+    let mut records: Vec<KillMail> = Vec::new();
+
+    while let Some(response) = api::gw::get_package("54689e7ff0b") {
+
+        if let Some(content) = response.package {
+            println!("{}", content.id);
+            records.push(content.killmail);
+        } else {
+            if let Some(count) = flush(&records) {
+                println!("Saved {} killmails", count);
+                records.clear();
             }
+            thread::sleep(std::time::Duration::from_secs(10));
         }
-        );
     }
-
-    let reader = io::BufReader::new(io::stdin());
-    for line in reader.lines() {
-        s.send(line.unwrap()).unwrap();
-    }
-
 }
