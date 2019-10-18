@@ -1,7 +1,10 @@
 
+#[macro_use]
+extern crate log;
+
 use lib::api;
 use lib::api::killmail::KillMail;
-use lib::models::{DB, Connection, Hash};
+use lib::models::{DB, Hash};
 use std::collections::HashMap;
 use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};
 use std::io::Write;
@@ -28,17 +31,19 @@ fn receiver(src: &SegQueue<Message<Id>>, dst: &SegQueue<Message<KillMail>>) {
         if let Ok(msg) = src.pop() {
             match msg {
                 Message::Quit => {
+                    info!("Received Message::Quit");
                     thread::sleep(std::time::Duration::from_millis(4000));
                     src.push(Message::Quit);
                     dst.push(Message::Quit);
                     break;
                 },
                 Message::Work(id) => {
-                    let response = api::gw::get_killamil(id.id, &id.hash);
-                    if let Some(killmail) = response {
+                    info!("Received Message::Work{:?}", id);
+                    if let Some(killmail) = api::gw::get_killamil(id.id, &id.hash) {
+                        info!("Received killamil {} from API", killmail.killmail_id);
                         dst.push(Message::Work(killmail));
                     } else {
-//                        src.push(Message::Work(id));
+                        warn!("Received no data from API");
                        thread::sleep(std::time::Duration::from_millis(600));
                     }
                 }
@@ -47,18 +52,22 @@ fn receiver(src: &SegQueue<Message<Id>>, dst: &SegQueue<Message<KillMail>>) {
     }
 }
 
-fn flush(conn: &Connection, records: &mut Vec<KillMail>) -> Option<usize> {
-    if let Some(_) = DB::save_all(&conn, &records).ok() {
-        let count = records.len();
-        records.clear();
-        Some(count)
-    } else {
-        None
+fn flush(records: &Vec<KillMail>) -> Option<usize> {
+    let conn = DB::connection();
+    match DB::save_all(&conn, &records) {
+        Ok(()) => {
+            info!("Saved {} items to the DB", records.len());
+            Some(records.len())
+        },
+        Err(err) => {
+            error!("Failed to save to DB {:?}", err);
+            None
+        }
     }
 }
 
+
 fn saver(src: &SegQueue<Message<KillMail>>, year: i32, month: u32, day: u32, start: usize, total: usize) {
-    let conn = DB::connection();
     let mut counter = start;
     print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
     std::io::stdout().flush().unwrap_or_default();
@@ -69,13 +78,15 @@ fn saver(src: &SegQueue<Message<KillMail>>, year: i32, month: u32, day: u32, sta
         if let Ok(msg) = src.pop() {
             match msg {
                 Message::Quit => {
+                    info!("Received Message::Quit");
                     src.push(Message::Quit);
                     break;
                 },
                 Message::Work(killmail) => {
                     records.push(killmail);
-                    if timer.elapsed().as_secs() > 2 {
-                        if let Some(added) = flush(&conn, &mut records) {
+                    if timer.elapsed().as_secs() > 30 {
+                        if let Some(added) = flush(&records) {
+                            records.clear();
                             counter = counter + added;
                             print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
                             std::io::stdout().flush().unwrap_or_default();
@@ -87,7 +98,7 @@ fn saver(src: &SegQueue<Message<KillMail>>, year: i32, month: u32, day: u32, sta
         }
     }
 
-    if let Some(added) = flush(&conn, &mut records) {
+    if let Some(added) = flush(&records) {
         counter = counter + added;
         println!("{:4}-{:02}-{:02} Loading {:5}/{:5} ({:5} new)", year, month, day, counter, total, (total - start));
         std::io::stdout().flush().unwrap_or_default();
@@ -145,6 +156,7 @@ fn load_year_kills(year: i32) -> usize {
 }
 
 fn main() {
+    env_logger::init();
     let args: Vec<_> = std::env::args().collect();
     let mut total_kills = 0;
     if 4 == args.len() {

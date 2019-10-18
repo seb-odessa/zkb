@@ -8,7 +8,13 @@ use std::thread;
 
 fn flush(records: &Vec<KillMail>) -> Option<usize> {
     let conn = DB::connection();
-    match DB::save_all(&conn, &records) {
+    let mut new = Vec::new();
+    for km in records {
+        if !DB::exists(&conn, km.killmail_id) {
+            new.push(km.clone());
+        }
+    }
+    match DB::save_all(&conn, &new) {
         Ok(()) => {
             Some(records.len())
         },

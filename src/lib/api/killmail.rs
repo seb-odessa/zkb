@@ -13,7 +13,7 @@ pub type PositionOptional = Option<Position>;
 //https://esi.evetech.net/latest/swagger.json
 
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct KillMail {
     pub killmail_id: IntRequired,
     pub killmail_time: TimeRequired,
@@ -30,7 +30,7 @@ impl TryFrom<String> for KillMail {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
 #[serde(default)]
 pub struct Victim {
     pub ship_type_id: IntRequired,
@@ -43,7 +43,7 @@ pub struct Victim {
     pub position: PositionOptional,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
 #[serde(default)]
 pub struct Attacker {
     pub ship_type_id: IntOptional,
@@ -57,7 +57,7 @@ pub struct Attacker {
     pub weapon_type_id: IntOptional,
 }
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
 #[serde(default)]
 pub struct Item {
     pub item_type_id: IntRequired,
@@ -69,7 +69,7 @@ pub struct Item {
 }
 
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
 #[serde(default)]
 pub struct Position {
     pub x: f64,
