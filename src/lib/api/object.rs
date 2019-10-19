@@ -2,7 +2,7 @@ use std::convert::TryFrom;
 use serde::{Deserialize, Serialize};
 use crate::api::*;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct Object {
     pub id: IntRequired,
     pub category: StrRequired,

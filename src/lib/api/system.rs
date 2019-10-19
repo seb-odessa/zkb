@@ -2,8 +2,19 @@ use std::convert::TryFrom;
 use serde::{Deserialize, Serialize};
 use crate::api::*;
 
+pub const AMARR_ID: IntRequired = 30002187;
+pub const HEK_ID: IntRequired = 30002053;
+pub const DODIXIE_ID: IntRequired = 30002659;
+pub const JITA_ID: IntRequired = 30000142;
+pub const RENS_ID: IntRequired = 30002510;
 
 pub type PlanetOptional = Option<Vec<Planet>>;
+
+pub fn route(departue: IntRequired, destination: IntRequired) -> IdsRequired {
+    let uri = format!("route/{}/{}", departue, destination);
+    let response = gw::evetech(&uri).unwrap_or_default();
+    serde_json::from_str(&response).unwrap_or_default()
+}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct System {
@@ -53,5 +64,11 @@ mod tests {
         assert_eq!(30002659, system.system_id);
         assert_eq!("Dodixie", &system.name);
         assert_eq!(Some(String::from("B")), system.security_class);
+    }
+
+    #[test]
+    fn test_route() {
+        let route = route(JITA_ID, HEK_ID);
+        assert_eq!(10, route.len());
     }
 }

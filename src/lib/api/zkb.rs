@@ -33,6 +33,11 @@ pub struct PackageContent {
     pub killmail: KillMail,
     pub zkb: Zkb,
 }
+impl PackageContent {
+    pub fn zkb_url(&self)->String {
+        format!("https://zkillboard.com/kill/{}/", self.id)
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Package {

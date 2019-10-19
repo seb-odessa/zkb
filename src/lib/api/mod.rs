@@ -17,6 +17,7 @@ pub type TimeRequired = DateTime<Utc>;
 pub type StrRequired = String;
 pub type StrOptional = Option<String>;
 pub type PositionOptional = Option<Position>;
+pub type IdsRequired = Vec<i32>;
 pub type IdsOptional = Option<Vec<i32>>;
 
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
