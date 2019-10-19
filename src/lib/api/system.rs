@@ -5,8 +5,7 @@ use crate::api::*;
 
 pub type PlanetOptional = Option<Vec<Planet>>;
 
-#[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
-#[serde(default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct System {
     pub system_id: IntRequired,
     pub star_id: IntOptional,
@@ -29,7 +28,6 @@ impl TryFrom<i32> for System {
     type Error = serde_json::Error;
     fn try_from(id: i32) -> Result<Self, Self::Error> {
         let response = gw::evetech(&format!("universe/systems/{}", id)).unwrap_or_default();
-        println!("{}", response);
         System::try_from(response)
     }
 }
@@ -48,7 +46,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_from() {
+    fn from_api() {
         let maybe = System::try_from(30002659);
         assert!(maybe.is_ok());
         let system = maybe.unwrap();
