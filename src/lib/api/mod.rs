@@ -6,6 +6,7 @@ pub mod killmail;
 pub mod zkb;
 pub mod system;
 pub mod character;
+pub mod object;
 
 pub type BoolRequired = bool;
 pub type IntRequired = i32;

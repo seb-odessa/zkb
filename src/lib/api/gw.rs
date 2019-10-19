@@ -5,6 +5,7 @@ use super::zkb::Package;
 use std::convert::TryFrom;
 
 //https://esi.evetech.net/latest/swagger.json
+//https://esi.evetech.net/latest/characters/2114350216/?datasource=tranquility
 //https://esi.evetech.net/latest/universe/systems/30002659/?datasource=tranquility&language=en-us
 //https://esi.evetech.net/latest/killmails/78146996/4ceed992204ea5cab36f954380b90f0417534f5/?datasource=tranquility
 
@@ -25,9 +26,33 @@ fn get(url: &str) -> Result<Vec<u8>, Error> {
     return Ok(content);
 }
 
+fn post(url: &str, request: &str) -> Result<Vec<u8>, Error> {
+    let mut easy = Easy::new();
+    easy.accept_encoding("gzip")?;
+    easy.useragent("Easy API, Maintainer: seb@ukr.net")?;
+    easy.url(url)?;
+    easy.post_fields_copy(request.as_bytes())?;
+    let mut content = Vec::new();
+    {
+        let mut transfer = easy.transfer();
+        transfer.write_function(|data| {content.extend_from_slice(data); Ok(data.len())})?;
+        transfer.perform()?;
+    }
+    return Ok(content);
+}
+
 pub fn evetech(cmd: &str) -> Option<String> {
     let url = format!("{}/{}/{}", EVE_API, cmd, EVE_SRV);
     if let Some(response) = get(&url).ok() {
+        String::from_utf8(response).ok()
+    } else {
+        None
+    }
+}
+
+pub fn evetech_post(cmd: &str, request: &str) -> Option<String> {
+    let url = format!("{}/{}/{}", EVE_API, cmd, EVE_SRV);
+    if let Some(response) = post(&url, &request).ok() {
         String::from_utf8(response).ok()
     } else {
         None
