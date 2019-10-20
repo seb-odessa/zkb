@@ -41,7 +41,8 @@ impl PackageContent {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Package {
-    pub package: Option<PackageContent>,
+    #[serde(alias = "package")]
+    pub content: Option<PackageContent>,
 }
 impl TryFrom<String> for Package {
     type Error = serde_json::Error;
@@ -116,8 +117,8 @@ mod tests {
         let val = Package::try_from(json.unwrap());
         assert!(val.is_ok());
         let record = val.unwrap();
-        assert!(record.package.is_some());
-        let content = record.package.unwrap();
+        assert!(record.content.is_some());
+        let content = record.content.unwrap();
         assert_eq!(79417923, content.id);
         assert_eq!(79417923, content.killmail.killmail_id);
         assert_eq!(40009240, content.zkb.location_id);
@@ -132,6 +133,6 @@ mod tests {
         let val = Package::try_from(json.unwrap());
         assert!(val.is_ok());
         let record = val.unwrap();
-        assert!(record.package.is_none());
+        assert!(record.content.is_none());
     }
 }

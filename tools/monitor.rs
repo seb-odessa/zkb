@@ -2,23 +2,25 @@
 extern crate log;
 extern crate separator;
 use separator::Separatable;
+use std::fmt;
 
-use lib::api;
+use lib::api::*;
 use lib::api::system::*;
+use lib::api::price::Prices;
 use lib::api::object::Object;
 use std::thread;
 use std::convert::TryFrom;
 use std::collections::HashMap;
 
-struct NameCollector {
+struct NameProvider {
     names: HashMap<i32, String>,
 }
-impl NameCollector {
+impl NameProvider {
     pub fn new() -> Self {
-        Self {names: HashMap::new() }
+        NameProvider {names: HashMap::new() }
     }
 
-    pub fn get(&mut self, id: Option<i32>) -> String {
+    pub fn get(&mut self, id: IntOptional) -> String {
         if let Some(id) = id {
             self.names.entry(id).or_insert(Object::try_from(id).ok().unwrap_or_default().name);
             self.names.get(&id).map(|name| name.clone()).unwrap_or_default()
@@ -28,46 +30,91 @@ impl NameCollector {
     }
 }
 
-fn run_monitor(id: String, timeout: u32) {
-    let mut names = NameCollector::new();
-    while let Some(response) = api::gw::get_package(&id) {
-        info!("Received response from API");
-        if let Some(content) = response.package {
-            let total_value = content.zkb.total_value as u64;
-            let time = content.killmail.killmail_time.to_string();
-            let system_id = content.killmail.solar_system_id;
-            let jita = route(JITA_ID, system_id).len();
-            let amarr = route(AMARR_ID, system_id).len();
-            let dodixie = route(DODIXIE_ID, system_id).len();
-            let rens = route(RENS_ID, system_id).len();
-            let hek = route(HEK_ID, system_id).len();
-            if content.zkb.npc { //&& total_value > 50_000_000 {
-                let victim = content.killmail.victim.clone();
-                let victim_char = names.get(victim.character_id);
-                let victim_ship = names.get(Some(victim.ship_type_id));
-                let system = names.get(Some(system_id));
-                println!("{:>40} | {:>30} | {:>10} | J-{:>02} | A-{:>02} | D-{:>02} | R-{:>02} | H-{:>02} |", 
-                    content.zkb_url(), time, system, jita, amarr, dodixie, rens, hek);
-                println!("{:>40} | {:>30} | {:>10} |", "", 
-                    total_value.separated_string(),"");
-                println!("{:>40} | {:>30} | {:>10} |", 
-                    victim_char, victim_ship, victim.damage_taken);
+#[derive(Debug)]
+struct Participant {
+    pub name: String, 
+    pub ship: String, 
+    pub damage: i32,
+}
+impl Participant {
+    pub fn new(name: String, ship: String, damage: i32) -> Self {
+        Self { name, ship, damage }
+    }
+}
 
-                let mut attackers = content.killmail.attackers;
-                while let Some(attacker) = attackers.pop() {
-                    let attacker_char = names.get(attacker.character_id);
-                    let attacker_ship = names.get(attacker.ship_type_id);
-                    println!("{:>40} | {:>30} | {:>10} |", 
-                        attacker_char, 
-                        attacker_ship, 
-                        attacker.damage_done);
+#[derive(Debug)]
+struct Report {
+    pub time: TimeRequired,
+    pub zkb_url: String,
+    pub system_id: i32,
+    pub system_name: String,
+    pub total_value: u64,
+    pub victim: Participant,
+    pub attackers: Vec<Participant>,
+
+}
+impl Report {
+    pub fn new(package: zkb::Package, names: &mut NameProvider) -> Option<Self> {
+        if let Some(content) = package.content {
+            Some(
+                Self {
+                    time: content.killmail.killmail_time,
+                    zkb_url: content.zkb_url(),
+                    system_id: content.killmail.solar_system_id,
+                    system_name: names.get(Some(content.killmail.solar_system_id)),
+                    total_value: content.zkb.total_value as u64,
+                    victim: Participant::new(
+                        names.get(content.killmail.victim.character_id),
+                        names.get(Some(content.killmail.victim.ship_type_id)),
+                        content.killmail.victim.damage_taken),
+                    attackers: content.killmail.attackers.iter()
+                        .map(|a|
+                            Participant::new(
+                                names.get(a.character_id),
+                                names.get(a.ship_type_id),
+                                a.damage_done))
+                        .collect(),
                 }
-                println!("{}{}{}{}", 
+            )
+        } else {
+            None
+        }
+    }
+}
+impl fmt::Display for Report {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "{:>40} | {:>30} | {:>10} | J-{:>02} | A-{:>02} | D-{:>02} | R-{:>02} | H-{:>02} |", 
+            self.zkb_url, 
+            self.time.to_string(), 
+            self.system_name, 
+            route(JITA_ID, self.system_id).len(), 
+            route(AMARR_ID, self.system_id).len(),
+            route(DODIXIE_ID, self.system_id).len(),
+            route(RENS_ID, self.system_id).len(), 
+            route(HEK_ID, self.system_id).len()
+        )?;
+        writeln!(f, "{:>40} | {:>30} | {:>10} |", "", self.total_value.separated_string(),"")?;
+        writeln!(f, "{:>40} | {:>30} | {:>10} |", self.victim.name, self.victim.ship, self.victim.damage)?;
+        for attacker in &self.attackers {
+            writeln!(f, "{:>40} | {:>30} | {:>10} |", attacker.name, attacker.ship, attacker.damage)?;
+        }
+        writeln!(f, "{}{}{}{}", 
                     format!("{:-^1$}|", "-", 41),
                     format!("{:-^1$}|", "-", 32),
                     format!("{:-^1$}|", "-", 12),
-                    format!("{:-^1$}|", "-", 34)); 
-            }
+                    format!("{:-^1$}|", "-", 34))
+    }
+}
+
+
+fn run_monitor(id: String, timeout: u32) {
+    let mut names = NameProvider::new();
+    let prices = Prices::new();
+    while let Some(package) = gw::get_package(&id) {
+        info!("Received response from API");
+        if let Some(report) = Report::new(package, &mut names) {
+            info!("Report ready to display");
+            print!("{}", report);
         } else {
             thread::sleep(std::time::Duration::from_secs(timeout.into()));
         }
