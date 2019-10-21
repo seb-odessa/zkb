@@ -1,7 +1,6 @@
 #[macro_use]
 extern crate log;
 extern crate separator;
-extern crate ansi_term;
 
 use separator::Separatable;
 use std::fmt;
@@ -11,18 +10,26 @@ use lib::api::system::*;
 use lib::provider;
 use std::thread;
 
-
-
 #[derive(Debug)]
 struct Participant {
-    pub name: String,
-    pub ship: String,
-    pub damage: i32,
+    pub character_id: IntOptional,
+    pub ship_id: IntOptional,
+    pub damage: IntRequired,
 }
 impl Participant {
-    pub fn new(name: String, ship: String, damage: i32) -> Self {
-        Self { name, ship, damage }
+    pub fn new(character_id: IntOptional, ship_id: IntOptional, damage: IntRequired) -> Self {
+        Self { character_id, ship_id, damage }
     }
+    pub fn character(&self) -> String {
+        provider::get_name(self.character_id)
+    }
+    pub fn ship(&self) -> String {
+        provider::get_name(self.ship_id)
+    }
+    pub fn damage(&self) -> i32 {
+        self.damage
+    }
+
 }
 
 fn calc_dropped_items(items: &Option<Vec<killmail::Item>>) -> f32 {
@@ -41,10 +48,10 @@ fn calc_dropped_items(items: &Option<Vec<killmail::Item>>) -> f32 {
 
 #[derive(Debug)]
 struct Report {
+    pub npc_only: bool,
     pub time: TimeRequired,
     pub zkb_url: String,
     pub system_id: i32,
-    pub system_name: String,
     pub total_value: u64,
     pub dropped_value: u64,
     pub victim: Participant,
@@ -54,24 +61,26 @@ struct Report {
 impl Report {
     pub fn new(package: zkb::Package) -> Option<Self> {
         if let Some(content) = package.content {
+            let url = content.zkb_url();
+            let killmail = content.killmail;
+
             Some(
                 Self {
-                    time: content.killmail.killmail_time,
-                    zkb_url: content.zkb_url(),
-                    system_id: content.killmail.solar_system_id,
-                    system_name: provider::get_name(Some(content.killmail.solar_system_id)),
+                    npc_only: content.zkb.npc,
+                    time: killmail.killmail_time,
+                    zkb_url: url,
+                    system_id: killmail.solar_system_id,
                     total_value: content.zkb.total_value as u64,
-                    dropped_value: calc_dropped_items(&content.killmail.victim.items) as u64,
+                    dropped_value: calc_dropped_items(&killmail.victim.items) as u64,
                     victim: Participant::new(
-                        provider::get_name(content.killmail.victim.character_id),
-                        provider::get_name(Some(content.killmail.victim.ship_type_id)),
-                        content.killmail.victim.damage_taken),
-                    attackers: content.killmail.attackers.iter()
-                        .map(|a|
-                            Participant::new(
-                                provider::get_name(a.character_id),
-                                provider::get_name(a.ship_type_id),
-                                a.damage_done))
+                        killmail.victim.character_id, 
+                        Some(killmail.victim.ship_type_id), 
+                        killmail.victim.damage_taken),
+                    attackers: killmail.attackers.iter()
+                        .map(|a| Participant::new(
+                            a.character_id, 
+                            a.ship_type_id, 
+                            a.damage_done))
                         .collect(),
                 }
             )
@@ -79,6 +88,10 @@ impl Report {
             None
         }
     }
+    pub fn system_name(&self) -> String {
+        provider::get_name(Some(self.system_id))
+    }
+
 }
 impl fmt::Display for Report {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -93,15 +106,18 @@ impl fmt::Display for Report {
             provider::get_route(HEK_ID, self.system_id).len()
         )?;
         writeln!(f, "{:^30} | {:>40} | {:>20} |",
-            self.system_name,
+            self.system_name(),
             self.total_value.separated_string(),
             self.dropped_value.separated_string())?;
         writeln!(f, "{:>30} | {:>40} | {:>20} |",
-            self.victim.name,
-            self.victim.ship,
-            self.victim.damage)?;
+            self.victim.character(),
+            self.victim.ship(),
+            self.victim.damage())?;
         for attacker in &self.attackers {
-            writeln!(f, "{:<30} | {:>40} | {:>20} |", attacker.name, attacker.ship, attacker.damage)?;
+            writeln!(f, "{:<30} | {:>40} | {:>20} |", 
+                attacker.character(), 
+                attacker.ship(), 
+                attacker.damage())?;
         }
         write!(f, "{}{}{}{}",
                     format!("{:-^1$}|", "-", 31),
@@ -118,7 +134,12 @@ fn run_monitor(id: String, timeout: u32) {
             info!("Received response from API");
             if let Some(report) = Report::new(package) {
                 info!("Report ready to display");
-                println!("{}", report);
+                let accepted = 
+                    report.attackers.iter().any(|a| a.ship().starts_with("Mordu")) ||
+                    report.npc_only;
+                if accepted {
+                    println!("{}", report);
+                }
             }
         }
         warn!("Perform sleep {} sec ", timeout);
@@ -128,7 +149,6 @@ fn run_monitor(id: String, timeout: u32) {
 
 fn main() {
     env_logger::init();
-    //ansi_term::enable_ansi_support();
     let args: Vec<_> = std::env::args().collect();
     if 3 == args.len() {
         let id: String = args[1]
