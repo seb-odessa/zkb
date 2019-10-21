@@ -41,7 +41,7 @@ fn post(url: &str, request: &str) -> Result<Vec<u8>, Error> {
     return Ok(content);
 }
 
-pub fn evetech(cmd: &str) -> Option<String> {
+pub fn eve_api(cmd: &str) -> Option<String> {
     let url = format!("{}/{}/{}", EVE_API, cmd, EVE_SRV);
     if let Some(response) = get(&url).ok() {
         String::from_utf8(response).ok()
@@ -50,7 +50,7 @@ pub fn evetech(cmd: &str) -> Option<String> {
     }
 }
 
-pub fn evetech_post(cmd: &str, request: &str) -> Option<String> {
+pub fn eve_api_post(cmd: &str, request: &str) -> Option<String> {
     let url = format!("{}/{}/{}", EVE_API, cmd, EVE_SRV);
     if let Some(response) = post(&url, &request).ok() {
         String::from_utf8(response).ok()

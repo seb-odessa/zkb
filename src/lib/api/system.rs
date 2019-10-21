@@ -12,7 +12,7 @@ pub type PlanetOptional = Option<Vec<Planet>>;
 
 pub fn route(departue: IntRequired, destination: IntRequired) -> IdsRequired {
     let uri = format!("route/{}/{}", departue, destination);
-    let response = gw::evetech(&uri).unwrap_or_default();
+    let response = gw::eve_api(&uri).unwrap_or_default();
     serde_json::from_str(&response).unwrap_or_default()
 }
 
@@ -38,7 +38,7 @@ impl TryFrom<String> for System {
 impl TryFrom<i32> for System {
     type Error = serde_json::Error;
     fn try_from(id: i32) -> Result<Self, Self::Error> {
-        let response = gw::evetech(&format!("universe/systems/{}", id)).unwrap_or_default();
+        let response = gw::eve_api(&format!("universe/systems/{}", id)).unwrap_or_default();
         System::try_from(response)
     }
 }

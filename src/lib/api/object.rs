@@ -22,7 +22,7 @@ impl TryFrom<i32> for Object {
     type Error = serde_json::Error;
     fn try_from(id: i32) -> Result<Self, Self::Error> {
         let query = format!("[{}]", id);
-        let response = gw::evetech_post("universe/names", &query).unwrap_or_default();
+        let response = gw::eve_api_post("universe/names", &query).unwrap_or_default();
         Self::try_from(response)
     }
 }

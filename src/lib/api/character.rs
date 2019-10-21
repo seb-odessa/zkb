@@ -26,7 +26,7 @@ impl TryFrom<String> for Character {
 impl TryFrom<i32> for Character {
     type Error = serde_json::Error;
     fn try_from(id: i32) -> Result<Self, Self::Error> {
-        let response = gw::evetech(&format!("characters/{}", id)).unwrap_or_default();
+        let response = gw::eve_api(&format!("characters/{}", id)).unwrap_or_default();
         Self::try_from(response)
     }
 }

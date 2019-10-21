@@ -24,7 +24,7 @@ pub struct Prices {
 }
 impl Prices {
     fn receive() -> Vec<Item> {
-        let response = gw::evetech("markets/prices").unwrap_or_default();
+        let response = gw::eve_api("markets/prices").unwrap_or_default();
         serde_json::from_str(&response).ok().unwrap_or_default()
     }
 
@@ -36,12 +36,12 @@ impl Prices {
         Prices{ items: items }
     }
 
-    pub fn avg(&self, id: &IntRequired) -> FloatOptional {
-        self.items.get(id).and_then(|price| price.average)
+    pub fn avg(&self, id: IntRequired) -> FloatOptional {
+        self.items.get(&id).and_then(|price| price.average)
     }
 
-    pub fn adj(&self, id: &IntRequired) -> FloatOptional {
-        self.items.get(id).and_then(|price| price.average)
+    pub fn adj(&self, id: IntRequired) -> FloatOptional {
+        self.items.get(&id).and_then(|price| price.average)
     }
 }
 
