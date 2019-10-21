@@ -10,12 +10,6 @@ pub const RENS_ID: IntRequired = 30002510;
 
 pub type PlanetOptional = Option<Vec<Planet>>;
 
-pub fn route(departue: IntRequired, destination: IntRequired) -> IdsRequired {
-    let uri = format!("route/{}/{}", departue, destination);
-    let response = gw::eve_api(&uri).unwrap_or_default();
-    serde_json::from_str(&response).unwrap_or_default()
-}
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct System {
     pub system_id: IntRequired,
@@ -66,9 +60,4 @@ mod tests {
         assert_eq!(Some(String::from("B")), system.security_class);
     }
 
-    #[test]
-    fn test_route() {
-        let route = route(JITA_ID, HEK_ID);
-        assert_eq!(10, route.len());
-    }
 }

@@ -9,7 +9,7 @@ struct Names {
 }
 impl Names {
     pub fn new() -> Self {
-        Names {names: HashMap::new() }
+        Self {names: HashMap::new() }
     }
 
     pub fn get(&mut self, id: i32) -> String {

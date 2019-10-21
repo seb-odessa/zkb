@@ -29,18 +29,20 @@ fn flush(records: &Vec<KillMail>) -> Option<usize> {
 
 fn run_updater(id: String, timeout: u32) {
     let mut records: Vec<KillMail> = Vec::new();
-    while let Some(response) = api::gw::get_package(&id) {
-        info!("Received response from API");
-        if let Some(content) = response.content {
-            println!("{} {} {}", content.id, content.zkb.npc, content.zkb.href);
-            records.push(content.killmail);
-        } else if records.len() > 0 {
-            if let Some(count) = flush(&records) {
-                println!("Saved {} killmails", count);
-                records.clear();
+    loop {
+        while let Some(response) = api::gw::get_package(&id) {
+            info!("Received response from API");
+            if let Some(content) = response.content {
+                println!("{} {} {}", content.id, content.zkb.npc, content.zkb.href);
+                records.push(content.killmail);
+            } else if records.len() > 0 {
+                if let Some(count) = flush(&records) {
+                    println!("Saved {} killmails", count);
+                    records.clear();
+                }
             }
-            thread::sleep(std::time::Duration::from_secs(timeout.into()));
         }
+        thread::sleep(std::time::Duration::from_secs(timeout.into()));
     }
 }
 

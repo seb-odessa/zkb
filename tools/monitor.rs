@@ -1,6 +1,8 @@
 #[macro_use]
 extern crate log;
 extern crate separator;
+extern crate ansi_term;
+
 use separator::Separatable;
 use std::fmt;
 
@@ -84,18 +86,24 @@ impl fmt::Display for Report {
             self.time.to_string(),
             self.zkb_url,
             "",
-            route(JITA_ID, self.system_id).len(),
-            route(AMARR_ID, self.system_id).len(),
-            route(DODIXIE_ID, self.system_id).len(),
-            route(RENS_ID, self.system_id).len(),
-            route(HEK_ID, self.system_id).len()
+            provider::get_route(JITA_ID, self.system_id).len(),
+            provider::get_route(AMARR_ID, self.system_id).len(),
+            provider::get_route(DODIXIE_ID, self.system_id).len(),
+            provider::get_route(RENS_ID, self.system_id).len(),
+            provider::get_route(HEK_ID, self.system_id).len()
         )?;
-        writeln!(f, "{:>30} | {:>40} | {:>20} |", self.system_name, self.total_value.separated_string(),self.dropped_value.separated_string())?;
-        writeln!(f, "{:>30} | {:>40} | {:>20} |", self.victim.name, self.victim.ship, self.victim.damage)?;
+        writeln!(f, "{:^30} | {:>40} | {:>20} |",
+            self.system_name,
+            self.total_value.separated_string(),
+            self.dropped_value.separated_string())?;
+        writeln!(f, "{:>30} | {:>40} | {:>20} |",
+            self.victim.name,
+            self.victim.ship,
+            self.victim.damage)?;
         for attacker in &self.attackers {
-            writeln!(f, "{:>30} | {:>40} | {:>20} |", attacker.name, attacker.ship, attacker.damage)?;
+            writeln!(f, "{:<30} | {:>40} | {:>20} |", attacker.name, attacker.ship, attacker.damage)?;
         }
-        writeln!(f, "{}{}{}{}",
+        write!(f, "{}{}{}{}",
                     format!("{:-^1$}|", "-", 31),
                     format!("{:-^1$}|", "-", 42),
                     format!("{:-^1$}|", "-", 22),
@@ -105,19 +113,22 @@ impl fmt::Display for Report {
 
 
 fn run_monitor(id: String, timeout: u32) {
-    while let Some(package) = gw::get_package(&id) {
-        info!("Received response from API");
-        if let Some(report) = Report::new(package) {
-            info!("Report ready to display");
-            print!("{}", report);
-        } else {
-            thread::sleep(std::time::Duration::from_secs(timeout.into()));
+    loop {
+        while let Some(package) = gw::get_package(&id) {
+            info!("Received response from API");
+            if let Some(report) = Report::new(package) {
+                info!("Report ready to display");
+                println!("{}", report);
+            }
         }
+        warn!("Perform sleep {} sec ", timeout);
+        thread::sleep(std::time::Duration::from_secs(timeout.into()));
     }
 }
 
 fn main() {
     env_logger::init();
+    //ansi_term::enable_ansi_support();
     let args: Vec<_> = std::env::args().collect();
     if 3 == args.len() {
         let id: String = args[1]
