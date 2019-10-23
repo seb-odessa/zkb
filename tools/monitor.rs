@@ -71,14 +71,10 @@ impl Report {
             None
         }
     }
-    pub fn system_name(&self) -> String {
-        provider::get_name(&Some(self.system_id))
-    }
-
 }
 impl fmt::Display for Report {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "{:>30} | {:>40}   {:>20} | J-{:>02} | A-{:>02} | D-{:>02} | R-{:>02} | H-{:>02} |",
+        writeln!(f, "{:<40} | {:>40}   {:>20} | J-{:>02} | A-{:>02} | D-{:>02} | R-{:>02} | H-{:>02} |",
             self.time.to_string(),
             self.zkb_url,
             "",
@@ -88,22 +84,22 @@ impl fmt::Display for Report {
             provider::get_route(RENS_ID, self.system_id).len(),
             provider::get_route(HEK_ID, self.system_id).len()
         )?;
-        writeln!(f, "{:^30} | {:>40} | {:>20} |",
-            self.system_name(),
+        writeln!(f, "{:<40} | {:>40} | {:>20} |",
+            provider::get_system(&self.system_id).map_or(String::new(), |system| system.get_full_name()),
             self.total_value.separated_string(),
             self.dropped_value.separated_string())?;
-        writeln!(f, "{:>30} | {:>40} | {:>20} |",
+        writeln!(f, "{:>40} | {:>40} | {:>20} |",
             self.victim.character(),
             self.victim.ship(),
             self.victim.damage())?;
         for attacker in &self.attackers {
-            writeln!(f, "{:<30} | {:>40} | {:>20} |",
+            writeln!(f, "{:<40} | {:>40} | {:>20} |",
                 attacker.character(),
                 attacker.ship(),
                 attacker.damage())?;
         }
         writeln!(f, "{}{}{}{}",
-                    format!("{:-^1$}|", "-", 31),
+                    format!("{:-^1$}|", "-", 41),
                     format!("{:-^1$}|", "-", 42),
                     format!("{:-^1$}|", "-", 22),
                     format!("{:-^1$}|", "-", 34))

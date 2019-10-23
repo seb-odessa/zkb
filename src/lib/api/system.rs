@@ -1,6 +1,7 @@
 use std::convert::TryFrom;
 use serde::{Deserialize, Serialize};
 use crate::api::*;
+use crate::provider;
 
 pub const AMARR_ID: IntRequired = 30002187;
 pub const HEK_ID: IntRequired = 30002053;
@@ -10,7 +11,7 @@ pub const RENS_ID: IntRequired = 30002510;
 
 pub type PlanetOptional = Option<Vec<Planet>>;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct System {
     pub system_id: IntRequired,
     pub star_id: IntOptional,
@@ -22,6 +23,23 @@ pub struct System {
     pub planets: PlanetOptional,
     pub stargates: IdsOptional,
     pub stations: IdsOptional,
+}
+impl System {
+    pub fn new(system_id: IntRequired) -> Option<Self> {
+        System::try_from(system_id).ok()
+    }
+
+    pub fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    pub fn get_full_name(&self) -> String {
+        format!("{} ({:0.1}) < {} < REGION",
+            self.name,
+            self.security_status,
+            provider::get_name(&Some(self.constellation_id)))
+    }
+
 }
 impl TryFrom<String> for System {
     type Error = serde_json::Error;
