@@ -2,6 +2,7 @@ use std::convert::TryFrom;
 
 use serde::{Deserialize, Serialize};
 use crate::api::*;
+use crate::provider;
 
 pub type ItemsOptional = Option<Vec<Item>>;
 
@@ -21,6 +22,61 @@ impl TryFrom<String> for KillMail {
         serde_json::from_str(&json)
     }
 }
+impl KillMail {
+    pub fn href(&self)->String {
+        format!("https://zkillboard.com/kill/{}/", self.killmail_id)
+    }
+
+    pub fn get_system_name(&self) -> String {
+        provider::get_name(&Some(self.solar_system_id))
+    }
+
+    fn get_sum<P>(id: &IntOptional, quantity: &IntOptional, get_price: &P) -> FloatRequired
+    where P: Fn(&IntOptional)->FloatOptional {
+        let quantity = quantity.unwrap_or(0);
+        let price = get_price(id).unwrap_or(0.0);
+        let item = provider::get_name(id);
+        info!("Item {}: {} x {} = {}", item, quantity, price, quantity * (price as i32));
+        return quantity as f32 * price;
+    }
+
+    fn items_sum<Q, P>(items: &ItemsOptional, get_quantity: &Q, get_price: &P) -> FloatRequired
+    where
+        Q: Fn(&Item)->IntOptional,
+        P: Fn(&IntOptional)->FloatOptional
+        {
+            items.as_ref().map_or(0.0, |items|{
+                items.iter().map(|item| {
+                    KillMail::get_sum(&Some(item.item_type_id), &get_quantity(item), get_price)
+                    +
+                    KillMail::items_sum(&item.items, get_quantity, get_price)
+            }).fold(0.0, |acc, x| acc + x)
+        })
+    }
+
+    pub fn get_dropped_sum(&self) -> u32 {
+        KillMail::items_sum(
+            &self.victim.items,
+            &|item: &Item| {item.quantity_dropped},
+            &provider::get_avg_price) as u32
+    }
+
+    pub fn get_destroyed_sum(&self) -> u32 {
+        (
+            KillMail::items_sum(
+                &self.victim.items,
+                &|item: &Item| {item.quantity_destroyed},
+                &provider::get_avg_price)
+            +
+            KillMail::get_sum(&Some(self.victim.ship_type_id), &Some(1), &provider::get_avg_price)
+        )
+        as u32
+    }
+
+    pub fn get_total_sum(&self) -> u32 {
+        self.get_destroyed_sum() + self.get_dropped_sum()
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
 #[serde(default)]
@@ -33,6 +89,24 @@ pub struct Victim {
     pub faction_id: IntOptional,
     pub items: ItemsOptional,
     pub position: PositionOptional,
+}
+impl Victim {
+    pub fn get_ship(&self) -> String {
+        provider::get_name(&Some(self.ship_type_id))
+    }
+    pub fn get_character(&self) -> String {
+        provider::get_name(&self.character_id)
+    }
+    pub fn get_corporation(&self) -> String {
+        provider::get_name(&self.corporation_id)
+    }
+    pub fn get_alliance(&self) -> String {
+        provider::get_name(&self.alliance_id)
+    }
+    pub fn get_faction(&self) -> String {
+        provider::get_name(&self.faction_id)
+    }
+
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
@@ -48,7 +122,26 @@ pub struct Attacker {
     pub security_status: FloatRequired,
     pub weapon_type_id: IntOptional,
 }
-
+impl Attacker {
+    pub fn get_ship(&self) -> String {
+        provider::get_name(&self.ship_type_id)
+    }
+    pub fn get_character(&self) -> String {
+        provider::get_name(&self.character_id)
+    }
+    pub fn get_corporation(&self) -> String {
+        provider::get_name(&self.corporation_id)
+    }
+    pub fn get_alliance(&self) -> String {
+        provider::get_name(&self.alliance_id)
+    }
+    pub fn get_faction(&self) -> String {
+        provider::get_name(&self.faction_id)
+    }
+    pub fn get_weapon(&self) -> String {
+        provider::get_name(&self.weapon_type_id)
+    }
+}
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
 #[serde(default)]
 pub struct Item {

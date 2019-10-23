@@ -21,29 +21,14 @@ impl Participant {
         Self { character_id, ship_id, damage }
     }
     pub fn character(&self) -> String {
-        provider::get_name(self.character_id)
+        provider::get_name(&self.character_id)
     }
     pub fn ship(&self) -> String {
-        provider::get_name(self.ship_id)
+        provider::get_name(&self.ship_id)
     }
     pub fn damage(&self) -> i32 {
         self.damage
     }
-
-}
-
-fn calc_dropped_items(items: &Option<Vec<killmail::Item>>) -> f32 {
-    items.as_ref().map_or(0.0, |items|{
-        items.iter().map(|item| {
-            let mut sum = 0.0;
-            if let Some(quantity) = item.quantity_dropped {
-                sum = sum + quantity as f32 * provider::get_avg_price(Some(item.item_type_id)).unwrap_or(0.0);
-            }
-            sum = sum + calc_dropped_items(&item.items);
-
-            return sum;
-        }).fold(0.0, |acc, x| acc + x)
-    })
 }
 
 #[derive(Debug)]
@@ -52,8 +37,8 @@ struct Report {
     pub time: TimeRequired,
     pub zkb_url: String,
     pub system_id: i32,
-    pub total_value: u64,
-    pub dropped_value: u64,
+    pub total_value: u32,
+    pub dropped_value: u32,
     pub victim: Participant,
     pub attackers: Vec<Participant>,
 
@@ -61,17 +46,15 @@ struct Report {
 impl Report {
     pub fn new(package: zkb::Package) -> Option<Self> {
         if let Some(content) = package.content {
-            let url = content.zkb_url();
             let killmail = content.killmail;
-
             Some(
                 Self {
                     npc_only: content.zkb.npc,
                     time: killmail.killmail_time,
-                    zkb_url: url,
+                    zkb_url: killmail.href(),
                     system_id: killmail.solar_system_id,
-                    total_value: content.zkb.total_value as u64,
-                    dropped_value: calc_dropped_items(&killmail.victim.items) as u64,
+                    total_value: killmail.get_total_sum(),
+                    dropped_value: killmail.get_dropped_sum(),
                     victim: Participant::new(
                         killmail.victim.character_id,
                         Some(killmail.victim.ship_type_id),
@@ -89,7 +72,7 @@ impl Report {
         }
     }
     pub fn system_name(&self) -> String {
-        provider::get_name(Some(self.system_id))
+        provider::get_name(&Some(self.system_id))
     }
 
 }
@@ -119,7 +102,7 @@ impl fmt::Display for Report {
                 attacker.ship(),
                 attacker.damage())?;
         }
-        write!(f, "{}{}{}{}",
+        writeln!(f, "{}{}{}{}",
                     format!("{:-^1$}|", "-", 31),
                     format!("{:-^1$}|", "-", 42),
                     format!("{:-^1$}|", "-", 22),
@@ -134,12 +117,12 @@ fn run_monitor(id: String, timeout: u32) {
             info!("Received response from API");
             if let Some(report) = Report::new(package) {
                 info!("Report ready to display");
-                let accepted =
-                    report.attackers.iter().any(|a| a.ship().starts_with("Mordu"));
+                // let accepted = true;
+                    // report.attackers.iter().any(|a| a.ship().starts_with("Mordu"));
                     // || report.npc_only;
-                if accepted {
-                    println!("{}", report);
-                }
+                // if accepted {
+                    print!("{}", report);
+                // }
             }
         }
         warn!("Perform sleep {} sec ", timeout);
