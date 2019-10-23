@@ -100,17 +100,22 @@ fn saver(src: &SegQueue<Message<KillMail>>, year: i32, month: u32, day: u32, sta
 
     if let Some(added) = flush(&records) {
         counter = counter + added;
-        println!("{:4}-{:02}-{:02} Loading {:5}/{:5} ({:5} new)", year, month, day, counter, total, (total - start));
+        let done = if counter > start {counter - start} else {0};
+        println!("{:4}-{:02}-{:02} Loading {:5}/{:5} ({:5} new)", year, month, day, counter, total, done);
         std::io::stdout().flush().unwrap_or_default();
     }
 }
 
 fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
     let json = api::gw::get_history(year, month, day);
-    let map: HashMap<i32, String> = serde_json::from_str(&json).expect("Cant parse json");
+    let map: HashMap<i32, String> = serde_json::from_str(&json).unwrap_or_default();
+    let total = map.len();
+    if 0 == total {
+        return 0;
+    }
+
     let done = DB::get_saved_killmails(&DB::connection(), &NaiveDate::from_ymd(year, month, day));
     let counter = done.len();
-    let total = map.len();
     let rest = map.into_iter()
                   .filter(|row|{ !done.contains(&row.0)})
                   .map(|row| { Id{ id: row.0, hash: row.1.clone()} })
@@ -138,6 +143,9 @@ fn load_month_kills(year: i32, month: u32) -> usize {
     let mut date = Utc.ymd(year, month, 1);
     while date.month() == month as u32 {
         let kills = load_day_kills(year, month, date.day());
+        if 0 == kills {
+            break;
+        }
         date = date + Duration::days(1);
         total = total + kills
     }

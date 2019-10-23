@@ -42,6 +42,7 @@ fn run_updater(id: String, timeout: u32) {
                 }
             }
         }
+        println!("Nothing to receive. Will wait {} sec", timeout);
         thread::sleep(std::time::Duration::from_secs(timeout.into()));
     }
 }

@@ -73,13 +73,13 @@ impl Report {
                     total_value: content.zkb.total_value as u64,
                     dropped_value: calc_dropped_items(&killmail.victim.items) as u64,
                     victim: Participant::new(
-                        killmail.victim.character_id, 
-                        Some(killmail.victim.ship_type_id), 
+                        killmail.victim.character_id,
+                        Some(killmail.victim.ship_type_id),
                         killmail.victim.damage_taken),
                     attackers: killmail.attackers.iter()
                         .map(|a| Participant::new(
-                            a.character_id, 
-                            a.ship_type_id, 
+                            a.character_id,
+                            a.ship_type_id,
                             a.damage_done))
                         .collect(),
                 }
@@ -114,9 +114,9 @@ impl fmt::Display for Report {
             self.victim.ship(),
             self.victim.damage())?;
         for attacker in &self.attackers {
-            writeln!(f, "{:<30} | {:>40} | {:>20} |", 
-                attacker.character(), 
-                attacker.ship(), 
+            writeln!(f, "{:<30} | {:>40} | {:>20} |",
+                attacker.character(),
+                attacker.ship(),
                 attacker.damage())?;
         }
         write!(f, "{}{}{}{}",
@@ -134,9 +134,9 @@ fn run_monitor(id: String, timeout: u32) {
             info!("Received response from API");
             if let Some(report) = Report::new(package) {
                 info!("Report ready to display");
-                let accepted = 
-                    report.attackers.iter().any(|a| a.ship().starts_with("Mordu")) ||
-                    report.npc_only;
+                let accepted =
+                    report.attackers.iter().any(|a| a.ship().starts_with("Mordu"));
+                    // || report.npc_only;
                 if accepted {
                     println!("{}", report);
                 }
