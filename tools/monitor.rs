@@ -78,11 +78,12 @@ impl fmt::Display for Report {
             self.time.to_string(),
             self.zkb_url,
             "",
-            provider::get_route(JITA_ID, self.system_id).len(),
-            provider::get_route(AMARR_ID, self.system_id).len(),
-            provider::get_route(DODIXIE_ID, self.system_id).len(),
-            provider::get_route(RENS_ID, self.system_id).len(),
-            provider::get_route(HEK_ID, self.system_id).len()
+            "", "", "", "", ""
+            // provider::get_route(JITA_ID, self.system_id).len(),
+            // provider::get_route(AMARR_ID, self.system_id).len(),
+            // provider::get_route(DODIXIE_ID, self.system_id).len(),
+            // provider::get_route(RENS_ID, self.system_id).len(),
+            // provider::get_route(HEK_ID, self.system_id).len()
         )?;
         writeln!(f, "{:<40} | {:>40} | {:>20} |",
             provider::get_system(&self.system_id).map_or(String::new(), |system| system.get_full_name()),
@@ -119,9 +120,12 @@ fn run_monitor(id: String, timeout: u32) {
                 // if accepted {
                     print!("{}", report);
                 // }
+            } else {
+                println!("Names cache size: {}", provider::get_cached_names_count().unwrap_or_default());
+                println!("Routes cache size: {}", provider::get_cached_route_count().unwrap_or_default());
+                println!("Systems cache size: {}", provider::get_cached_systems_count().unwrap_or_default());
             }
         }
-        warn!("Perform sleep {} sec ", timeout);
         thread::sleep(std::time::Duration::from_secs(timeout.into()));
     }
 }
