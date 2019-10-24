@@ -35,8 +35,6 @@ impl KillMail {
     where P: Fn(&IntOptional)->FloatOptional {
         let quantity = quantity.unwrap_or(0);
         let price = get_price(id).unwrap_or(0.0);
-        let item = provider::get_name(id);
-        info!("Item {}: {} x {} = {}", item, quantity, price, quantity * (price as i32));
         return quantity as f32 * price;
     }
 

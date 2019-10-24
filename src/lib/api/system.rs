@@ -2,6 +2,7 @@ use std::convert::TryFrom;
 use serde::{Deserialize, Serialize};
 use crate::api::*;
 use crate::provider;
+use crate::api::constellation::Constellation;
 
 pub const AMARR_ID: IntRequired = 30002187;
 pub const HEK_ID: IntRequired = 30002053;
@@ -33,11 +34,16 @@ impl System {
         self.name.clone()
     }
 
+    pub fn get_constellation(&self) -> Option<Constellation> {
+        Constellation::new(self.constellation_id)
+    }
+
     pub fn get_full_name(&self) -> String {
-        format!("{} ({:0.1}) < {} < REGION",
+        format!("{}({:0.1})::{}::{}",
             self.name,
             self.security_status,
-            provider::get_name(&Some(self.constellation_id)))
+            provider::get_name(&Some(self.constellation_id)),
+            self.get_constellation().map(|x| provider::get_name(&Some(x.region_id))).unwrap_or_default())
     }
 
 }

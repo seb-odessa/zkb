@@ -110,20 +110,30 @@ impl fmt::Display for Report {
 
 fn run_monitor(id: String, timeout: u32) {
     loop {
+        let mut show_stat = false;
         while let Some(package) = gw::get_package(&id) {
-            info!("Received response from API");
-            if let Some(report) = Report::new(package) {
-                info!("Report ready to display");
-                // let accepted = true;
-                    // report.attackers.iter().any(|a| a.ship().starts_with("Mordu"));
-                    // || report.npc_only;
-                // if accepted {
-                    print!("{}", report);
-                // }
+            if let Some(content) = package.content {
+                let killmail = content.killmail;
+                info!("{} {} {:>12}/{:<12} {}",
+                    killmail.killmail_time.to_string(),
+                    killmail.href(),
+                    killmail.get_dropped_sum(),
+                    killmail.get_total_sum(),
+                    provider::get_system(&killmail.solar_system_id).map_or(String::new(), |system| system.get_full_name())
+                );
+                show_stat = true;
+            // if let Some(report) = Report::new(package) {
+            //     print!("{}", report);
+
             } else {
-                println!("Names cache size: {}", provider::get_cached_names_count().unwrap_or_default());
-                println!("Routes cache size: {}", provider::get_cached_route_count().unwrap_or_default());
-                println!("Systems cache size: {}", provider::get_cached_systems_count().unwrap_or_default());
+                if show_stat {
+                    info!("Names/Routes/Systems caches contains {} {} {}",
+                        provider::get_cached_names_count().unwrap_or_default(),
+                        provider::get_cached_route_count().unwrap_or_default(),
+                        provider::get_cached_systems_count().unwrap_or_default());
+                    show_stat = false;
+                }
+
             }
         }
         thread::sleep(std::time::Duration::from_secs(timeout.into()));

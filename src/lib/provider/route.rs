@@ -30,13 +30,9 @@ impl Routes {
     }
 
     pub fn get(&mut self, src: i32, dst: i32) -> Ids {
-        let count = self.get_cache_count();
+
         let id = Route::new(src, dst);
-        self.routes.entry(id.clone()).or_insert(Self::new_route(&id));
-        if self.get_cache_count() != count {
-            info!("Route provider contains {} cached routes", self.get_cache_count());
-        }
-        self.routes.get(&id).map(|name| name.clone()).unwrap_or_default()
+        self.routes.entry(id.clone()).or_insert(Self::new_route(&id)).to_vec()
     }
 
     pub fn get_cache_count(&self) -> usize {

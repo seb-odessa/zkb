@@ -8,6 +8,7 @@ pub mod system;
 pub mod character;
 pub mod object;
 pub mod price;
+pub mod constellation;
 
 pub type BoolRequired = bool;
 pub type IntRequired = i32;

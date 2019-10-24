@@ -31,7 +31,6 @@ fn run_updater(id: String, timeout: u32) {
     let mut records: Vec<KillMail> = Vec::new();
     loop {
         while let Some(response) = api::gw::get_package(&id) {
-            info!("Received response from API");
             if let Some(content) = response.content {
                 println!("{} {} {}", content.id, content.zkb.npc, content.zkb.href);
                 records.push(content.killmail);

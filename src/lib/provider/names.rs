@@ -13,12 +13,11 @@ impl Names {
     }
 
     pub fn get(&mut self, id: i32) -> String {
-        let count = self.get_cache_count();
-        self.names.entry(id).or_insert(Object::try_from(id).ok().unwrap_or_default().name);
-        if self.get_cache_count() != count {
-            info!("Name provider contains {} cached names", self.get_cache_count());
-        }
-        self.names.get(&id).map(|name| name.clone()).unwrap_or_default()
+        self.names
+            .entry(id)
+            .or_insert(Object::try_from(id).ok().unwrap_or_default().name)
+//            .as_ref()
+            .to_string()
     }
 
     pub fn get_cache_count(&self) -> usize {

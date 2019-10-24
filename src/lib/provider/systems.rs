@@ -46,12 +46,12 @@ mod tests {
 
     #[test]
     fn from_get_name() {
-        assert_eq!(Some(0), super::get_cached_names_count());
-        assert_eq!(super::get_name(&Some(2114350216)), "Seb Odessa");
-        assert_eq!(Some(1), super::get_cached_names_count());
-        assert_eq!(super::get_name(&Some(3178)), "Light Neutron Blaster II");
-        assert_eq!(Some(2), super::get_cached_names_count());
-        assert_eq!(super::get_name(&Some(2114350216)), "Seb Odessa");
-        assert_eq!(Some(2), super::get_cached_names_count());
+        assert_eq!(Some(0), super::get_cached_systems_count());
+        assert_eq!("Jita", super::get_system(&30000142).map(|x| x.name).unwrap_or_default());
+        assert_eq!(Some(1), super::get_cached_systems_count());
+        assert_eq!("Hek", super::get_system(&30002053).map(|x| x.name).unwrap_or_default());
+        assert_eq!(Some(2), super::get_cached_systems_count());
+        assert_eq!("Jita", super::get_system(&30000142).map(|x| x.name).unwrap_or_default());
+        assert_eq!(Some(2), super::get_cached_systems_count());
     }
 }
