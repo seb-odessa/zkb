@@ -7,7 +7,6 @@ use std::fmt;
 
 use lib::api::*;
 use lib::api::system::*;
-use lib::provider;
 use std::thread;
 
 #[derive(Debug)]
@@ -21,10 +20,10 @@ impl Participant {
         Self { character_id, ship_id, damage }
     }
     pub fn character(&self) -> String {
-        provider::get_name(&self.character_id)
+        try_get_name(&self.character_id)
     }
     pub fn ship(&self) -> String {
-        provider::get_name(&self.ship_id)
+        try_get_name(&self.ship_id)
     }
     pub fn damage(&self) -> i32 {
         self.damage
@@ -37,8 +36,8 @@ struct Report {
     pub time: TimeRequired,
     pub zkb_url: String,
     pub system_id: i32,
-    pub total_value: u32,
-    pub dropped_value: u32,
+    pub total_value: u64,
+    pub dropped_value: u64,
     pub victim: Participant,
     pub attackers: Vec<Participant>,
 
@@ -86,7 +85,7 @@ impl fmt::Display for Report {
             // provider::get_route(HEK_ID, self.system_id).len()
         )?;
         writeln!(f, "{:<40} | {:>40} | {:>20} |",
-            provider::get_system(&self.system_id).map_or(String::new(), |system| system.get_full_name()),
+            System::new(&self.system_id).map_or(String::new(), |system| system.get_full_name()),
             self.total_value.separated_string(),
             self.dropped_value.separated_string())?;
         writeln!(f, "{:>40} | {:>40} | {:>20} |",
@@ -110,7 +109,7 @@ impl fmt::Display for Report {
 
 fn run_monitor(id: String, timeout: u32) {
     loop {
-        let mut show_stat = false;
+        // let mut show_stat = false;
         while let Some(package) = gw::get_package(&id) {
             if let Some(content) = package.content {
                 let killmail = content.killmail;
@@ -119,20 +118,20 @@ fn run_monitor(id: String, timeout: u32) {
                     killmail.href(),
                     killmail.get_dropped_sum(),
                     killmail.get_total_sum(),
-                    provider::get_system(&killmail.solar_system_id).map_or(String::new(), |system| system.get_full_name())
+                    System::new(&killmail.solar_system_id).map(|s| s.get_full_name()).unwrap_or_default()
                 );
-                show_stat = true;
+//                show_stat = true;
             // if let Some(report) = Report::new(package) {
             //     print!("{}", report);
 
             } else {
-                if show_stat {
-                    info!("Names/Routes/Systems caches contains {} {} {}",
-                        provider::get_cached_names_count().unwrap_or_default(),
-                        provider::get_cached_route_count().unwrap_or_default(),
-                        provider::get_cached_systems_count().unwrap_or_default());
-                    show_stat = false;
-                }
+                // if show_stat {
+                //     info!("Names/Routes/Systems caches contains {} {} {}",
+                //         provider::get_cached_names_count().unwrap_or_default(),
+                //         provider::get_cached_route_count().unwrap_or_default(),
+                //         provider::get_cached_systems_count().unwrap_or_default());
+                //     show_stat = false;
+                // }
 
             }
         }

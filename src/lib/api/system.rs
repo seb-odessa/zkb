@@ -1,14 +1,9 @@
-use std::convert::TryFrom;
-use serde::{Deserialize, Serialize};
 use crate::api::*;
 use crate::provider;
 use crate::api::constellation::Constellation;
 
-pub const AMARR_ID: IntRequired = 30002187;
-pub const HEK_ID: IntRequired = 30002053;
-pub const DODIXIE_ID: IntRequired = 30002659;
-pub const JITA_ID: IntRequired = 30000142;
-pub const RENS_ID: IntRequired = 30002510;
+use std::convert::TryFrom;
+use serde::{Deserialize, Serialize};
 
 pub type PlanetOptional = Option<Vec<Planet>>;
 
@@ -26,8 +21,13 @@ pub struct System {
     pub stations: IdsOptional,
 }
 impl System {
-    pub fn new(system_id: IntRequired) -> Option<Self> {
-        System::try_from(system_id).ok()
+    fn load(id: &i32) -> Option<Self> {
+        let response = gw::eve_api(&format!("universe/systems/{}", id)).unwrap_or_default();
+        Self::try_from(response).ok()
+    }
+
+    pub fn new(id: &IntRequired) -> Option<Self> {
+        provider::get_system(id, &Self::load)
     }
 
     pub fn get_name(&self) -> String {
@@ -35,29 +35,20 @@ impl System {
     }
 
     pub fn get_constellation(&self) -> Option<Constellation> {
-        Constellation::new(self.constellation_id)
+        Constellation::new(&self.constellation_id)
     }
 
     pub fn get_full_name(&self) -> String {
-        format!("{}({:0.1})::{}::{}",
+        format!("{} ({:0.1}) - {}",
             self.name,
             self.security_status,
-            provider::get_name(&Some(self.constellation_id)),
-            self.get_constellation().map(|x| provider::get_name(&Some(x.region_id))).unwrap_or_default())
+            self.get_constellation().map(|o| get_name(&o.region_id)).unwrap_or_default())
     }
-
 }
 impl TryFrom<String> for System {
     type Error = serde_json::Error;
     fn try_from(json: String) -> Result<Self, Self::Error> {
         serde_json::from_str(&json)
-    }
-}
-impl TryFrom<i32> for System {
-    type Error = serde_json::Error;
-    fn try_from(id: i32) -> Result<Self, Self::Error> {
-        let response = gw::eve_api(&format!("universe/systems/{}", id)).unwrap_or_default();
-        System::try_from(response)
     }
 }
 
@@ -75,9 +66,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn from_api() {
-        let maybe = System::try_from(30002659);
-        assert!(maybe.is_ok());
+    fn test_new() {
+        let maybe = System::new(&30002659);
+        assert!(maybe.is_some());
         let system = maybe.unwrap();
         assert_eq!(30002659, system.system_id);
         assert_eq!("Dodixie", &system.name);

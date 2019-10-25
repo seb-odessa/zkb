@@ -1,6 +1,8 @@
+use crate::api::*;
+use crate::provider;
+
 use std::convert::TryFrom;
 use serde::{Deserialize, Serialize};
-use crate::api::*;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Character {
@@ -17,6 +19,17 @@ pub struct Character {
     pub security_status: FloatOptional,
     pub title: StrOptional,
 }
+impl Character {
+    fn load(id: &i32) -> Option<Self> {
+        let response = gw::eve_api(&format!("characters/{}", id)).unwrap_or_default();
+        Self::try_from(response).ok()
+    }
+
+    pub fn new(id: &IntRequired) -> Option<Self> {
+        provider::get_character(id, &Self::load)
+    }
+}
+
 impl TryFrom<String> for Character {
     type Error = serde_json::Error;
     fn try_from(json: String) -> Result<Self, Self::Error> {

@@ -2,9 +2,13 @@ use std::convert::TryFrom;
 
 use serde::{Deserialize, Serialize};
 use crate::api::*;
+use crate::api::object::Object;
 use crate::provider;
 
 pub type ItemsOptional = Option<Vec<Item>>;
+
+
+
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct KillMail {
@@ -28,7 +32,7 @@ impl KillMail {
     }
 
     pub fn get_system_name(&self) -> String {
-        provider::get_name(&Some(self.solar_system_id))
+        get_name(&self.solar_system_id)
     }
 
     fn get_sum<P>(id: &IntOptional, quantity: &IntOptional, get_price: &P) -> FloatRequired
@@ -52,14 +56,14 @@ impl KillMail {
         })
     }
 
-    pub fn get_dropped_sum(&self) -> u32 {
+    pub fn get_dropped_sum(&self) -> u64 {
         KillMail::items_sum(
             &self.victim.items,
             &|item: &Item| {item.quantity_dropped},
-            &provider::get_avg_price) as u32
+            &provider::get_avg_price) as u64
     }
 
-    pub fn get_destroyed_sum(&self) -> u32 {
+    pub fn get_destroyed_sum(&self) -> u64 {
         (
             KillMail::items_sum(
                 &self.victim.items,
@@ -68,10 +72,10 @@ impl KillMail {
             +
             KillMail::get_sum(&Some(self.victim.ship_type_id), &Some(1), &provider::get_avg_price)
         )
-        as u32
+        as u64
     }
 
-    pub fn get_total_sum(&self) -> u32 {
+    pub fn get_total_sum(&self) -> u64 {
         self.get_destroyed_sum() + self.get_dropped_sum()
     }
 }
@@ -90,21 +94,20 @@ pub struct Victim {
 }
 impl Victim {
     pub fn get_ship(&self) -> String {
-        provider::get_name(&Some(self.ship_type_id))
+        Object::new(&self.ship_type_id).map(|obj|obj.get_name()).unwrap_or_default()
     }
     pub fn get_character(&self) -> String {
-        provider::get_name(&self.character_id)
+        try_get_name(&self.character_id)
     }
     pub fn get_corporation(&self) -> String {
-        provider::get_name(&self.corporation_id)
+        try_get_name(&self.corporation_id)
     }
     pub fn get_alliance(&self) -> String {
-        provider::get_name(&self.alliance_id)
+        try_get_name(&self.alliance_id)
     }
     pub fn get_faction(&self) -> String {
-        provider::get_name(&self.faction_id)
+        try_get_name(&self.faction_id)
     }
-
 }
 
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
@@ -122,22 +125,22 @@ pub struct Attacker {
 }
 impl Attacker {
     pub fn get_ship(&self) -> String {
-        provider::get_name(&self.ship_type_id)
+        try_get_name(&self.ship_type_id)
     }
     pub fn get_character(&self) -> String {
-        provider::get_name(&self.character_id)
+        try_get_name(&self.character_id)
     }
     pub fn get_corporation(&self) -> String {
-        provider::get_name(&self.corporation_id)
+        try_get_name(&self.corporation_id)
     }
     pub fn get_alliance(&self) -> String {
-        provider::get_name(&self.alliance_id)
+        try_get_name(&self.alliance_id)
     }
     pub fn get_faction(&self) -> String {
-        provider::get_name(&self.faction_id)
+        try_get_name(&self.faction_id)
     }
     pub fn get_weapon(&self) -> String {
-        provider::get_name(&self.weapon_type_id)
+        try_get_name(&self.weapon_type_id)
     }
 }
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
@@ -150,7 +153,11 @@ pub struct Item {
     pub quantity_dropped: IntOptional,
     pub items: ItemsOptional,
 }
-
+impl Item {
+    pub fn get_name(&self) -> String {
+        get_name(&self.item_type_id)
+    }
+}
 
 
 

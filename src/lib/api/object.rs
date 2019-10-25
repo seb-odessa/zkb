@@ -1,6 +1,8 @@
+use crate::api::*;
+use crate::provider;
+
 use std::convert::TryFrom;
 use serde::{Deserialize, Serialize};
-use crate::api::*;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct Object {
@@ -8,7 +10,25 @@ pub struct Object {
     pub category: StrRequired,
     pub name: StrRequired,
 }
+impl Object {
+    fn load(id: &i32) -> Option<Self> {
+        let query = format!("[{}]", id);
+        let response = gw::eve_api_post("universe/names", &query).unwrap_or_default();
+        Self::try_from(response).ok()
+    }
 
+    pub fn new(id: &IntRequired) -> Option<Self> {
+        provider::get_object(id, &Self::load)
+    }
+
+    pub fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    pub fn get_category(&self) -> String {
+        self.category.clone()
+    }
+}
 impl TryFrom<String> for Object {
     type Error = serde_json::Error;
     fn try_from(json: String) -> Result<Self, Self::Error> {
@@ -18,14 +38,6 @@ impl TryFrom<String> for Object {
         objects.pop().ok_or(Error::syntax(ErrorCode::EofWhileParsingObject, 0, 0))
     }
 }
-impl TryFrom<i32> for Object {
-    type Error = serde_json::Error;
-    fn try_from(id: i32) -> Result<Self, Self::Error> {
-        let query = format!("[{}]", id);
-        let response = gw::eve_api_post("universe/names", &query).unwrap_or_default();
-        Self::try_from(response)
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -33,8 +45,8 @@ mod tests {
 
     #[test]
     fn from_api() {
-        let response = Object::try_from(2114350216);
-        assert!(response.is_ok());
+        let response = Object::new(&2114350216);
+        assert!(response.is_some());
         let object = response.unwrap();
         assert_eq!(object.id, 2114350216);
         assert_eq!(object.name, "Seb Odessa");

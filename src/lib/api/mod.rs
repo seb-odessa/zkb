@@ -29,3 +29,14 @@ pub struct Position {
     pub y: f64,
     pub z: f64,
 }
+
+pub fn get_name(id: &IntRequired) -> String {
+    return object::Object::new(&id).map(|obj|obj.get_name()).unwrap_or_default()
+}
+
+pub fn try_get_name(id: &IntOptional) -> String {
+    if let Some(id) = id {
+        return object::Object::new(&id).map(|obj|obj.get_name()).unwrap_or_default()
+    }
+    return String::new();
+}

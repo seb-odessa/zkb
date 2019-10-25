@@ -1,7 +1,8 @@
-use std::convert::TryFrom;
-use serde::{Deserialize, Serialize};
 use crate::api::*;
 use crate::provider;
+
+use std::convert::TryFrom;
+use serde::{Deserialize, Serialize};
 
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
@@ -13,8 +14,14 @@ pub struct Constellation {
     pub systems: IdsRequired
 }
 impl Constellation {
-    pub fn new(constellation_id: IntRequired) -> Option<Self> {
-        Self::try_from(constellation_id).ok()
+
+    fn load(id: &i32) -> Option<Self> {
+        let response = gw::eve_api(&format!("universe/constellations/{}", id)).unwrap_or_default();
+        Self::try_from(response).ok()
+    }
+
+    pub fn new(id: &IntRequired) -> Option<Self> {
+        provider::get_constellation(id, &Self::load)
     }
 
     pub fn get_name(&self) -> String {
@@ -27,13 +34,7 @@ impl TryFrom<String> for Constellation {
         serde_json::from_str(&json)
     }
 }
-impl TryFrom<i32> for Constellation {
-    type Error = serde_json::Error;
-    fn try_from(id: i32) -> Result<Self, Self::Error> {
-        let response = gw::eve_api(&format!("universe/constellations/{}", id)).unwrap_or_default();
-        Self::try_from(response)
-    }
-}
+
 
 #[cfg(test)]
 mod tests {
@@ -41,8 +42,8 @@ mod tests {
 
     #[test]
     fn from_api() {
-        let maybe = Constellation::try_from(20000009);
-        assert!(maybe.is_ok());
+        let maybe = Constellation::new(&20000009);
+        assert!(maybe.is_some());
         let object = maybe.unwrap();
         assert_eq!(20000009, object.constellation_id);
         assert_eq!("Mekashtad", &object.name);
