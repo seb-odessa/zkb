@@ -50,11 +50,11 @@ mod tests {
 
     #[test]
     fn from_api() {
-        let response = Character::try_from(2114350216);
-        assert!(response.is_ok());
+        let response = Character::new(&109299958);
+        assert!(response.is_some());
         let character = response.unwrap();
-        assert_eq!(character.race_id, 1);
-        assert_eq!(&character.name, "Seb Odessa");
+        assert_eq!(character.race_id, 2);
+        assert_eq!(&character.name, "CCP Bartender");
         assert_eq!(&character.gender, "male");
     }
 }
