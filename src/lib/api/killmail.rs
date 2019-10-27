@@ -3,12 +3,10 @@ use std::convert::TryFrom;
 use serde::{Deserialize, Serialize};
 use crate::api::*;
 use crate::api::object::Object;
+use crate::api::system::System;
 use crate::provider;
 
 pub type ItemsOptional = Option<Vec<Item>>;
-
-
-
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct KillMail {
@@ -33,6 +31,10 @@ impl KillMail {
 
     pub fn get_system_name(&self) -> String {
         get_name(&self.solar_system_id)
+    }
+
+    pub fn get_system_full_name(&self) -> String {
+        System::new(&self.solar_system_id).map(|s| s.get_full_name()).unwrap_or_default()
     }
 
     fn get_sum<P>(id: &IntOptional, quantity: &IntOptional, get_price: &P) -> FloatRequired
