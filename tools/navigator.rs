@@ -37,7 +37,6 @@ struct AppContext {
     characters: Mutex<HashMap<String, i32>>,
     corporation: Mutex<HashMap<String, i32>>,
     alliance: Mutex<HashMap<String, i32>>,
-    faction: Mutex<HashMap<String, i32>>,
     systems: Mutex<HashMap<String, i32>>,
     ships: Mutex<HashMap<String, i32>>,
     monitor: Queue,
@@ -55,7 +54,6 @@ impl AppContext {
             characters: Mutex::new(HashMap::new()),
             corporation: Mutex::new(HashMap::new()),
             alliance: Mutex::new(HashMap::new()),
-            faction: Mutex::new(HashMap::new()),
             systems: Mutex::new(HashMap::new()),
             ships: Mutex::new(HashMap::new()),
             monitor: Queue::new(),
@@ -98,6 +96,84 @@ fn resolve_ships(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str
     }
 }
 
+fn resolve_characters(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) {
+    let mut objs = Vec::new();
+
+    if let Some(id) = killmail.victim.character_id {
+        if let Some(character) = Object::new(&id) {
+            objs.push((character.name, character.id));
+        }
+    }
+
+    for attacker in &killmail.attackers {
+        if let Some(id) = attacker.character_id {
+            if let Some(character) = Object::new(&id) {
+                objs.push((character.name, character.id));
+            }
+        }
+    }
+
+    if let Ok(ref mut characters) = context.characters.try_lock() {
+        for obj in objs.into_iter() {
+                characters.entry(obj.0).or_insert(obj.1);
+            }
+    } else {
+        warn!("{}",msg);
+    }
+}
+
+fn resolve_corporations(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) {
+    let mut objs = Vec::new();
+
+    if let Some(id) = killmail.victim.corporation_id {
+        if let Some(corporation) = Object::new(&id) {
+            objs.push((corporation.name, corporation.id));
+        }
+    }
+
+    for attacker in &killmail.attackers {
+        if let Some(id) = attacker.corporation_id {
+            if let Some(corporation) = Object::new(&id) {
+                objs.push((corporation.name, corporation.id));
+            }
+        }
+    }
+
+    if let Ok(ref mut corporation) = context.corporation.try_lock() {
+        for obj in objs.into_iter() {
+                corporation.entry(obj.0).or_insert(obj.1);
+            }
+    } else {
+        warn!("{}",msg);
+    }
+}
+
+fn resolve_alliances(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) {
+    let mut objs = Vec::new();
+
+    if let Some(id) = killmail.victim.alliance_id {
+        if let Some(alliance) = Object::new(&id) {
+            objs.push((alliance.name, alliance.id));
+        }
+    }
+
+    for attacker in &killmail.attackers {
+        if let Some(id) = attacker.alliance_id {
+            if let Some(alliance) = Object::new(&id) {
+                objs.push((alliance.name, alliance.id));
+            }
+        }
+    }
+
+    if let Ok(ref mut alliance) = context.alliance.try_lock() {
+        for obj in objs.into_iter() {
+                alliance.entry(obj.0).or_insert(obj.1);
+            }
+    } else {
+        warn!("{}",msg);
+    }
+}
+
 fn resolver(context: web::Data<AppContext>) {
     info!("resolver started");
     let mut enabled = true;
@@ -110,8 +186,11 @@ fn resolver(context: web::Data<AppContext>) {
                     break;
                 },
                 Message::Resolve(killmail) => {
-                    resolve_system(&context, &killmail, "resolver was not able to acquire context.systems.");
-                    resolve_ships(&context, &killmail, "resolver was not able to acquire context.ships.");
+                    resolve_system(&context, &killmail, "resolver was not able to acquire context.systems");
+                    resolve_ships(&context, &killmail, "resolver was not able to acquire context.ships");
+                    resolve_characters(&context, &killmail, "resolver was not able to acquire context.characters");
+                    resolve_corporations(&context, &killmail, "resolver was not able to acquire context.corporations");
+                    resolve_alliances(&context, &killmail, "resolver was not able to acquire context.alliances");
                 },
                 Message::Wait(timeout) => {
                     info!("resolver will suspended {} sec", timeout);
@@ -233,7 +312,13 @@ fn stat(context: web::Data<AppContext>) -> String {
 
 fn system(info: web::Path<String>, context: web::Data<AppContext>) -> Result<String> {
     info!("/system/{}", info);
-    Ok(format!("Welcome {}!\n", info))
+    if let Ok(systems) = context.systems.try_lock() {
+        let name = info.into_inner();
+        let id: i32 = systems.get(&name).cloned().unwrap_or_default();
+        Ok(format!("The '{}' system has id {}!\n", name, id))
+    } else {
+        Ok(format!("The '{}' was not found!\n", info))
+    }
 }
 
 fn server(context: web::Data<AppContext>) {
