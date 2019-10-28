@@ -39,10 +39,11 @@ impl System {
     }
 
     pub fn get_full_name(&self) -> String {
-        format!("{} ({:0.1}) - {}",
+        format!("{}/{}({:0.1})",
+            self.get_constellation().map(|o| get_name(&o.region_id)).unwrap_or_default(),
             self.name,
-            self.security_status,
-            self.get_constellation().map(|o| get_name(&o.region_id)).unwrap_or_default())
+            self.security_status
+            )
     }
 }
 impl TryFrom<String> for System {

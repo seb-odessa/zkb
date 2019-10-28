@@ -12,11 +12,11 @@ use actix_rt;
 use actix_web::{web, App, HttpServer, Result};
 use crossbeam_queue::SegQueue;
 use crossbeam_utils::thread::scope;
-
+use crossbeam_utils::sync::Parker;
+use crossbeam_utils::sync::Unparker;
 
 use std::sync::Mutex;
 use std::fmt::Write;
-use std::thread;
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
@@ -39,13 +39,21 @@ struct AppContext {
     alliance: Mutex<HashMap<String, i32>>,
     systems: Mutex<HashMap<String, i32>>,
     ships: Mutex<HashMap<String, i32>>,
-    monitor: Queue,
-    saver: Queue,
-    resolver: Queue,
+    monitor_queue: Queue,
+    saver_queue: Queue,
+    saver_parker: Mutex<Parker>,
+    saver_unparker: Mutex<Unparker>,
+    resolver_queue: Queue,
+    resolver_parker: Mutex<Parker>,
+    resolver_unparker: Mutex<Unparker>,
 }
 impl AppContext {
     pub fn new(connection: Connection) -> Self {
-       // @todo implement complete ctor
+        let saver_parker = Parker::new();
+        let saver_unparker = saver_parker.unparker().clone();
+        let resolver_parker = Parker::new();
+        let resolver_unparker = resolver_parker.unparker().clone();
+
         Self {
             connection: Mutex::new(connection),
             server: String::from("127.0.0.1:8088"),
@@ -56,9 +64,41 @@ impl AppContext {
             alliance: Mutex::new(HashMap::new()),
             systems: Mutex::new(HashMap::new()),
             ships: Mutex::new(HashMap::new()),
-            monitor: Queue::new(),
-            saver: Queue::new(),
-            resolver: Queue::new(),
+            monitor_queue: Queue::new(),
+            saver_queue: Queue::new(),
+            saver_parker: Mutex::new(saver_parker),
+            saver_unparker: Mutex::new(saver_unparker),
+            resolver_queue: Queue::new(),
+            resolver_parker: Mutex::new(resolver_parker),
+            resolver_unparker: Mutex::new(resolver_unparker),
+        }
+    }
+    pub fn park_saver(&self) {
+        if let Ok(parker) = self.saver_parker.try_lock() {
+            parker.park();
+        } else {
+            error!("failed to asquire self.saver_parker");
+        }
+    }
+    pub fn unpark_saver(&self) {
+        if let Ok(unparker) = self.saver_unparker.try_lock() {
+            unparker.unpark();
+        } else {
+            error!("failed to asquire self.saver_unparker");
+        }
+    }
+    pub fn park_resolver(&self) {
+        if let Ok(parker) = self.resolver_parker.try_lock() {
+            parker.park();
+        } else {
+            error!("failed to asquire self.resolver_parker");
+        }
+    }
+    pub fn unpark_resolver(&self) {
+        if let Ok(unparker) = self.resolver_unparker.try_lock() {
+            unparker.unpark();
+        } else {
+            error!("failed to asquire self.resolver_unparker");
         }
     }
 }
@@ -178,7 +218,8 @@ fn resolver(context: web::Data<AppContext>) {
     info!("resolver started");
     let mut enabled = true;
     while enabled {
-        while let Ok(msg) = context.resolver.pop() {
+        context.park_resolver();
+        while let Ok(msg) = context.resolver_queue.pop() {
             match msg {
                 Message::Quit => {
                     info!("resolver received Message::Quit");
@@ -192,21 +233,11 @@ fn resolver(context: web::Data<AppContext>) {
                     resolve_corporations(&context, &killmail, "resolver was not able to acquire context.corporations");
                     resolve_alliances(&context, &killmail, "resolver was not able to acquire context.alliances");
                 },
-                Message::Wait(timeout) => {
-                    info!("resolver will suspended {} sec", timeout);
-                    thread::sleep(std::time::Duration::from_secs(timeout));
-                },
                 _ => {
                     error!("resolver received unexpected message!");
                 }
             }
         }
-        if !enabled {
-            break;
-        }
-        let timeout = context.timeout.into();
-        info!("resolver will suspended {} sec", timeout);
-        thread::sleep(std::time::Duration::from_secs(timeout));
     }
     info!("resolver ended");
 }
@@ -215,11 +246,13 @@ fn saver(context: web::Data<AppContext>) {
     info!("saver started");
     let mut enabled = true;
     while enabled {
-        while let Ok(msg) = context.saver.pop() {
+        context.park_saver();
+        while let Ok(msg) = context.saver_queue.pop() {
             match msg {
                 Message::Quit => {
                     info!("saver received Message::Quit");
-                    context.resolver.push(Message::Quit);
+                    context.resolver_queue.push(Message::Quit);
+                    context.unpark_resolver();
                     enabled = false;
                     break;
                 },
@@ -232,27 +265,18 @@ fn saver(context: web::Data<AppContext>) {
                                 Err(e) => error!("saver was not able to save killmail: {}", e)
                             }
                         }
-                        context.resolver.push(Message::Resolve(killmail));
+                        context.resolver_queue.push(Message::Resolve(killmail));
+                        context.unpark_resolver();
                     } else {
                         warn!("saver was not able to acquire connection.");
-                        context.saver.push(Message::Save(killmail));
+                        context.saver_queue.push(Message::Save(killmail));
                     }
-                },
-                Message::Wait(timeout) => {
-                    info!("saver will suspended {} sec", timeout);
-                    thread::sleep(std::time::Duration::from_secs(timeout));
                 },
                 _ => {
                     error!("saver received unexpected message!");
                 }
             }
         }
-        if !enabled {
-            break;
-        }
-        let timeout = context.timeout.into();
-        info!("saver will suspended {} sec", timeout);
-        thread::sleep(std::time::Duration::from_secs(timeout));
     }
     info!("saver ended");
 }
@@ -262,10 +286,11 @@ fn monitor(context: web::Data<AppContext>) {
     let mut enabled = true;
     while enabled {
         while let Some(package) = gw::get_package(&context.client) {
-            if let Ok(msg) = context.monitor.pop() {
+            if let Ok(msg) = context.monitor_queue.pop() {
                 if Message::Quit == msg {
                     info!("monitor received Message::Quit");
-                    context.saver.push(Message::Quit);
+                    context.saver_queue.push(Message::Quit);
+                    context.unpark_saver();
                     enabled = false;
                     break;
                 }
@@ -273,31 +298,30 @@ fn monitor(context: web::Data<AppContext>) {
 
             if let Some(content) = package.content {
                 let killmail = content.killmail;
-                info!("monitor received {} : {} {} {:>12}/{:<12} {}",
-                    killmail.killmail_id,
+                info!("monitor {} {} {:>12}/{:>12} {}",
                     killmail.killmail_time.time().to_string(),
                     killmail.href(),
                     killmail.get_dropped_sum(),
                     killmail.get_total_sum(),
                     killmail.get_system_full_name()
                 );
-                context.saver.push(Message::Save(killmail));
+                context.saver_queue.push(Message::Save(killmail));
+                context.unpark_saver();
             }
         }
         if !enabled {
             break;
         }
         let timeout = context.timeout.into();
-        context.saver.push(Message::Wait(timeout));
         info!("monitor will suspended {} sec", timeout);
-        thread::sleep(std::time::Duration::from_secs(timeout));
+        Parker::new().park_timeout(std::time::Duration::from_secs(timeout))
     }
     info!("monitor ended");
 }
 
 fn quit(context: web::Data<AppContext>) -> String {
     info!("server received Message::Quit");
-    context.monitor.push(Message::Quit);
+    context.monitor_queue.push(Message::Quit);
     actix_rt::System::current().stop();
     format!("Quit\n")
 }
