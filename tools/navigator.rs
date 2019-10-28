@@ -19,7 +19,8 @@ use std::thread;
 #[derive(Debug, PartialEq)]
 pub enum Message<T> {
     Quit,
-    Data(T),
+    Save(T),
+    Wait(u64),
 }
 
 type Queue = SegQueue<Message<KillMail>>;
@@ -47,6 +48,7 @@ impl AppContext {
 }
 
 fn registrant(context: web::Data<AppContext>) {
+    info!("registrant started");
     let mut enabled = true;
     while enabled {
         while let Ok(msg) = context.queue.pop() {
@@ -57,32 +59,46 @@ fn registrant(context: web::Data<AppContext>) {
                     enabled = false;
                     break;
                 },
-                Message::Data(killmail) => {
+                Message::Save(killmail) => {
                     if let Ok(ref conn) = context.connection.try_lock() {
                         if !DB::exists(&conn, killmail.killmail_id) {
                             match DB::save(&conn, &killmail)
                             {
-                                Ok(()) => info!("registrant has saved killmail {}", killmail.killmail_id),
+                                Ok(()) => info!("registrant saved killmail {}", killmail.killmail_id),
                                 Err(e) => error!("registrant was not able to save killmail: {}", e)
                             }
                         }
                     } else {
                         warn!("registrant was not able to acquire connection.");
-                        context.queue.push(Message::Data(killmail));
+                        context.queue.push(Message::Save(killmail));
                     }
+                },
+                Message::Wait(timeout) => {
+                    info!("registrant will suspended {} sec", timeout);
+                    thread::sleep(std::time::Duration::from_secs(timeout));
                 }
             }
         }
-        if !enabled {
-            break;
-        }
     }
+    info!("registrant ended");
 }
 
 fn monitor(context: web::Data<AppContext>) {
+    info!("monitor started");
     let mut enabled = true;
     while enabled {
         while let Some(package) = gw::get_package(&context.client) {
+            if let Ok(msg) = context.queue.pop() {
+                if Message::Quit == msg {
+                    info!("monitor received Message::Quit");
+                    context.queue.push(Message::Quit);
+                    enabled = false;
+                    break;
+                } else {
+                    context.queue.push(msg);
+                }
+            }
+
             if let Some(content) = package.content {
                 let killmail = content.killmail;
                 info!("monitor received {} : {} {} {:>12}/{:<12} {}",
@@ -93,22 +109,15 @@ fn monitor(context: web::Data<AppContext>) {
                     killmail.get_total_sum(),
                     killmail.get_system_full_name()
                 );
-                context.queue.push(Message::Data(killmail));
-            }
-            while let Ok(msg) = context.queue.pop() {
-                if Message::Quit == msg {
-                    info!("monitor received Message::Quit");
-                    context.queue.push(Message::Quit);
-                    enabled = false;
-                    break;
-                }
-            }
-            if !enabled {
-                break;
+                context.queue.push(Message::Save(killmail));
             }
         }
-        thread::sleep(std::time::Duration::from_secs(context.timeout.into()));
+        let timeout = context.timeout.into();
+        context.queue.push(Message::Wait(timeout));
+        info!("monitor will suspended {} sec", timeout);
+        thread::sleep(std::time::Duration::from_secs(timeout));
     }
+    info!("monitor ended");
 }
 
 fn quit(context: web::Data<AppContext>) -> String {
@@ -154,9 +163,9 @@ fn main() {
     let context = web::Data::new(AppContext::new(conn));
 
     scope(|scope| {
-         scope.spawn(|_| registrant(context.clone()));
-         scope.spawn(|_| monitor(context.clone()));
-         scope.spawn(|_| server(context.clone()));
+        scope.spawn(|_| server(context.clone()));
+        scope.spawn(|_| monitor(context.clone()));
+        scope.spawn(|_| registrant(context.clone()));
     })
     .unwrap();
 
