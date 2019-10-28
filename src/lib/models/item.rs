@@ -39,29 +39,7 @@ impl From<&api::killmail::Item> for Item{
     }
 }
 
-impl Item {
-    pub fn load(src: &api::killmail::KillMail) -> Vec<Self> {
-        let mut res = Vec::new();
-        if let Some(items) = &src.victim.items {
-            for i in 0..items.len()
-            {
-                let mut item = Self::from(&items[i]);
-                item.killmail_id = src.killmail_id;
-                res.push(item);
-                if let Some(subitems) = &items[i].items {
-                    for i in 0..subitems.len()
-                    {
-                        let mut item = Self::from(&subitems[i]);
-                        item.killmail_id = src.killmail_id;
-                        res.push(item);
-                    }
-                }
-            }
-        }
-        return res;
-    }
 
-}
 
 
 

@@ -51,16 +51,16 @@ impl From<&api::killmail::Attacker> for Attacker{
 }
 
 impl Attacker {
-    pub fn load(src: &api::killmail::KillMail) -> Vec<Self> {
-        let mut res = Vec::new();
-        for i in 0..src.attackers.len()
-        {
-            let mut attacker = Self::from(&src.attackers[i]);
-            attacker.killmail_id = src.killmail_id;
-            res.push(attacker);
-        }
-        return res;
-    }
+    // pub fn load(src: &api::killmail::KillMail) -> Vec<Self> {
+    //     let mut res = Vec::new();
+    //     for i in 0..src.attackers.len()
+    //     {
+    //         let mut attacker = Self::from(&src.attackers[i]);
+    //         attacker.killmail_id = src.killmail_id;
+    //         res.push(attacker);
+    //     }
+    //     return res;
+    // }
 
 
 

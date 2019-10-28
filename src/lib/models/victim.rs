@@ -3,18 +3,6 @@ use crate::api;
 use crate::schema::victims;
 use super::{Integer, OptInteger};
 
-// CREATE TABLE IF NOT EXISTS victims(
-//     victim_id INTEGER NOT NULL PRIMARY KEY,
-//     killmail_id INTEGER NOT NULL,
-//     ship_type_id INTEGER NOT NULL,
-//     damage_taken INTEGER NOT NULL,
-//     alliance_id	INTEGER,
-//     character_id	INTEGER,
-//     corporation_id	INTEGER,
-//     faction_id	INTEGER,
-//     FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
-// );
-
 #[derive(Queryable, Insertable)]
 #[table_name = "victims"]
 pub struct Victim {

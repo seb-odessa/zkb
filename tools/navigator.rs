@@ -4,6 +4,7 @@ extern crate log;
 extern crate diesel_migrations;
 
 use lib::api::gw;
+use lib::api::object::Object;
 use lib::api::killmail::KillMail;
 use lib::models::*;
 
@@ -14,48 +15,132 @@ use crossbeam_utils::thread::scope;
 
 
 use std::sync::Mutex;
+use std::fmt::Write;
 use std::thread;
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
 pub enum Message<T> {
     Quit,
     Save(T),
     Wait(u64),
+    Resolve(T),
 }
 
 type Queue = SegQueue<Message<KillMail>>;
 
 struct AppContext {
-    counter: Mutex<u32>,
     connection: Mutex<Connection>,
     server: String,
     client: String,
     timeout: u64,
-    queue: Queue,
+    characters: Mutex<HashMap<String, i32>>,
+    corporation: Mutex<HashMap<String, i32>>,
+    alliance: Mutex<HashMap<String, i32>>,
+    faction: Mutex<HashMap<String, i32>>,
+    systems: Mutex<HashMap<String, i32>>,
+    ships: Mutex<HashMap<String, i32>>,
+    monitor: Queue,
+    saver: Queue,
+    resolver: Queue,
 }
 impl AppContext {
     pub fn new(connection: Connection) -> Self {
        // @todo implement complete ctor
         Self {
-            counter: Mutex::new(0),
             connection: Mutex::new(connection),
             server: String::from("127.0.0.1:8088"),
             client: String::from("seb_odessa"),
             timeout: 10,
-            queue: Queue::new(),
+            characters: Mutex::new(HashMap::new()),
+            corporation: Mutex::new(HashMap::new()),
+            alliance: Mutex::new(HashMap::new()),
+            faction: Mutex::new(HashMap::new()),
+            systems: Mutex::new(HashMap::new()),
+            ships: Mutex::new(HashMap::new()),
+            monitor: Queue::new(),
+            saver: Queue::new(),
+            resolver: Queue::new(),
         }
     }
 }
 
-fn registrant(context: web::Data<AppContext>) {
-    info!("registrant started");
+fn resolve_system(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) {
+    if let Some(system) = Object::new(&killmail.solar_system_id) {
+        if let Ok(ref mut systems) = context.systems.try_lock() {
+            systems.entry(system.name).or_insert(system.id);
+        } else {
+            warn!("{}",msg);
+        }
+    }
+}
+
+fn resolve_ships(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) {
+    let mut objs = Vec::new();
+
+    if let Some(ship) = Object::new(&killmail.victim.ship_type_id) {
+        objs.push((ship.name, ship.id));
+    }
+
+    for attacker in &killmail.attackers {
+        if let Some(ship_id) = attacker.ship_type_id {
+            if let Some(ship) = Object::new(&ship_id) {
+                objs.push((ship.name, ship.id));
+            }
+        }
+    }
+    if let Ok(ref mut ships) = context.ships.try_lock() {
+        for obj in objs.into_iter() {
+                ships.entry(obj.0).or_insert(obj.1);
+            }
+    } else {
+        warn!("{}",msg);
+    }
+}
+
+fn resolver(context: web::Data<AppContext>) {
+    info!("resolver started");
     let mut enabled = true;
     while enabled {
-        while let Ok(msg) = context.queue.pop() {
+        while let Ok(msg) = context.resolver.pop() {
             match msg {
                 Message::Quit => {
-                    info!("registrant received Message::Quit");
-                    context.queue.push(Message::Quit);
+                    info!("resolver received Message::Quit");
+                    enabled = false;
+                    break;
+                },
+                Message::Resolve(killmail) => {
+                    resolve_system(&context, &killmail, "resolver was not able to acquire context.systems.");
+                    resolve_ships(&context, &killmail, "resolver was not able to acquire context.ships.");
+                },
+                Message::Wait(timeout) => {
+                    info!("resolver will suspended {} sec", timeout);
+                    thread::sleep(std::time::Duration::from_secs(timeout));
+                },
+                _ => {
+                    error!("resolver received unexpected message!");
+                }
+            }
+        }
+        if !enabled {
+            break;
+        }
+        let timeout = context.timeout.into();
+        info!("resolver will suspended {} sec", timeout);
+        thread::sleep(std::time::Duration::from_secs(timeout));
+    }
+    info!("resolver ended");
+}
+
+fn saver(context: web::Data<AppContext>) {
+    info!("saver started");
+    let mut enabled = true;
+    while enabled {
+        while let Ok(msg) = context.saver.pop() {
+            match msg {
+                Message::Quit => {
+                    info!("saver received Message::Quit");
+                    context.resolver.push(Message::Quit);
                     enabled = false;
                     break;
                 },
@@ -64,23 +149,33 @@ fn registrant(context: web::Data<AppContext>) {
                         if !DB::exists(&conn, killmail.killmail_id) {
                             match DB::save(&conn, &killmail)
                             {
-                                Ok(()) => info!("registrant saved killmail {}", killmail.killmail_id),
-                                Err(e) => error!("registrant was not able to save killmail: {}", e)
+                                Ok(()) => info!("saver saved killmail {}", killmail.killmail_id),
+                                Err(e) => error!("saver was not able to save killmail: {}", e)
                             }
                         }
+                        context.resolver.push(Message::Resolve(killmail));
                     } else {
-                        warn!("registrant was not able to acquire connection.");
-                        context.queue.push(Message::Save(killmail));
+                        warn!("saver was not able to acquire connection.");
+                        context.saver.push(Message::Save(killmail));
                     }
                 },
                 Message::Wait(timeout) => {
-                    info!("registrant will suspended {} sec", timeout);
+                    info!("saver will suspended {} sec", timeout);
                     thread::sleep(std::time::Duration::from_secs(timeout));
+                },
+                _ => {
+                    error!("saver received unexpected message!");
                 }
             }
         }
+        if !enabled {
+            break;
+        }
+        let timeout = context.timeout.into();
+        info!("saver will suspended {} sec", timeout);
+        thread::sleep(std::time::Duration::from_secs(timeout));
     }
-    info!("registrant ended");
+    info!("saver ended");
 }
 
 fn monitor(context: web::Data<AppContext>) {
@@ -88,14 +183,12 @@ fn monitor(context: web::Data<AppContext>) {
     let mut enabled = true;
     while enabled {
         while let Some(package) = gw::get_package(&context.client) {
-            if let Ok(msg) = context.queue.pop() {
+            if let Ok(msg) = context.monitor.pop() {
                 if Message::Quit == msg {
                     info!("monitor received Message::Quit");
-                    context.queue.push(Message::Quit);
+                    context.saver.push(Message::Quit);
                     enabled = false;
                     break;
-                } else {
-                    context.queue.push(msg);
                 }
             }
 
@@ -109,11 +202,14 @@ fn monitor(context: web::Data<AppContext>) {
                     killmail.get_total_sum(),
                     killmail.get_system_full_name()
                 );
-                context.queue.push(Message::Save(killmail));
+                context.saver.push(Message::Save(killmail));
             }
         }
+        if !enabled {
+            break;
+        }
         let timeout = context.timeout.into();
-        context.queue.push(Message::Wait(timeout));
+        context.saver.push(Message::Wait(timeout));
         info!("monitor will suspended {} sec", timeout);
         thread::sleep(std::time::Duration::from_secs(timeout));
     }
@@ -122,17 +218,21 @@ fn monitor(context: web::Data<AppContext>) {
 
 fn quit(context: web::Data<AppContext>) -> String {
     info!("server received Message::Quit");
-    let mut counter = context.counter.lock().unwrap();
-    *counter += 1;
-    context.queue.push(Message::Quit);
+    context.monitor.push(Message::Quit);
     actix_rt::System::current().stop();
-    format!("Quit\nRequest number: {}\n", counter)
+    format!("Quit\n")
+}
+
+fn stat(context: web::Data<AppContext>) -> String {
+    let mut result = String::new();
+    write!(&mut result, "Statistics:\n").unwrap();
+    write!(&mut result, "Known systems: {}\n", context.systems.try_lock().ok().map(|s|s.len()).unwrap_or_default()).unwrap();
+    write!(&mut result, "Known ships: {}\n", context.ships.try_lock().ok().map(|s|s.len()).unwrap_or_default()).unwrap();
+    return result;
 }
 
 fn system(info: web::Path<String>, context: web::Data<AppContext>) -> Result<String> {
     info!("/system/{}", info);
-    let mut counter = context.counter.lock().unwrap();
-    *counter += 1;
     Ok(format!("Welcome {}!\n", info))
 }
 
@@ -144,6 +244,7 @@ fn server(context: web::Data<AppContext>) {
         App::new()
             .register_data(context.clone())
             .route("/quit", web::get().to(quit))
+            .route("/stat", web::get().to(stat))
             .route("/system/{id}", web::get().to(system))
     })
     .bind(address)
@@ -156,7 +257,7 @@ fn server(context: web::Data<AppContext>) {
 embed_migrations!("migrations");
 
 fn main() {
-    std::env::set_var("DATABASE_URL", ":memory:");
+//    std::env::set_var("DATABASE_URL", ":memory:");
     env_logger::init();
     let conn =  DB::connection();
     embedded_migrations::run(&conn).expect("In Memory DB migration failed");
@@ -165,7 +266,8 @@ fn main() {
     scope(|scope| {
         scope.spawn(|_| server(context.clone()));
         scope.spawn(|_| monitor(context.clone()));
-        scope.spawn(|_| registrant(context.clone()));
+        scope.spawn(|_| saver(context.clone()));
+        scope.spawn(|_| resolver(context.clone()));
     })
     .unwrap();
 
