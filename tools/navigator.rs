@@ -39,7 +39,7 @@ struct AppContext {
     alliance: Mutex<HashMap<String, i32>>,
     systems: Mutex<HashMap<String, i32>>,
     ships: Mutex<HashMap<String, i32>>,
-    monitor_queue: Queue,
+    command_queue: Queue,
     saver_queue: Queue,
     saver_parker: Mutex<Parker>,
     saver_unparker: Mutex<Unparker>,
@@ -64,7 +64,7 @@ impl AppContext {
             alliance: Mutex::new(HashMap::new()),
             systems: Mutex::new(HashMap::new()),
             ships: Mutex::new(HashMap::new()),
-            monitor_queue: Queue::new(),
+            command_queue: Queue::new(),
             saver_queue: Queue::new(),
             saver_parker: Mutex::new(saver_parker),
             saver_unparker: Mutex::new(saver_unparker),
@@ -103,17 +103,19 @@ impl AppContext {
     }
 }
 
-fn resolve_system(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) {
+fn resolve_system(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) -> usize{
     if let Some(system) = Object::new(&killmail.solar_system_id) {
         if let Ok(ref mut systems) = context.systems.try_lock() {
             systems.entry(system.name).or_insert(system.id);
+            return 1;
         } else {
             warn!("{}",msg);
         }
     }
+    return 0;
 }
 
-fn resolve_ships(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) {
+fn resolve_ships(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) -> usize{
     let mut objs = Vec::new();
 
     if let Some(ship) = Object::new(&killmail.victim.ship_type_id) {
@@ -128,15 +130,16 @@ fn resolve_ships(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str
         }
     }
     if let Ok(ref mut ships) = context.ships.try_lock() {
-        for obj in objs.into_iter() {
-                ships.entry(obj.0).or_insert(obj.1);
+        for obj in &objs {
+                ships.entry(obj.0.clone()).or_insert(obj.1);
             }
     } else {
         warn!("{}",msg);
     }
+    objs.len()
 }
 
-fn resolve_characters(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) {
+fn resolve_characters(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) -> usize {
     let mut objs = Vec::new();
 
     if let Some(id) = killmail.victim.character_id {
@@ -154,15 +157,16 @@ fn resolve_characters(context: &web::Data<AppContext>, killmail: &KillMail, msg:
     }
 
     if let Ok(ref mut characters) = context.characters.try_lock() {
-        for obj in objs.into_iter() {
-                characters.entry(obj.0).or_insert(obj.1);
+        for obj in &objs {
+                characters.entry(obj.0.clone()).or_insert(obj.1);
             }
     } else {
         warn!("{}",msg);
     }
+    objs.len()
 }
 
-fn resolve_corporations(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) {
+fn resolve_corporations(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) -> usize {
     let mut objs = Vec::new();
 
     if let Some(id) = killmail.victim.corporation_id {
@@ -180,15 +184,16 @@ fn resolve_corporations(context: &web::Data<AppContext>, killmail: &KillMail, ms
     }
 
     if let Ok(ref mut corporation) = context.corporation.try_lock() {
-        for obj in objs.into_iter() {
-                corporation.entry(obj.0).or_insert(obj.1);
+        for obj in &objs {
+                corporation.entry(obj.0.clone()).or_insert(obj.1);
             }
     } else {
         warn!("{}",msg);
     }
+    objs.len()
 }
 
-fn resolve_alliances(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) {
+fn resolve_alliances(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) -> usize {
     let mut objs = Vec::new();
 
     if let Some(id) = killmail.victim.alliance_id {
@@ -206,35 +211,40 @@ fn resolve_alliances(context: &web::Data<AppContext>, killmail: &KillMail, msg: 
     }
 
     if let Ok(ref mut alliance) = context.alliance.try_lock() {
-        for obj in objs.into_iter() {
-                alliance.entry(obj.0).or_insert(obj.1);
-            }
+        for obj in &objs {
+            alliance.entry(obj.0.clone()).or_insert(obj.1);
+        }
     } else {
         warn!("{}",msg);
     }
+    objs.len()
 }
 
 fn resolver(context: web::Data<AppContext>) {
     info!("resolver started");
-    let mut enabled = true;
-    while enabled {
+    loop {
         context.park_resolver();
-        while let Ok(msg) = context.resolver_queue.pop() {
+        if let Ok(msg) = context.command_queue.pop() {
+            if Message::Quit == msg {
+                info!("resolver received Message::Quit");
+                context.command_queue.push(Message::Quit);
+                context.unpark_resolver();
+                break;
+            }
+        }        
+        if let Ok(msg) = context.resolver_queue.pop() {
             match msg {
-                Message::Quit => {
-                    info!("resolver received Message::Quit");
-                    enabled = false;
-                    break;
-                },
                 Message::Resolve(killmail) => {
-                    resolve_system(&context, &killmail, "resolver was not able to acquire context.systems");
-                    resolve_ships(&context, &killmail, "resolver was not able to acquire context.ships");
-                    resolve_characters(&context, &killmail, "resolver was not able to acquire context.characters");
-                    resolve_corporations(&context, &killmail, "resolver was not able to acquire context.corporations");
-                    resolve_alliances(&context, &killmail, "resolver was not able to acquire context.alliances");
+                    let count = 
+                        resolve_system(&context, &killmail, "resolver was not able to acquire context.systems")
+                        + resolve_ships(&context, &killmail, "resolver was not able to acquire context.ships")
+                        + resolve_characters(&context, &killmail, "resolver was not able to acquire context.characters")
+                        + resolve_corporations(&context, &killmail, "resolver was not able to acquire context.corporations")
+                        + resolve_alliances(&context, &killmail, "resolver was not able to acquire context.alliances");
+                    info!("resolver saved {}/{} names", count, context.resolver_queue.len());
                 },
                 _ => {
-                    error!("resolver received unexpected message!");
+                    warn!("Unexpected message");
                 }
             }
         }
@@ -244,23 +254,22 @@ fn resolver(context: web::Data<AppContext>) {
 
 fn saver(context: web::Data<AppContext>) {
     info!("saver started");
-    let mut enabled = true;
-    while enabled {
+    loop {
         context.park_saver();
-        while let Ok(msg) = context.saver_queue.pop() {
+        if let Ok(msg) = context.command_queue.pop() {
+            if Message::Quit == msg {
+                info!("saver received Message::Quit");
+                context.command_queue.push(Message::Quit);
+                context.unpark_resolver();
+                break;
+            }
+        }
+        if let Ok(msg) = context.saver_queue.pop() {
             match msg {
-                Message::Quit => {
-                    info!("saver received Message::Quit");
-                    context.resolver_queue.push(Message::Quit);
-                    context.unpark_resolver();
-                    enabled = false;
-                    break;
-                },
                 Message::Save(killmail) => {
                     if let Ok(ref conn) = context.connection.try_lock() {
                         if !DB::exists(&conn, killmail.killmail_id) {
-                            match DB::save(&conn, &killmail)
-                            {
+                            match DB::save(&conn, &killmail) {
                                 Ok(()) => info!("saver saved killmail {}", killmail.killmail_id),
                                 Err(e) => error!("saver was not able to save killmail: {}", e)
                             }
@@ -273,7 +282,7 @@ fn saver(context: web::Data<AppContext>) {
                     }
                 },
                 _ => {
-                    error!("saver received unexpected message!");
+
                 }
             }
         }
@@ -286,10 +295,10 @@ fn monitor(context: web::Data<AppContext>) {
     let mut enabled = true;
     while enabled {
         while let Some(package) = gw::get_package(&context.client) {
-            if let Ok(msg) = context.monitor_queue.pop() {
+            if let Ok(msg) = context.command_queue.pop() {
                 if Message::Quit == msg {
                     info!("monitor received Message::Quit");
-                    context.saver_queue.push(Message::Quit);
+                    context.command_queue.push(Message::Quit);
                     context.unpark_saver();
                     enabled = false;
                     break;
@@ -321,7 +330,7 @@ fn monitor(context: web::Data<AppContext>) {
 
 fn quit(context: web::Data<AppContext>) -> String {
     info!("server received Message::Quit");
-    context.monitor_queue.push(Message::Quit);
+    context.command_queue.push(Message::Quit);
     actix_rt::System::current().stop();
     format!("Quit\n")
 }
@@ -331,7 +340,51 @@ fn stat(context: web::Data<AppContext>) -> String {
     write!(&mut result, "Statistics:\n").unwrap();
     write!(&mut result, "Known systems: {}\n", context.systems.try_lock().ok().map(|s|s.len()).unwrap_or_default()).unwrap();
     write!(&mut result, "Known ships: {}\n", context.ships.try_lock().ok().map(|s|s.len()).unwrap_or_default()).unwrap();
+    write!(&mut result, "Known characters: {}\n", context.characters.try_lock().ok().map(|s|s.len()).unwrap_or_default()).unwrap();
+    write!(&mut result, "Known corporation: {}\n", context.corporation.try_lock().ok().map(|s|s.len()).unwrap_or_default()).unwrap();
+    write!(&mut result, "Known alliance: {}\n", context.alliance.try_lock().ok().map(|s|s.len()).unwrap_or_default()).unwrap();
     return result;
+}
+
+fn out(stream: &mut String, map: &HashMap<String, i32>) {
+    for key in map.keys() {
+        write!(stream, "{}\n", key).unwrap();
+    }
+}
+
+fn systems(context: web::Data<AppContext>) -> String {
+    let mut stream = String::new();
+    write!(&mut stream, "Known systems:\n").unwrap();
+    context.systems.try_lock().ok().map(|map| out(&mut stream, &map)).unwrap();
+    return stream;
+}
+
+fn ships(context: web::Data<AppContext>) -> String {
+    let mut stream = String::new();
+    write!(&mut stream, "Known systems:\n").unwrap();
+    context.ships.try_lock().ok().map(|map| out(&mut stream, &map)).unwrap();
+    return stream;
+}
+
+fn characters(context: web::Data<AppContext>) -> String {
+    let mut stream = String::new();
+    write!(&mut stream, "Known characters:\n").unwrap();
+    context.characters.try_lock().ok().map(|map| out(&mut stream, &map)).unwrap();
+    return stream;
+}
+
+fn corporation(context: web::Data<AppContext>) -> String {
+    let mut stream = String::new();
+    write!(&mut stream, "Known corporation:\n").unwrap();
+    context.corporation.try_lock().ok().map(|map| out(&mut stream, &map)).unwrap();
+    return stream;
+}
+
+fn alliance(context: web::Data<AppContext>) -> String {
+    let mut stream = String::new();
+    write!(&mut stream, "Known alliance\n:").unwrap();
+    context.alliance.try_lock().ok().map(|map| out(&mut stream, &map)).unwrap();
+    return stream;
 }
 
 fn system(info: web::Path<String>, context: web::Data<AppContext>) -> Result<String> {
@@ -354,6 +407,11 @@ fn server(context: web::Data<AppContext>) {
             .register_data(context.clone())
             .route("/quit", web::get().to(quit))
             .route("/stat", web::get().to(stat))
+            .route("/systems", web::get().to(systems))
+            .route("/ships", web::get().to(ships))
+            .route("/characters", web::get().to(characters))
+            .route("/corporation", web::get().to(corporation))
+            .route("/alliance", web::get().to(alliance))
             .route("/system/{id}", web::get().to(system))
     })
     .bind(address)
@@ -379,6 +437,5 @@ fn main() {
         scope.spawn(|_| resolver(context.clone()));
     })
     .unwrap();
-
 
 }
