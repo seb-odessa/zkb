@@ -1,7 +1,8 @@
 use std::convert::From;
+use std::convert::Into;
 use crate::api;
 use crate::schema::killmails;
-use super::{Integer, DateTime, Connection, QueryResult};
+use super::{Integer, DateTime};
 
 #[derive(Queryable, Insertable)]
 #[table_name = "killmails"]
@@ -23,8 +24,24 @@ impl From<&api::killmail::KillMail> for KillMail{
         }
     }
 }
-impl KillMail {
-}
 
+/*
+impl Into<api::killmail::KillMail> for KillMail{
+    fn into(self) -> api::killmail::KillMail {
+
+        api::killmail::KillMail {
+            killmail_id: self.killmail_id,
+            killmail_time: self.killmail_time,
+            solar_system_id: self.solar_system_id,
+            moon_id: self.moon_id,
+            war_id: self.war_id,
+            victim:
+        }
+
+    pub victim: Victim,
+    pub attackers: Vec<Attacker>,
+    }
+}
+*/
 
 

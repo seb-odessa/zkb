@@ -1,21 +1,10 @@
 use std::convert::From;
 use crate::api;
 use crate::schema::items;
-use super::{Integer, OptInteger};
-
-// CREATE TABLE IF NOT EXISTS items(
-//     item_id INTEGER NOT NULL PRIMARY KEY,
-//     killmail_id INTEGER NOT NULL,
-//     item_type_id INTEGER NOT NULL,
-//     singleton INTEGER NOT NULL,
-//     flag INTEGER NOT NULL,
-//     quantity_destroyed INTEGER,
-//     quantity_dropped INTEGER,
-//     FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
-// );
+use super::{Integer, OptInteger, Connection, QueryResult};
 
 
-#[derive(Queryable, Insertable, Default)]
+#[derive(Insertable, Default)]
 #[table_name = "items"]
 pub struct Item {
     pub killmail_id: Integer,
@@ -38,8 +27,38 @@ impl From<&api::killmail::Item> for Item{
         }
     }
 }
+impl From<&Loadable> for Item{
+    fn from(src: &Loadable) -> Self {
+        Self {
+            killmail_id: src.killmail_id,
+            item_type_id: src.item_type_id,
+            singleton: src.singleton,
+            flag: src.flag,
+            quantity_destroyed: src.quantity_destroyed,
+            quantity_dropped: src.quantity_dropped,
+        }
+    }
+}
 
 
+#[derive(Queryable)]
+struct Loadable {
+    pub item_id: Integer,
+    pub killmail_id: Integer,
+    pub item_type_id: Integer,
+    pub singleton: Integer,
+    pub flag: Integer,
+    pub quantity_destroyed: OptInteger,
+    pub quantity_dropped: OptInteger,
+}
+
+impl Loadable {
+    pub fn load(conn: &Connection, killmail_id: Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+        use crate::schema::items::dsl as table;
+        table::items.filter(table::killmail_id.eq(&killmail_id)).load(conn)
+    }
+}
 
 
 
