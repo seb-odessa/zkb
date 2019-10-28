@@ -17,6 +17,10 @@ name = "monitor"
 path = "tools/monitor.rs"
 
 [[bin]]
+name = "updater"
+path = "tools/updater.rs"
+
+[[bin]]
 name = "navigator"
 path = "tools/navigator.rs"
 
@@ -25,6 +29,7 @@ path = "tools/navigator.rs"
     serde_json = "*"
     diesel = {version = "1.4", features = ["sqlite", "chrono"]}
     diesel_codegen = "0.16"
+    diesel_migrations = "1.4"
     dotenv = "0.10"
     curl = "0.4"
     chrono = { version = "0.4", features = ["serde"]}

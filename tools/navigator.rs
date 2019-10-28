@@ -1,12 +1,17 @@
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate diesel_migrations;
+
 use lib::api::gw;
 use lib::api::killmail::KillMail;
+use lib::models::*;
 
 use actix_rt;
-use actix_web::{web, App, HttpResponse, HttpServer, Responder, Result};
+use actix_web::{web, App, HttpServer, Result};
 use crossbeam_queue::SegQueue;
 use crossbeam_utils::thread::scope;
+
 
 use std::sync::Mutex;
 use std::thread;
@@ -14,53 +19,64 @@ use std::thread;
 #[derive(Debug, PartialEq)]
 pub enum Message<T> {
     Quit,
-    Work(T),
+    Data(T),
 }
 
 type Queue = SegQueue<Message<KillMail>>;
 
 struct AppContext {
     counter: Mutex<u32>,
+    connection: Mutex<Connection>,
     server: String,
     client: String,
     timeout: u64,
-    monitor_input: Queue,
-    monitor_output: Queue,
-    navigator_input: Queue,
-    navigator_output: Queue,
+    queue: Queue,
 }
 impl AppContext {
-    pub fn new() -> Self {
-       // @todo implement complete ctor 
-        Self { 
+    pub fn new(connection: Connection) -> Self {
+       // @todo implement complete ctor
+        Self {
             counter: Mutex::new(0),
+            connection: Mutex::new(connection),
             server: String::from("127.0.0.1:8088"),
             client: String::from("seb_odessa"),
             timeout: 10,
-            monitor_input: Queue::new(),
-            monitor_output: Queue::new(),
-            navigator_input: Queue::new(),
-            navigator_output: Queue::new(),
-
+            queue: Queue::new(),
         }
     }
 }
 
-fn quit(context: web::Data<AppContext>) -> String {
-    info!("/quit");
-    let mut counter = context.counter.lock().unwrap();
-    *counter += 1;
-    context.monitor_input.push(Message::Quit);
-    context.navigator_input.push(Message::Quit);
-    actix_rt::System::current().stop();
-    format!("Quit\nRequest number: {}\n", counter)
-}
-
-fn system(info: web::Path<String>, context: web::Data<AppContext>) -> Result<String> {
-    info!("/system/{}", info);
-    let mut counter = context.counter.lock().unwrap();
-    *counter += 1;
-    Ok(format!("Welcome {}!\n", info))
+fn registrant(context: web::Data<AppContext>) {
+    let mut enabled = true;
+    while enabled {
+        while let Ok(msg) = context.queue.pop() {
+            match msg {
+                Message::Quit => {
+                    info!("registrant received Message::Quit");
+                    context.queue.push(Message::Quit);
+                    enabled = false;
+                    break;
+                },
+                Message::Data(killmail) => {
+                    if let Ok(ref conn) = context.connection.try_lock() {
+                        if !DB::exists(&conn, killmail.killmail_id) {
+                            match DB::save(&conn, &killmail)
+                            {
+                                Ok(()) => info!("registrant has saved killmail {}", killmail.killmail_id),
+                                Err(e) => error!("registrant was not able to save killmail: {}", e)
+                            }
+                        }
+                    } else {
+                        warn!("registrant was not able to acquire connection.");
+                        context.queue.push(Message::Data(killmail));
+                    }
+                }
+            }
+        }
+        if !enabled {
+            break;
+        }
+    }
 }
 
 fn monitor(context: web::Data<AppContext>) {
@@ -69,19 +85,22 @@ fn monitor(context: web::Data<AppContext>) {
         while let Some(package) = gw::get_package(&context.client) {
             if let Some(content) = package.content {
                 let killmail = content.killmail;
-                info!("{} {} {:>12}/{:<12} {}",
+                info!("monitor received {} : {} {} {:>12}/{:<12} {}",
+                    killmail.killmail_id,
                     killmail.killmail_time.time().to_string(),
                     killmail.href(),
                     killmail.get_dropped_sum(),
                     killmail.get_total_sum(),
                     killmail.get_system_full_name()
                 );
-                context.monitor_output.push(Message::Work(killmail));
+                context.queue.push(Message::Data(killmail));
             }
-            while let Ok(msg) = context.monitor_input.pop() {
+            while let Ok(msg) = context.queue.pop() {
                 if Message::Quit == msg {
-                    info!("Received Message::Quit");
+                    info!("monitor received Message::Quit");
+                    context.queue.push(Message::Quit);
                     enabled = false;
+                    break;
                 }
             }
             if !enabled {
@@ -92,36 +111,20 @@ fn monitor(context: web::Data<AppContext>) {
     }
 }
 
-fn navigator(context: web::Data<AppContext>) {
-    let mut enabled = true;
-    let mut data = Vec::new();
-    while enabled {
-        if let Ok(msg) = context.monitor_output.pop() {
-            match msg {
-                Message::Quit => {
-                    info!("Received Message::Quit");
-                    enabled = false;
-                    break;
-                },
-                Message::Work(killmail) => {
-                    info!("Received Message::Work({})", killmail.killmail_id);
-                    data.push(killmail);
-                }
-            }
-        }
-        if let Ok(msg) = context.navigator_input.pop() {
-            match msg {
-                Message::Quit => {
-                    info!("Received Message::Quit");
-                    enabled = false;
-                    break;
-                },
-                Message::Work(killmail) => {
-                    info!("Received Message::Work({})", killmail.killmail_id);
-                }
-            }
-        }
-    }    
+fn quit(context: web::Data<AppContext>) -> String {
+    info!("server received Message::Quit");
+    let mut counter = context.counter.lock().unwrap();
+    *counter += 1;
+    context.queue.push(Message::Quit);
+    actix_rt::System::current().stop();
+    format!("Quit\nRequest number: {}\n", counter)
+}
+
+fn system(info: web::Path<String>, context: web::Data<AppContext>) -> Result<String> {
+    info!("/system/{}", info);
+    let mut counter = context.counter.lock().unwrap();
+    *counter += 1;
+    Ok(format!("Welcome {}!\n", info))
 }
 
 fn server(context: web::Data<AppContext>) {
@@ -141,15 +144,21 @@ fn server(context: web::Data<AppContext>) {
     .unwrap();
 }
 
+embed_migrations!("migrations");
+
 fn main() {
+    std::env::set_var("DATABASE_URL", ":memory:");
     env_logger::init();
-    let context = web::Data::new(AppContext::new());
+    let conn =  DB::connection();
+    embedded_migrations::run(&conn).expect("In Memory DB migration failed");
+    let context = web::Data::new(AppContext::new(conn));
 
     scope(|scope| {
-        scope.spawn(|_| monitor(context.clone()));
-        scope.spawn(|_| server(context.clone()));
+         scope.spawn(|_| registrant(context.clone()));
+         scope.spawn(|_| monitor(context.clone()));
+         scope.spawn(|_| server(context.clone()));
     })
     .unwrap();
 
-    
+
 }

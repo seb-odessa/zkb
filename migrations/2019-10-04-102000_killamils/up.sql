@@ -1,5 +1,4 @@
 -- Your SQL goes here
-.echo on
 
 CREATE TABLE IF NOT EXISTS killmails(
     killmail_id INTEGER NOT NULL PRIMARY KEY,
