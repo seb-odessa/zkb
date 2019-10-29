@@ -25,6 +25,10 @@ CREATE INDEX IF NOT EXISTS v_killmail_idx    ON victims(killmail_id);
 CREATE INDEX IF NOT EXISTS i_type_idx        ON items(item_type_id);
 CREATE INDEX IF NOT EXISTS i_killmail_idx    ON items(killmail_id);
 
+CREATE INDEX IF NOT EXISTS c_category_name_idx    ON categories(category_name);
+CREATE INDEX IF NOT EXISTS o_object_name_idx      ON objects(object_name);
+
+
 
 
 

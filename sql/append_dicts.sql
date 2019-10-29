@@ -1,0 +1,14 @@
+-- SQLite
+
+CREATE TABLE IF NOT EXISTS categories(
+    category_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
+    category_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE
+);
+
+CREATE TABLE IF NOT EXISTS objects(
+    object_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
+    category_id INTEGER NOT NULL,
+    object_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE,
+    FOREIGN KEY(category_id) REFERENCES categories(category_id)
+);
+

@@ -32,7 +32,7 @@ fn receiver(src: &SegQueue<Message<Id>>, dst: &SegQueue<Message<KillMail>>) {
             match msg {
                 Message::Quit => {
                     info!("Received Message::Quit");
-                    thread::sleep(std::time::Duration::from_millis(4000));
+                    thread::sleep(std::time::Duration::from_millis(400));
                     src.push(Message::Quit);
                     dst.push(Message::Quit);
                     break;
@@ -128,6 +128,10 @@ fn load_day_kills(year: i32, month: u32, day: u32) -> usize {
     tasks.push(Message::Quit);
     let results = SegQueue::new();
     scope(|scope| {
+        scope.spawn(|_| receiver(&tasks, &results));
+        scope.spawn(|_| receiver(&tasks, &results));
+        scope.spawn(|_| receiver(&tasks, &results));
+        scope.spawn(|_| receiver(&tasks, &results));
         scope.spawn(|_| receiver(&tasks, &results));
         scope.spawn(|_| receiver(&tasks, &results));
         scope.spawn(|_| receiver(&tasks, &results));

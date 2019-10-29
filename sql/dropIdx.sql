@@ -24,6 +24,10 @@ DROP INDEX IF EXISTS v_killmail_idx;
 DROP INDEX IF EXISTS i_type_idx;
 DROP INDEX IF EXISTS i_killmail_idx;
 
+DROP INDEX IF EXISTS c_category_name_idx;
+DROP INDEX IF EXISTS o_object_name_idx;
+
+
 VACUUM;
 ANALYZE;
 VACUUM;
