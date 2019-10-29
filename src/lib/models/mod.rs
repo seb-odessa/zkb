@@ -7,6 +7,7 @@ pub mod killmail;
 pub mod attacker;
 pub mod victim;
 pub mod item;
+pub mod object;
 
 pub use diesel::sqlite::SqliteConnection as Connection;
 
@@ -18,6 +19,7 @@ pub type Hash = String;
 pub type Date = chrono::NaiveDate;
 pub type DateTime = chrono::NaiveDateTime;
 pub type QueryResult<T> = std::result::Result<T, diesel::result::Error>;
+
 
 pub struct DB;
 impl DB {
@@ -109,7 +111,23 @@ impl DB {
             Ok(())
         })
     }
+}
 
+pub struct ObjectsApi;
+impl ObjectsApi {
+    pub fn save(conn: &Connection, object: &api::object::Object) -> QueryResult<usize>  {
+        use super::schema;
+        use diesel::RunQueryDsl;
+        diesel::insert_into(schema::objects::table)
+                   .values(&object::Object::from(object))
+                   .execute(conn)
+    }
+
+    pub fn load(conn: &Connection, id: &Integer) -> QueryResult<object::Object>  {
+        use diesel::prelude::*;
+        use crate::schema::objects::dsl as table;
+        table::objects.filter(table::object_id.eq(id)).first(conn)
+    }
 }
 
 fn get_attackers(killmail: &api::killmail::KillMail) -> Vec<attacker::Attacker> {

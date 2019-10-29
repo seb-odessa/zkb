@@ -103,7 +103,7 @@ impl AppContext {
     }
 }
 
-fn resolve_system(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) -> usize{
+fn resolve_system(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) -> usize {
     if let Some(system) = Object::new(&killmail.solar_system_id) {
         if let Ok(ref mut systems) = context.systems.try_lock() {
             systems.entry(system.name).or_insert(system.id);
@@ -231,11 +231,11 @@ fn resolver(context: web::Data<AppContext>) {
                 context.unpark_resolver();
                 break;
             }
-        }        
+        }
         if let Ok(msg) = context.resolver_queue.pop() {
             match msg {
                 Message::Resolve(killmail) => {
-                    let count = 
+                    let count =
                         resolve_system(&context, &killmail, "resolver was not able to acquire context.systems")
                         + resolve_ships(&context, &killmail, "resolver was not able to acquire context.ships")
                         + resolve_characters(&context, &killmail, "resolver was not able to acquire context.characters")

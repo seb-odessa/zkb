@@ -45,6 +45,14 @@ table! {
 }
 
 table! {
+    objects (object_id) {
+        object_id -> Integer,
+        category_name -> Text,
+        object_name -> Text,
+    }
+}
+
+table! {
     victims (victim_id) {
         victim_id -> Integer,
         killmail_id -> Integer,
@@ -66,5 +74,6 @@ allow_tables_to_appear_in_same_query!(
     items,
     killmails,
     kills,
+    objects,
     victims,
 );
