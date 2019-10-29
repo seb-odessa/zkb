@@ -13,7 +13,6 @@ use actix_web::{web, App, HttpServer, Result};
 use crossbeam_queue::SegQueue;
 use crossbeam_utils::thread::scope;
 use crossbeam_utils::sync::Parker;
-use crossbeam_utils::sync::Unparker;
 
 use std::sync::Mutex;
 use std::fmt::Write;
@@ -22,9 +21,11 @@ use std::collections::HashMap;
 #[derive(Debug, PartialEq)]
 pub enum Message{
     Quit,
-    Save(KillMail),
+    Killmail(KillMail),
+    Object(Object),
+    CheckObject(i32),
     Wait(u64),
-    Resolve(i32),
+    Resolve((i32, bool)),
 }
 
 type Queue = SegQueue<Message>;
@@ -41,24 +42,15 @@ struct AppContext {
     ships: Mutex<HashMap<String, i32>>,
     command_queue: Queue,
     saver_queue: Queue,
-    saver_parker: Mutex<Parker>,
-    saver_unparker: Mutex<Unparker>,
     resolver_queue: Queue,
-    resolver_parker: Mutex<Parker>,
-    resolver_unparker: Mutex<Unparker>,
 }
 impl AppContext {
     pub fn new(connection: Connection) -> Self {
-        let saver_parker = Parker::new();
-        let saver_unparker = saver_parker.unparker().clone();
-        let resolver_parker = Parker::new();
-        let resolver_unparker = resolver_parker.unparker().clone();
-
         Self {
             connection: Mutex::new(connection),
             server: String::from("127.0.0.1:8088"),
             client: String::from("seb_odessa"),
-            timeout: 10,
+            timeout: 5,
             characters: Mutex::new(HashMap::new()),
             corporation: Mutex::new(HashMap::new()),
             alliance: Mutex::new(HashMap::new()),
@@ -66,39 +58,7 @@ impl AppContext {
             ships: Mutex::new(HashMap::new()),
             command_queue: Queue::new(),
             saver_queue: Queue::new(),
-            saver_parker: Mutex::new(saver_parker),
-            saver_unparker: Mutex::new(saver_unparker),
             resolver_queue: Queue::new(),
-            resolver_parker: Mutex::new(resolver_parker),
-            resolver_unparker: Mutex::new(resolver_unparker),
-        }
-    }
-    pub fn park_saver(&self) {
-        if let Ok(parker) = self.saver_parker.try_lock() {
-            parker.park();
-        } else {
-            error!("failed to asquire self.saver_parker");
-        }
-    }
-    pub fn unpark_saver(&self) {
-        if let Ok(unparker) = self.saver_unparker.try_lock() {
-            unparker.unpark();
-        } else {
-            error!("failed to acquire self.saver_unparker");
-        }
-    }
-    pub fn park_resolver(&self) {
-        if let Ok(parker) = self.resolver_parker.try_lock() {
-            parker.park();
-        } else {
-            error!("failed to acquire self.resolver_parker");
-        }
-    }
-    pub fn unpark_resolver(&self) {
-        if let Ok(unparker) = self.resolver_unparker.try_lock() {
-            unparker.unpark();
-        } else {
-            error!("failed to acquire self.resolver_unparker");
         }
     }
 }
@@ -106,43 +66,31 @@ impl AppContext {
 fn resolver(context: web::Data<AppContext>) {
     info!("resolver started");
     loop {
-        context.park_resolver();
         if let Ok(msg) = context.command_queue.pop() {
             if Message::Quit == msg {
                 info!("resolver received Message::Quit");
                 context.command_queue.push(Message::Quit);
-                context.unpark_resolver();
                 break;
             }
         }
         if let Ok(msg) = context.resolver_queue.pop() {
             match msg {
-                Message::Resolve(id) => {
-                    let exist: bool = context.connection.try_lock()
-                                        .map(|conn|ObjectsApi::exist(&conn, &id))
-                                        .unwrap_or(false);
-                    let mut success = false;
-                    if !exist {
-                        if let Some(object) = Object::new(&id) {
-                            success = context.connection.try_lock()
-                                        .map(|conn| ObjectsApi::save(&conn, &object).ok())
-                                        .unwrap_or_default()
-                                        .unwrap_or(false);
-                            if (success) {
-                                info!("resolver saved {} {} {}. Queue length {}",
+                Message::Resolve((id, first_try)) => {
+                    if let Some(object) = Object::new(&id) {
+                        context.saver_queue.push(Message::Object(object.clone()));
+                        info!("resolver received {} '{}' '{}'. Queue length {}",
                                     object.id,
                                     object.name,
                                     object.category,
                                     context.resolver_queue.len());
-                            } esle {
-                                warn!("resolver was failed to save object with id {}. Queue length {}",
-                                    object.id,
+                    } else {
+                        warn!("resolver was failed to query object with id {}. Queue length {}",
+                                    id,
                                     context.resolver_queue.len());
-                            }
+                        if first_try {
+                            context.resolver_queue.push(Message::Resolve((id, false)));
                         }
-                    }
-                    if !success {
-                        context.resolver_queue.push(Message::Resolve(id));
+
                     }
                 },
                 _ => {
@@ -150,71 +98,98 @@ fn resolver(context: web::Data<AppContext>) {
                 }
             }
         }
+        if 0 == context.resolver_queue.len() {
+            let timeout = context.timeout.into();
+            info!("resolver will suspended {} sec", timeout);
+            Parker::new().park_timeout(std::time::Duration::from_secs(timeout))
+        }
     }
     info!("resolver ended");
 }
 
-fn enqueue(queue: &Queue, id: &i32) {
-    queue.push(Message::Resolve(*id));
+fn enqueue_check(queue: &Queue, id: &i32) {
+    queue.push(Message::CheckObject(*id));
 }
 
-fn try_enqueue(queue: &Queue, id: &Option<i32>) {
+fn try_enqueue_check(queue: &Queue, id: &Option<i32>) {
     if let Some(id) = id {
-        queue.push(Message::Resolve(*id));
+        enqueue_check(queue, id);
     }
 }
 
 fn saver(context: web::Data<AppContext>) {
     info!("saver started");
     loop {
-        context.park_saver();
         if let Ok(msg) = context.command_queue.pop() {
             if Message::Quit == msg {
                 info!("saver received Message::Quit");
                 context.command_queue.push(Message::Quit);
-                context.unpark_resolver();
                 break;
             }
         }
         if let Ok(msg) = context.saver_queue.pop() {
             match msg {
-                Message::Save(killmail) => {
+                Message::Killmail(killmail) => {
                     if let Ok(ref conn) = context.connection.try_lock() {
                         if !DB::exists(&conn, killmail.killmail_id) {
                             match DB::save(&conn, &killmail) {
-                                Ok(()) => info!("saver saved killmail {}", killmail.killmail_id),
+                                Ok(()) => info!("saver saved killmail {} queue length: {}", killmail.killmail_id, context.saver_queue.len()),
                                 Err(e) => error!("saver was not able to save killmail: {}", e)
                             }
                         }
                     } else {
                         warn!("saver was not able to acquire connection.");
-                        context.saver_queue.push(Message::Save(killmail.clone()));
-                        context.park_saver();
+                        context.saver_queue.push(Message::Killmail(killmail.clone()));
                     }
 
-                    enqueue(&context.resolver_queue, &killmail.solar_system_id);
-                    try_enqueue(&context.resolver_queue, &killmail.moon_id);
-                    try_enqueue(&context.resolver_queue, &killmail.war_id);
-                    enqueue(&context.resolver_queue, &killmail.victim.ship_type_id);
-                    try_enqueue(&context.resolver_queue, &killmail.victim.character_id);
-                    try_enqueue(&context.resolver_queue, &killmail.victim.corporation_id);
-                    try_enqueue(&context.resolver_queue, &killmail.victim.alliance_id);
-                    try_enqueue(&context.resolver_queue, &killmail.victim.faction_id);
+                    enqueue_check(&context.saver_queue, &killmail.solar_system_id);
+                    try_enqueue_check(&context.saver_queue, &killmail.moon_id);
+                    try_enqueue_check(&context.saver_queue, &killmail.war_id);
+                    enqueue_check(&context.saver_queue, &killmail.victim.ship_type_id);
+                    try_enqueue_check(&context.saver_queue, &killmail.victim.character_id);
+                    try_enqueue_check(&context.saver_queue, &killmail.victim.corporation_id);
+                    try_enqueue_check(&context.saver_queue, &killmail.victim.alliance_id);
+                    try_enqueue_check(&context.saver_queue, &killmail.victim.faction_id);
                     for attacker in &killmail.attackers {
-                        try_enqueue(&context.resolver_queue, &attacker.ship_type_id);
-                        try_enqueue(&context.resolver_queue, &attacker.character_id);
-                        try_enqueue(&context.resolver_queue, &attacker.corporation_id);
-                        try_enqueue(&context.resolver_queue, &attacker.alliance_id);
-                        try_enqueue(&context.resolver_queue, &attacker.faction_id);
-                        try_enqueue(&context.resolver_queue, &attacker.weapon_type_id);
+                        try_enqueue_check(&context.saver_queue, &attacker.ship_type_id);
+                        try_enqueue_check(&context.saver_queue, &attacker.character_id);
+                        try_enqueue_check(&context.saver_queue, &attacker.corporation_id);
+                        try_enqueue_check(&context.saver_queue, &attacker.alliance_id);
+                        try_enqueue_check(&context.saver_queue, &attacker.faction_id);
+                        try_enqueue_check(&context.saver_queue, &attacker.weapon_type_id);
                     }
-                    context.unpark_resolver();
                 },
-                _ => {
-
+                Message::CheckObject(id) => {
+                    if let Ok(ref conn) = context.connection.try_lock() {
+                        if !ObjectsApi::exist(conn, &id) {
+                            context.resolver_queue.push(Message::Resolve((id, true)));
+                        }
+                    }
+                }
+                Message::Object(object) => {
+                    if let Ok(ref conn) = context.connection.try_lock() {
+                        if !ObjectsApi::exist(&conn, &object.id) {
+                            match ObjectsApi::save(&conn, &object) {
+                                Ok(_) => info!("saver saved object {} queue length: {}", object.id, context.saver_queue.len()),
+                                Err(e) => error!("saver was not able to save object: {}", e)
+                            }
+                        }
+                    } else {
+                        warn!("saver was not able to acquire connection.");
+                        context.saver_queue.push(Message::Object(object));
+                    }
+                },
+                message => {
+                    warn!("saver received unexpected message: {:?} ", message);
                 }
             }
         }
+        if 0 == context.saver_queue.len() {
+            let timeout = context.timeout.into();
+            info!("saver will suspended {} sec", timeout);
+            Parker::new().park_timeout(std::time::Duration::from_secs(timeout))
+        }
+
     }
     info!("saver ended");
 }
@@ -228,7 +203,6 @@ fn monitor(context: web::Data<AppContext>) {
                 if Message::Quit == msg {
                     info!("monitor received Message::Quit");
                     context.command_queue.push(Message::Quit);
-                    context.unpark_saver();
                     enabled = false;
                     break;
                 }
@@ -243,8 +217,7 @@ fn monitor(context: web::Data<AppContext>) {
                     killmail.get_total_sum(),
                     killmail.get_system_full_name()
                 );
-                context.saver_queue.push(Message::Save(killmail));
-                context.unpark_saver();
+                context.saver_queue.push(Message::Killmail(killmail));
             }
         }
         if !enabled {
@@ -363,6 +336,8 @@ fn main() {
         scope.spawn(|_| server(context.clone()));
         scope.spawn(|_| monitor(context.clone()));
         scope.spawn(|_| saver(context.clone()));
+        scope.spawn(|_| resolver(context.clone()));
+        scope.spawn(|_| resolver(context.clone()));
         scope.spawn(|_| resolver(context.clone()));
     })
     .unwrap();

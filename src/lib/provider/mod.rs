@@ -2,6 +2,7 @@ use crate::api::object::Object;
 use crate::api::system::System;
 use crate::api::character::Character;
 use crate::api::constellation::Constellation;
+use std::collections::HashMap;
 
 use std::sync::Mutex;
 
@@ -13,21 +14,31 @@ pub use prices::get_adj_price;
 
 
 lazy_static! {
-    static ref OBJECTS: Mutex<cache::Cache<i32, Object>> = Mutex::new(cache::Cache::new());
+    static ref OBJECTS: Mutex<HashMap<i32, Object>> = Mutex::new(HashMap::new());
     static ref SYSTEMS: Mutex<cache::Cache<i32, System>> = Mutex::new(cache::Cache::new());
     static ref CHARACTER: Mutex<cache::Cache<i32, Character>> = Mutex::new(cache::Cache::new());
     static ref CONSTELLATION: Mutex<cache::Cache<i32, Constellation>> = Mutex::new(cache::Cache::new());
 }
 
 pub fn get_object<L>(key: &i32, loader: &L) -> Option<Object>
-    where
-        L: Fn(&i32)->Option<Object>
+    where L: Fn(&i32)->Option<Object>
 {
-    if let Ok(ref mut cache) = OBJECTS.try_lock() {
-        return cache.get(key, loader).cloned()
+    let mut object = if let Ok(map) = OBJECTS.try_lock() {
+        map.get(key).cloned()
     } else {
         None
+    };
+
+    if object.is_none() {
+        if let Some(received) = loader(key) {
+            object = Some(received.clone());
+            if let Ok(ref mut map) = OBJECTS.try_lock() {
+                map.entry(*key).or_insert(received);
+            }
+        }
     }
+
+    return object;
 }
 
 pub fn get_system<L>(key: &i32, loader: &L) -> Option<System>

@@ -46,10 +46,16 @@ CREATE TABLE IF NOT EXISTS items(
     FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
 );
 
+CREATE TABLE IF NOT EXISTS categories(
+    category_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
+    category_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE
+);
+
 CREATE TABLE IF NOT EXISTS objects(
-    object_id INTEGER NOT NULL PRIMARY KEY,
-    category_name TEXT NOT NULL,
-    object_name TEXT NOT NULL
+    object_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
+    category_id INTEGER NOT NULL,
+    object_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE,
+    FOREIGN KEY(category_id) REFERENCES categories(category_id)
 );
 
 CREATE INDEX IF NOT EXISTS k_time_idx        ON killmails(killmail_time);
@@ -75,7 +81,7 @@ CREATE INDEX IF NOT EXISTS v_killmail_idx    ON victims(killmail_id);
 CREATE INDEX IF NOT EXISTS i_type_idx        ON items(item_type_id);
 CREATE INDEX IF NOT EXISTS i_killmail_idx    ON items(killmail_id);
 
-CREATE INDEX IF NOT EXISTS o_category_name_idx    ON objects(category_name);
+CREATE INDEX IF NOT EXISTS c_category_name_idx    ON categories(category_name);
 CREATE INDEX IF NOT EXISTS o_object_name_idx      ON objects(object_name);
 
 

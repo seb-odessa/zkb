@@ -23,11 +23,6 @@ impl<K,V> Cache<K,V> {
     }
 
     #[allow(dead_code)]
-    pub fn get_count(&self) -> usize {
-        self.cache.len()
-    }
-
-    #[allow(dead_code)]
     pub fn get_mem_usage(&self) -> usize {
         std::mem::size_of_val(&self.cache)
     }

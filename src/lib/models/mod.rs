@@ -8,6 +8,7 @@ pub mod attacker;
 pub mod victim;
 pub mod item;
 pub mod object;
+pub mod category;
 
 pub use diesel::sqlite::SqliteConnection as Connection;
 
@@ -113,15 +114,46 @@ impl DB {
     }
 }
 
+pub struct CategoriesApi;
+impl CategoriesApi {
+    pub fn save(conn: &Connection, object: &api::object::Object) -> QueryResult<bool>  {
+        use super::schema;
+        use crate::schema::categories::dsl::*;
+        use crate::diesel::RunQueryDsl;
+        use crate::diesel::ExpressionMethods;
+        diesel::insert_into(schema::categories::table)
+                   .values(category_name.eq(&object.category))
+                   .execute(conn).and_then(|count| Ok(1 == count))
+    }
+
+    pub fn find(conn: &Connection, name: &String) -> QueryResult<category::Category>  {
+        use diesel::prelude::*;
+        use crate::schema::categories::dsl as table;
+        table::categories.filter(table::category_name.eq(name)).first(conn)
+    }
+}
+
 pub struct ObjectsApi;
 impl ObjectsApi {
     pub fn save(conn: &Connection, object: &api::object::Object) -> QueryResult<bool>  {
         use super::schema;
         use diesel::RunQueryDsl;
-        diesel::insert_into(schema::objects::table)
-                   .values(&object::Object::from(object))
-                   .execute(conn).and_then(|count| Ok(1 == count))
+        let category = match CategoriesApi::find(conn, &object.category) {
+            Ok(category) => {
+                Ok(category)
+            },
+            Err(diesel::result::Error::NotFound) => {
+                CategoriesApi::save(conn, &object)?;
+                CategoriesApi::find(conn, &object.category)
+            },
+            Err(err) => {
+                error!("Was not able to save object: {}", err);
+                Err(err)
+            },
+        }?;
 
+        let data = object::Object::new(object.id, category.category_id, object.name.clone());
+        diesel::insert_into(schema::objects::table).values(&data).execute(conn).and_then(|count| Ok(1 == count))
     }
 
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<object::Object>  {
