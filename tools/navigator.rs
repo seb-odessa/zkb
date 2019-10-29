@@ -20,14 +20,14 @@ use std::fmt::Write;
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
-pub enum Message<T> {
+pub enum Message{
     Quit,
-    Save(T),
+    Save(KillMail),
     Wait(u64),
-    Resolve(T),
+    Resolve(i32),
 }
 
-type Queue = SegQueue<Message<KillMail>>;
+type Queue = SegQueue<Message>;
 
 struct AppContext {
     connection: Mutex<Connection>,
@@ -84,140 +84,23 @@ impl AppContext {
         if let Ok(unparker) = self.saver_unparker.try_lock() {
             unparker.unpark();
         } else {
-            error!("failed to asquire self.saver_unparker");
+            error!("failed to acquire self.saver_unparker");
         }
     }
     pub fn park_resolver(&self) {
         if let Ok(parker) = self.resolver_parker.try_lock() {
             parker.park();
         } else {
-            error!("failed to asquire self.resolver_parker");
+            error!("failed to acquire self.resolver_parker");
         }
     }
     pub fn unpark_resolver(&self) {
         if let Ok(unparker) = self.resolver_unparker.try_lock() {
             unparker.unpark();
         } else {
-            error!("failed to asquire self.resolver_unparker");
+            error!("failed to acquire self.resolver_unparker");
         }
     }
-}
-
-fn resolve_system(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) -> usize {
-    if let Some(system) = Object::new(&killmail.solar_system_id) {
-        if let Ok(ref mut systems) = context.systems.try_lock() {
-            systems.entry(system.name).or_insert(system.id);
-            return 1;
-        } else {
-            warn!("{}",msg);
-        }
-    }
-    return 0;
-}
-
-fn resolve_ships(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) -> usize{
-    let mut objs = Vec::new();
-
-    if let Some(ship) = Object::new(&killmail.victim.ship_type_id) {
-        objs.push((ship.name, ship.id));
-    }
-
-    for attacker in &killmail.attackers {
-        if let Some(ship_id) = attacker.ship_type_id {
-            if let Some(ship) = Object::new(&ship_id) {
-                objs.push((ship.name, ship.id));
-            }
-        }
-    }
-    if let Ok(ref mut ships) = context.ships.try_lock() {
-        for obj in &objs {
-                ships.entry(obj.0.clone()).or_insert(obj.1);
-            }
-    } else {
-        warn!("{}",msg);
-    }
-    objs.len()
-}
-
-fn resolve_characters(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) -> usize {
-    let mut objs = Vec::new();
-
-    if let Some(id) = killmail.victim.character_id {
-        if let Some(character) = Object::new(&id) {
-            objs.push((character.name, character.id));
-        }
-    }
-
-    for attacker in &killmail.attackers {
-        if let Some(id) = attacker.character_id {
-            if let Some(character) = Object::new(&id) {
-                objs.push((character.name, character.id));
-            }
-        }
-    }
-
-    if let Ok(ref mut characters) = context.characters.try_lock() {
-        for obj in &objs {
-                characters.entry(obj.0.clone()).or_insert(obj.1);
-            }
-    } else {
-        warn!("{}",msg);
-    }
-    objs.len()
-}
-
-fn resolve_corporations(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) -> usize {
-    let mut objs = Vec::new();
-
-    if let Some(id) = killmail.victim.corporation_id {
-        if let Some(corporation) = Object::new(&id) {
-            objs.push((corporation.name, corporation.id));
-        }
-    }
-
-    for attacker in &killmail.attackers {
-        if let Some(id) = attacker.corporation_id {
-            if let Some(corporation) = Object::new(&id) {
-                objs.push((corporation.name, corporation.id));
-            }
-        }
-    }
-
-    if let Ok(ref mut corporation) = context.corporation.try_lock() {
-        for obj in &objs {
-                corporation.entry(obj.0.clone()).or_insert(obj.1);
-            }
-    } else {
-        warn!("{}",msg);
-    }
-    objs.len()
-}
-
-fn resolve_alliances(context: &web::Data<AppContext>, killmail: &KillMail, msg: &str) -> usize {
-    let mut objs = Vec::new();
-
-    if let Some(id) = killmail.victim.alliance_id {
-        if let Some(alliance) = Object::new(&id) {
-            objs.push((alliance.name, alliance.id));
-        }
-    }
-
-    for attacker in &killmail.attackers {
-        if let Some(id) = attacker.alliance_id {
-            if let Some(alliance) = Object::new(&id) {
-                objs.push((alliance.name, alliance.id));
-            }
-        }
-    }
-
-    if let Ok(ref mut alliance) = context.alliance.try_lock() {
-        for obj in &objs {
-            alliance.entry(obj.0.clone()).or_insert(obj.1);
-        }
-    } else {
-        warn!("{}",msg);
-    }
-    objs.len()
 }
 
 fn resolver(context: web::Data<AppContext>) {
@@ -234,14 +117,33 @@ fn resolver(context: web::Data<AppContext>) {
         }
         if let Ok(msg) = context.resolver_queue.pop() {
             match msg {
-                Message::Resolve(killmail) => {
-                    let count =
-                        resolve_system(&context, &killmail, "resolver was not able to acquire context.systems")
-                        + resolve_ships(&context, &killmail, "resolver was not able to acquire context.ships")
-                        + resolve_characters(&context, &killmail, "resolver was not able to acquire context.characters")
-                        + resolve_corporations(&context, &killmail, "resolver was not able to acquire context.corporations")
-                        + resolve_alliances(&context, &killmail, "resolver was not able to acquire context.alliances");
-                    info!("resolver saved {}/{} names", count, context.resolver_queue.len());
+                Message::Resolve(id) => {
+                    let exist: bool = context.connection.try_lock()
+                                        .map(|conn|ObjectsApi::exist(&conn, &id))
+                                        .unwrap_or(false);
+                    let mut success = false;
+                    if !exist {
+                        if let Some(object) = Object::new(&id) {
+                            success = context.connection.try_lock()
+                                        .map(|conn| ObjectsApi::save(&conn, &object).ok())
+                                        .unwrap_or_default()
+                                        .unwrap_or(false);
+                            if (success) {
+                                info!("resolver saved {} {} {}. Queue length {}",
+                                    object.id,
+                                    object.name,
+                                    object.category,
+                                    context.resolver_queue.len());
+                            } esle {
+                                warn!("resolver was failed to save object with id {}. Queue length {}",
+                                    object.id,
+                                    context.resolver_queue.len());
+                            }
+                        }
+                    }
+                    if !success {
+                        context.resolver_queue.push(Message::Resolve(id));
+                    }
                 },
                 _ => {
                     warn!("Unexpected message");
@@ -250,6 +152,16 @@ fn resolver(context: web::Data<AppContext>) {
         }
     }
     info!("resolver ended");
+}
+
+fn enqueue(queue: &Queue, id: &i32) {
+    queue.push(Message::Resolve(*id));
+}
+
+fn try_enqueue(queue: &Queue, id: &Option<i32>) {
+    if let Some(id) = id {
+        queue.push(Message::Resolve(*id));
+    }
 }
 
 fn saver(context: web::Data<AppContext>) {
@@ -274,12 +186,29 @@ fn saver(context: web::Data<AppContext>) {
                                 Err(e) => error!("saver was not able to save killmail: {}", e)
                             }
                         }
-                        context.resolver_queue.push(Message::Resolve(killmail));
-                        context.unpark_resolver();
                     } else {
                         warn!("saver was not able to acquire connection.");
-                        context.saver_queue.push(Message::Save(killmail));
+                        context.saver_queue.push(Message::Save(killmail.clone()));
+                        context.park_saver();
                     }
+
+                    enqueue(&context.resolver_queue, &killmail.solar_system_id);
+                    try_enqueue(&context.resolver_queue, &killmail.moon_id);
+                    try_enqueue(&context.resolver_queue, &killmail.war_id);
+                    enqueue(&context.resolver_queue, &killmail.victim.ship_type_id);
+                    try_enqueue(&context.resolver_queue, &killmail.victim.character_id);
+                    try_enqueue(&context.resolver_queue, &killmail.victim.corporation_id);
+                    try_enqueue(&context.resolver_queue, &killmail.victim.alliance_id);
+                    try_enqueue(&context.resolver_queue, &killmail.victim.faction_id);
+                    for attacker in &killmail.attackers {
+                        try_enqueue(&context.resolver_queue, &attacker.ship_type_id);
+                        try_enqueue(&context.resolver_queue, &attacker.character_id);
+                        try_enqueue(&context.resolver_queue, &attacker.corporation_id);
+                        try_enqueue(&context.resolver_queue, &attacker.alliance_id);
+                        try_enqueue(&context.resolver_queue, &attacker.faction_id);
+                        try_enqueue(&context.resolver_queue, &attacker.weapon_type_id);
+                    }
+                    context.unpark_resolver();
                 },
                 _ => {
 

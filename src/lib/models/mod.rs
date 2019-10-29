@@ -115,18 +115,25 @@ impl DB {
 
 pub struct ObjectsApi;
 impl ObjectsApi {
-    pub fn save(conn: &Connection, object: &api::object::Object) -> QueryResult<usize>  {
+    pub fn save(conn: &Connection, object: &api::object::Object) -> QueryResult<bool>  {
         use super::schema;
         use diesel::RunQueryDsl;
         diesel::insert_into(schema::objects::table)
                    .values(&object::Object::from(object))
-                   .execute(conn)
+                   .execute(conn).and_then(|count| Ok(1 == count))
+
     }
 
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<object::Object>  {
         use diesel::prelude::*;
         use crate::schema::objects::dsl as table;
         table::objects.filter(table::object_id.eq(id)).first(conn)
+    }
+
+    pub fn exist(conn: &Connection, id: &Integer) -> bool {
+        use diesel::prelude::*;
+        use crate::schema::objects::dsl as table;
+        table::objects.find(id).select(table::object_id).first(conn) == Ok(*id)
     }
 }
 
