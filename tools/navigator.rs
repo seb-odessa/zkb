@@ -35,11 +35,6 @@ struct AppContext {
     server: String,
     client: String,
     timeout: u64,
-    characters: Mutex<HashMap<String, i32>>,
-    corporation: Mutex<HashMap<String, i32>>,
-    alliance: Mutex<HashMap<String, i32>>,
-    systems: Mutex<HashMap<String, i32>>,
-    ships: Mutex<HashMap<String, i32>>,
     command_queue: Queue,
     saver_queue: Queue,
     resolver_queue: Queue,
@@ -51,11 +46,6 @@ impl AppContext {
             server: String::from("127.0.0.1:8088"),
             client: String::from("seb_odessa"),
             timeout: 5,
-            characters: Mutex::new(HashMap::new()),
-            corporation: Mutex::new(HashMap::new()),
-            alliance: Mutex::new(HashMap::new()),
-            systems: Mutex::new(HashMap::new()),
-            ships: Mutex::new(HashMap::new()),
             command_queue: Queue::new(),
             saver_queue: Queue::new(),
             resolver_queue: Queue::new(),
@@ -240,11 +230,6 @@ fn quit(context: web::Data<AppContext>) -> String {
 fn stat(context: web::Data<AppContext>) -> String {
     let mut result = String::new();
     write!(&mut result, "Statistics:\n").unwrap();
-    write!(&mut result, "Known systems: {}\n", context.systems.try_lock().ok().map(|s|s.len()).unwrap_or_default()).unwrap();
-    write!(&mut result, "Known ships: {}\n", context.ships.try_lock().ok().map(|s|s.len()).unwrap_or_default()).unwrap();
-    write!(&mut result, "Known characters: {}\n", context.characters.try_lock().ok().map(|s|s.len()).unwrap_or_default()).unwrap();
-    write!(&mut result, "Known corporation: {}\n", context.corporation.try_lock().ok().map(|s|s.len()).unwrap_or_default()).unwrap();
-    write!(&mut result, "Known alliance: {}\n", context.alliance.try_lock().ok().map(|s|s.len()).unwrap_or_default()).unwrap();
     return result;
 }
 
@@ -254,50 +239,16 @@ fn out(stream: &mut String, map: &HashMap<String, i32>) {
     }
 }
 
-fn systems(context: web::Data<AppContext>) -> String {
-    let mut stream = String::new();
-    write!(&mut stream, "Known systems:\n").unwrap();
-    context.systems.try_lock().ok().map(|map| out(&mut stream, &map)).unwrap();
-    return stream;
-}
-
-fn ships(context: web::Data<AppContext>) -> String {
-    let mut stream = String::new();
-    write!(&mut stream, "Known systems:\n").unwrap();
-    context.ships.try_lock().ok().map(|map| out(&mut stream, &map)).unwrap();
-    return stream;
-}
-
-fn characters(context: web::Data<AppContext>) -> String {
-    let mut stream = String::new();
-    write!(&mut stream, "Known characters:\n").unwrap();
-    context.characters.try_lock().ok().map(|map| out(&mut stream, &map)).unwrap();
-    return stream;
-}
-
-fn corporation(context: web::Data<AppContext>) -> String {
-    let mut stream = String::new();
-    write!(&mut stream, "Known corporation:\n").unwrap();
-    context.corporation.try_lock().ok().map(|map| out(&mut stream, &map)).unwrap();
-    return stream;
-}
-
-fn alliance(context: web::Data<AppContext>) -> String {
-    let mut stream = String::new();
-    write!(&mut stream, "Known alliance\n:").unwrap();
-    context.alliance.try_lock().ok().map(|map| out(&mut stream, &map)).unwrap();
-    return stream;
-}
-
 fn system(info: web::Path<String>, context: web::Data<AppContext>) -> Result<String> {
     info!("/system/{}", info);
-    if let Ok(systems) = context.systems.try_lock() {
-        let name = info.into_inner();
-        let id: i32 = systems.get(&name).cloned().unwrap_or_default();
-        Ok(format!("The '{}' system has id {}!\n", name, id))
-    } else {
-        Ok(format!("The '{}' was not found!\n", info))
-    }
+    // if let Ok(systems) = context.systems.try_lock() {
+    //     let name = info.into_inner();
+    //     let id: i32 = systems.get(&name).cloned().unwrap_or_default();
+    //     Ok(format!("The '{}' system has id {}!\n", name, id))
+    // } else {
+    //     Ok(format!("The '{}' was not found!\n", info))
+    // }
+    Ok(format!("The '{}' was queried!\n", info))
 }
 
 fn server(context: web::Data<AppContext>) {
@@ -309,11 +260,6 @@ fn server(context: web::Data<AppContext>) {
             .register_data(context.clone())
             .route("/quit", web::get().to(quit))
             .route("/stat", web::get().to(stat))
-            .route("/systems", web::get().to(systems))
-            .route("/ships", web::get().to(ships))
-            .route("/characters", web::get().to(characters))
-            .route("/corporation", web::get().to(corporation))
-            .route("/alliance", web::get().to(alliance))
             .route("/system/{id}", web::get().to(system))
     })
     .bind(address)
