@@ -16,16 +16,16 @@ pub enum Command{
 
 #[derive(Debug, PartialEq)]
 pub enum Message{
+    Ping,
     Killmail(KillMail),
     Object(Object),
     CheckObject(i32),
     Resolve((i32, bool)),
 }
 
-pub type Queue = crossbeam_queue::SegQueue<Message>;
 
 type Commands = Channel<Command>;
-type Unresolved = Channel<Message>;
+type Queue = Channel<Message>;
 type Guard = Arc<(Mutex<bool>, Condvar)>;
 
 pub struct AppContext {
@@ -34,21 +34,20 @@ pub struct AppContext {
     pub client: String,
     pub timeout: u64,
     pub commands: Commands,
-    pub saver_queue: Queue,
-    pub unresolved: Unresolved,
+    pub saver: Queue,
+    pub unresolved: Queue,
 }
 impl AppContext {
 
     pub fn new<S: Into<String>>(connection: Connection, address: S, client: S, timeout: u64) -> Self {
-        let guard: Guard = Arc::new((Mutex::new(false), Condvar::new())); 
         Self {
             connection: Mutex::new(connection),
             server: address.into(),
             client: client.into(),
             timeout: timeout,
-            commands: Commands::new(guard.clone()),
-            saver_queue: Queue::new(),
-            unresolved: Unresolved::new(guard.clone()),
+            commands: Commands::new(Arc::new((Mutex::new(false), Condvar::new()))),
+            saver: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
+            unresolved: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
         }
     }
 }
@@ -65,18 +64,8 @@ impl Channel<Command> {
         }
     }
     
-    fn reset(&self, value: bool) {
-        let (lock, condition) = &*self.guard;
-        let mut ready = lock.lock().unwrap();
-        *ready = value;
-        if value {
-            condition.notify_all();
-        }
-    }
-
     pub fn push(&self, msg: Command) {
         self.queue.push(msg);
-        self.reset(true);
     }
 
     pub fn pop(&self) -> Option<Command> {    
@@ -106,13 +95,11 @@ impl Channel<Message> {
     }
 
     fn wait_notification(&self) {
-        info!("Wait for notification");
         let (lock, var) = &*self.guard;
         let mut ready = lock.lock().unwrap();
         while !*ready {
             ready = var.wait(ready).unwrap();
         }
-        info!("Notification received");
     }
 
     pub fn push(&self, msg: Message) {

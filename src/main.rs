@@ -16,27 +16,20 @@ use crossbeam_utils::sync::Parker;
 
 use std::fmt::Write;
 use std::collections::HashMap;
-
 use lib::services::*;
-
-
-
-
 
 fn monitor(context: web::Data<AppContext>) {
     info!("monitor started");
     let mut enabled = true;
     while enabled {
         while let Some(package) = gw::get_package(&context.client) {
-            if let Some(msg) = context.commands.pop() {
-                if Command::Quit == msg {
-                    info!("monitor received Command::Quit");
-                    context.commands.push(Command::Quit);
-                    enabled = false;
-                    break;
-                }
+            if let Some(Command::Quit) = context.commands.pop() {
+                context.commands.push(Command::Quit);
+                context.saver.push(Message::Ping);
+                info!("received Command::Quit");            
+                enabled = false;
+                break;
             }
-
             if let Some(content) = package.content {
                 let killmail = content.killmail;
                 info!("monitor {} {} {:>12}/{:>12} {}",
@@ -46,7 +39,7 @@ fn monitor(context: web::Data<AppContext>) {
                     killmail.get_total_sum(),
                     killmail.get_system_full_name()
                 );
-                context.saver_queue.push(Message::Killmail(killmail));
+                context.saver.push(Message::Killmail(killmail));
             }
         }
         if !enabled {

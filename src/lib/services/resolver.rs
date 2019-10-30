@@ -5,8 +5,9 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
     info!("Started");
     loop {
         if let Some(Command::Quit) = context.commands.pop() {
-            info!("received Command::Quit");
             context.commands.push(Command::Quit);
+            context.unresolved.push(Message::Ping);
+            info!("received Command::Quit");
             break;
         }
         if let Some(msg) = context.unresolved.pop() {
@@ -18,7 +19,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                                     object.name,
                                     object.category,
                                     context.unresolved.len());
-                        context.saver_queue.push(Message::Object(object));
+                        context.saver.push(Message::Object(object));
                     } else {
                         warn!("failed to query object id {}. Queue length {}",
                                     id,
@@ -29,8 +30,11 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                         }
                     }
                 },
-                _ => {
-                    warn!("Unexpected message");
+                Message::Ping => {
+                    info!("received Message::Ping");
+                },
+                message => {
+                    warn!("received unexpected message: {:?} ", message);
                 }
             }
         }
