@@ -20,9 +20,9 @@ path = "tools/monitor.rs"
 name = "updater"
 path = "tools/updater.rs"
 
-[[bin]]
-name = "navigator"
-path = "tools/navigator.rs"
+#[[bin]]
+#name = "navigator"
+#path = "tools/navigator.rs"
 
 [dependencies]
     serde = { version = "1.0", features = ["derive"]}
