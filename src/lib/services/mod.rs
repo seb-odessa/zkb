@@ -1,12 +1,10 @@
 pub mod server;
 pub mod monitor;
 pub mod resolver;
-pub mod saver;
+pub mod database;
 
-use crate::models::Connection;
 use crate::api::object::Object;
 use crate::api::killmail::KillMail;
-
 use std::sync::{Arc, Mutex, Condvar};
 
 
@@ -31,7 +29,6 @@ type Queue = Channel<Message>;
 type Guard = Arc<(Mutex<bool>, Condvar)>;
 
 pub struct AppContext {
-    pub connection: Mutex<Connection>,
     pub server: String,
     pub client: String,
     pub timeout: u64,
@@ -41,9 +38,8 @@ pub struct AppContext {
 }
 impl AppContext {
 
-    pub fn new<S: Into<String>>(connection: Connection, address: S, client: S, timeout: u64) -> Self {
+    pub fn new<S: Into<String>>(address: S, client: S, timeout: u64) -> Self {
         Self {
-            connection: Mutex::new(connection),
             server: address.into(),
             client: client.into(),
             timeout: timeout,
@@ -65,15 +61,15 @@ impl Channel<Command> {
             guard: guard,
         }
     }
-    
+
     pub fn push(&self, msg: Command) {
         self.queue.push(msg);
     }
 
-    pub fn pop(&self) -> Option<Command> {    
+    pub fn pop(&self) -> Option<Command> {
         self.queue.pop().ok()
     }
-    
+
     pub fn len(&self) -> usize {
         self.queue.len()
     }
@@ -108,9 +104,9 @@ impl Channel<Message> {
         self.queue.push(msg);
         self.reset(true);
     }
-    
+
     pub fn pop(&self) -> Option<Message> {
-        self.wait_notification();        
+        self.wait_notification();
         let result = self.queue.pop().ok();
         if 0 == self.len() {
             self.reset(false);

@@ -9,15 +9,14 @@ use crossbeam_utils::thread::scope;
 use lib::services::*;
 use lib::models::DB;
 
-
 embed_migrations!("migrations");
 
 fn main() {
-//    std::env::set_var("DATABASE_URL", ":memory:");
     env_logger::init();
-    let conn =  DB::connection();
-    embedded_migrations::run(&conn).expect("In Memory DB migration failed");
-    let context = web::Data::new(AppContext::new(conn, "127.0.0.1:8088", "seb_odessa", 10));
+
+    embedded_migrations::run(&DB::connection()).expect("In Memory DB migration failed");
+
+    let context = web::Data::new(AppContext::new("127.0.0.1:8088", "seb_odessa_home", 10));
 
     scope(|scope| {
         scope.builder()
@@ -29,8 +28,8 @@ fn main() {
              .spawn(|_| monitor::run(context.clone()))
              .expect("Failed to create Monitor");
         scope.builder()
-             .name("Saver".to_string())
-             .spawn(|_| saver::run(context.clone()))
+             .name("DB provider".to_string())
+             .spawn(|_| database::run(context.clone()))
              .expect("Failed to create Saver");
         scope.builder()
              .name("Name Resolver".to_string())
