@@ -1,3 +1,4 @@
+pub mod server;
 pub mod monitor;
 pub mod resolver;
 pub mod saver;
@@ -36,7 +37,7 @@ pub struct AppContext {
     pub timeout: u64,
     pub commands: Commands,
     pub saver: Queue,
-    pub unresolved: Queue,
+    pub resolver: Queue,
 }
 impl AppContext {
 
@@ -48,7 +49,7 @@ impl AppContext {
             timeout: timeout,
             commands: Commands::new(Arc::new((Mutex::new(false), Condvar::new()))),
             saver: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
-            unresolved: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
+            resolver: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
         }
     }
 }

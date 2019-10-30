@@ -18,7 +18,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
     loop {
         if let Some(Command::Quit) = context.commands.pop() {
             context.commands.push(Command::Quit);
-            context.unresolved.push(Message::Ping);
+            context.resolver.push(Message::Ping);
             info!("received Command::Quit");            
             break;
         }
@@ -57,7 +57,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                 Message::CheckObject(id) => {
                     if let Ok(ref conn) = context.connection.try_lock() {
                         if !ObjectsApi::exist(conn, &id) {
-                            context.unresolved.push(Message::Resolve((id, true)));
+                            context.resolver.push(Message::Resolve((id, true)));
                         }
                     }
                 },
@@ -65,7 +65,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                     if let Ok(ref conn) = context.connection.try_lock() {
                         if !ObjectsApi::exist(&conn, &object.id) {
                             match ObjectsApi::save(&conn, &object) {
-                                Ok(_) => info!("received {:?}. Queue length {}", object, context.unresolved.len()),
+                                Ok(_) => info!("received {:?}. Queue length {}", object, context.resolver.len()),
                                 Err(e) => error!("was not able to save object: {}", e)
                             }
                         }
