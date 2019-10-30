@@ -17,7 +17,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
             }
             if let Some(content) = package.content {
                 let killmail = content.killmail;
-                info!("monitor {} {} {:>12}/{:>12} {}",
+                info!("received {} {} {}/{} {}",
                     killmail.killmail_time.time().to_string(),
                     killmail.href(),
                     killmail.get_dropped_sum(),
