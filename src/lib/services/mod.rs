@@ -1,11 +1,11 @@
 pub mod resolver;
+pub mod saver;
 
 use crate::models::Connection;
 use crate::api::object::Object;
 use crate::api::killmail::KillMail;
 
-use std::sync::Mutex;
-use crossbeam::sync::WaitGroup;
+use std::sync::{Arc, Mutex, Condvar};
 
 
 #[derive(Debug, PartialEq)]
@@ -26,6 +26,7 @@ pub type Queue = crossbeam_queue::SegQueue<Message>;
 
 type Commands = Channel<Command>;
 type Unresolved = Channel<Message>;
+type Guard = Arc<(Mutex<bool>, Condvar)>;
 
 pub struct AppContext {
     pub connection: Mutex<Connection>,
@@ -39,70 +40,95 @@ pub struct AppContext {
 impl AppContext {
 
     pub fn new<S: Into<String>>(connection: Connection, address: S, client: S, timeout: u64) -> Self {
+        let guard: Guard = Arc::new((Mutex::new(false), Condvar::new())); 
         Self {
             connection: Mutex::new(connection),
             server: address.into(),
             client: client.into(),
             timeout: timeout,
-            commands: Commands::new(),
+            commands: Commands::new(guard.clone()),
             saver_queue: Queue::new(),
-            unresolved: Unresolved::new(),
+            unresolved: Unresolved::new(guard.clone()),
         }
     }
 }
 
 pub struct Channel<T>{
     queue: crossbeam_queue::SegQueue<T>,
-    wg: WaitGroup,
+    guard: Arc<(Mutex<bool>, Condvar)>,
 }
 impl Channel<Command> {
-    pub fn new() -> Self {
+    pub fn new(guard: Guard) -> Self {
         Self{
             queue: crossbeam_queue::SegQueue::new(),
-            wg: WaitGroup::new(),
+            guard: guard,
+        }
+    }
+    
+    fn reset(&self, value: bool) {
+        let (lock, condition) = &*self.guard;
+        let mut ready = lock.lock().unwrap();
+        *ready = value;
+        if value {
+            condition.notify_all();
         }
     }
 
     pub fn push(&self, msg: Command) {
         self.queue.push(msg);
+        self.reset(true);
     }
-    pub fn pop(&self) -> Option<Command> {
+
+    pub fn pop(&self) -> Option<Command> {    
         self.queue.pop().ok()
     }
+    
     pub fn len(&self) -> usize {
         self.queue.len()
     }
 }
 
 impl Channel<Message> {
-    pub fn new() -> Self {
+    pub fn new(guard: Guard) -> Self {
         Self{
             queue: crossbeam_queue::SegQueue::new(),
-            wg: WaitGroup::new(),
+            guard: guard,
         }
+    }
+
+    fn reset(&self, value: bool) {
+        let (lock, condition) = &*self.guard;
+        let mut ready = lock.lock().unwrap();
+        *ready = value;
+        if value {
+            condition.notify_all();
+        }
+    }
+
+    fn wait_notification(&self) {
+        info!("Wait for notification");
+        let (lock, var) = &*self.guard;
+        let mut ready = lock.lock().unwrap();
+        while !*ready {
+            ready = var.wait(ready).unwrap();
+        }
+        info!("Notification received");
     }
 
     pub fn push(&self, msg: Message) {
         self.queue.push(msg);
-        // if let Ok(unparker) = self.unparker.try_lock() {
-        //     unparker.unpark();
-        //     info!("unpark()");
-        // } else {
-        //     warn!("failed to acquire mutex for unpark");
-        // }
+        self.reset(true);
     }
+    
     pub fn pop(&self) -> Option<Message> {
-        // if 0 == self.queue.len() {
-        //     info!("before park()");
-        //     if let Ok(parker) = self.parker.try_lock() {
-        //         parker.park();
-        //         info!("park()");
-        //     } else {
-        //         warn!("failed to acquire mutex for park");
-        //     }
-        // }
-        self.queue.pop().ok()
+        self.wait_notification();        
+        let result = self.queue.pop().ok();
+        if 0 == self.len() {
+            self.reset(false);
+        }
+        return result;
     }
+
     pub fn len(&self) -> usize {
         self.queue.len()
     }

@@ -1,11 +1,7 @@
 use crate::api::object::Object;
 use crate::services::{AppContext, Command, Message};
 
-use crossbeam_utils::sync::Parker;
-use actix_web::web;
-
-
-pub fn run(context: web::Data<AppContext>) {
+pub fn run(context: actix_web::web::Data<AppContext>) {
     info!("Started");
     loop {
         if let Some(Command::Quit) = context.commands.pop() {
@@ -37,11 +33,6 @@ pub fn run(context: web::Data<AppContext>) {
                     warn!("Unexpected message");
                 }
             }
-        }
-        if 0 == context.unresolved.len() {
-            let timeout = context.timeout.into();
-            info!("will suspended {} sec", timeout);
-            Parker::new().park_timeout(std::time::Duration::from_secs(timeout))
         }
     }
     info!("Ended");
