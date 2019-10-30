@@ -65,7 +65,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                     if let Ok(ref conn) = context.connection.try_lock() {
                         if !ObjectsApi::exist(&conn, &object.id) {
                             match ObjectsApi::save(&conn, &object) {
-                                Ok(_) => info!("received {:?}. Queue length {}", object, context.resolver.len()),
+                                Ok(_) => info!("saved {:?}. Queue length {}", object, context.resolver.len()),
                                 Err(e) => error!("was not able to save object: {}", e)
                             }
                         }
