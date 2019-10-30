@@ -14,7 +14,7 @@ fn try_enqueue_check(queue: &Queue, id: &Option<i32>) {
 }
 
 pub fn run(context: actix_web::web::Data<AppContext>) {
-    info!("saver started");
+    info!("Started");
     loop {
         if let Some(Command::Quit) = context.commands.pop() {
             context.commands.push(Command::Quit);
@@ -28,12 +28,12 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                     if let Ok(ref conn) = context.connection.try_lock() {
                         if !DB::exists(&conn, killmail.killmail_id) {
                             match DB::save(&conn, &killmail) {
-                                Ok(()) => info!("saver saved killmail {} queue length: {}", killmail.killmail_id, context.saver.len()),
-                                Err(e) => error!("saver was not able to save killmail: {}", e)
+                                Ok(()) => info!("saved killmail {} queue length: {}", killmail.killmail_id, context.saver.len()),
+                                Err(e) => error!("was not able to save killmail: {}", e)
                             }
                         }
                     } else {
-                        warn!("saver was not able to acquire connection.");
+                        warn!("was not able to acquire connection.");
                         context.saver.push(Message::Killmail(killmail.clone()));
                     }
 
@@ -65,12 +65,12 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                     if let Ok(ref conn) = context.connection.try_lock() {
                         if !ObjectsApi::exist(&conn, &object.id) {
                             match ObjectsApi::save(&conn, &object) {
-                                Ok(_) => info!("saver saved object {} queue length: {}", object.id, context.saver.len()),
-                                Err(e) => error!("saver was not able to save object: {}", e)
+                                Ok(_) => info!("received {:?}. Queue length {}", object, context.unresolved.len()),
+                                Err(e) => error!("was not able to save object: {}", e)
                             }
                         }
                     } else {
-                        warn!("saver was not able to acquire connection.");
+                        warn!("was not able to acquire connection.");
                         context.saver.push(Message::Object(object));
                     }
                 },

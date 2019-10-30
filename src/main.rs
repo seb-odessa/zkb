@@ -3,54 +3,14 @@ extern crate log;
 #[macro_use]
 extern crate diesel_migrations;
 
-use lib::api::gw;
-use lib::api::object::Object;
-use lib::api::killmail::KillMail;
-use lib::models::*;
-
 use actix_rt;
 use actix_web::{web, App, HttpServer, Result};
 use crossbeam_utils::thread::scope;
-use crossbeam_utils::sync::Parker;
-
 
 use std::fmt::Write;
 use std::collections::HashMap;
 use lib::services::*;
-
-fn monitor(context: web::Data<AppContext>) {
-    info!("monitor started");
-    let mut enabled = true;
-    while enabled {
-        while let Some(package) = gw::get_package(&context.client) {
-            if let Some(Command::Quit) = context.commands.pop() {
-                context.commands.push(Command::Quit);
-                context.saver.push(Message::Ping);
-                info!("received Command::Quit");            
-                enabled = false;
-                break;
-            }
-            if let Some(content) = package.content {
-                let killmail = content.killmail;
-                info!("monitor {} {} {:>12}/{:>12} {}",
-                    killmail.killmail_time.time().to_string(),
-                    killmail.href(),
-                    killmail.get_dropped_sum(),
-                    killmail.get_total_sum(),
-                    killmail.get_system_full_name()
-                );
-                context.saver.push(Message::Killmail(killmail));
-            }
-        }
-        if !enabled {
-            break;
-        }
-        let timeout = context.timeout.into();
-        info!("monitor will suspended {} sec", timeout);
-        Parker::new().park_timeout(std::time::Duration::from_secs(timeout))
-    }
-    info!("monitor ended");
-}
+use lib::models::*;
 
 fn quit(context: web::Data<AppContext>) -> String {
     info!("server received Command::Quit");
@@ -63,12 +23,6 @@ fn stat(context: web::Data<AppContext>) -> String {
     let mut result = String::new();
     write!(&mut result, "Statistics:\n").unwrap();
     return result;
-}
-
-fn out(stream: &mut String, map: &HashMap<String, i32>) {
-    for key in map.keys() {
-        write!(stream, "{}\n", key).unwrap();
-    }
 }
 
 fn system(info: web::Path<String>, context: web::Data<AppContext>) -> Result<String> {
@@ -111,12 +65,26 @@ fn main() {
     let context = web::Data::new(AppContext::new(conn, "127.0.0.1:8088", "seb_odessa", 5));
 
     scope(|scope| {
-        scope.spawn(|_| server(context.clone()));
-        scope.spawn(|_| monitor(context.clone()));
-        scope.spawn(|_| saver::run(context.clone()));
-        scope.spawn(|_| resolver::run(context.clone()));
-        scope.spawn(|_| resolver::run(context.clone()));
-        scope.spawn(|_| resolver::run(context.clone()));
+        scope.builder()
+             .name("API Server".to_string())
+             .spawn(|_| server(context.clone()))
+             .expect("Failed to create API Server");
+        scope.builder()
+             .name("Monitor".to_string())
+             .spawn(|_| monitor::run(context.clone()))
+             .expect("Failed to create Monitor");
+        scope.builder()
+             .name("Saver".to_string())
+             .spawn(|_| saver::run(context.clone()))
+             .expect("Failed to create Saver");
+        scope.builder()
+             .name("Name Resolver".to_string())
+             .spawn(|_| resolver::run(context.clone()))
+             .expect("Failed to create Name Resolver");
+        scope.builder()
+             .name("Name Resolver".to_string())
+             .spawn(|_| resolver::run(context.clone()))
+             .expect("Failed to create Name Resolver");
     })
     .unwrap();
 

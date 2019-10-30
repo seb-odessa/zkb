@@ -14,16 +14,9 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
             match msg {
                 Message::Resolve((id, first)) => {
                     if let Some(object) = Object::new(&id) {
-                        info!("received {} '{}' '{}'. Queue length {}",
-                                    object.id,
-                                    object.name,
-                                    object.category,
-                                    context.unresolved.len());
-                        context.saver.push(Message::Object(object));
+                        info!("received {:?}. Queue length {}", object, context.unresolved.len());
                     } else {
-                        warn!("failed to query object id {}. Queue length {}",
-                                    id,
-                                    context.unresolved.len());
+                        warn!("failed to query object id {}. Queue length {}", id, context.unresolved.len());
                         if first {
                             // try again if it was first time
                             context.unresolved.push(Message::Resolve((id, false)));
