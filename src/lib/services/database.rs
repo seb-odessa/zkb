@@ -12,9 +12,8 @@ fn try_enqueue_check(queue: &Queue, id: &Option<i32>) {
     }
 }
 
-pub fn run(context: actix_web::web::Data<AppContext>) {
+pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
     info!("Started");
-    let conn = DB::connection();
 
     loop {
         if let Some(Command::Quit) = context.commands.pop() {
