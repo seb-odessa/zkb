@@ -57,35 +57,6 @@ impl DB {
         HashSet::from_iter(vector.iter().cloned())
     }
 
-    pub fn exists(conn: &Connection, killmail_id: Integer) -> bool {
-        use diesel::prelude::*;
-        use super::schema::killmails::dsl as table;
-        table::killmails.find(killmail_id).select(table::killmail_id).first(conn) == Ok(killmail_id)
-    }
-
-    /** Saves killmail into DB */
-    pub fn save(conn: &Connection, killmail: &api::killmail::KillMail) -> QueryResult<()> {
-        use super::schema;
-        use diesel::connection::Connection;
-        use diesel::RunQueryDsl;
-
-        conn.transaction::<_, _, _>(|| {
-            diesel::insert_into(schema::killmails::table)
-                   .values(&killmail::KillMail::from(killmail))
-                   .execute(conn)?;
-            diesel::insert_into(schema::victims::table)
-                   .values(&victim::Victim::from(killmail))
-                   .execute(conn)?;
-            diesel::insert_into(schema::attackers::table)
-                   .values(&get_attackers(killmail))
-                   .execute(conn)?;
-            diesel::insert_into(schema::items::table)
-                   .values(&get_items(killmail))
-                   .execute(conn)?;
-            Ok(())
-        })
-    }
-
     /** Saves vector of killmail into DB */
     pub fn save_all(conn: &Connection, killmail: &Vec<api::killmail::KillMail>) -> QueryResult<()> {
         use super::schema;
@@ -113,6 +84,45 @@ impl DB {
         })
     }
 }
+
+pub struct KillmailsApi;
+impl KillmailsApi{
+    /** Saves killmail into DB */
+    pub fn save(conn: &Connection, killmail: &api::killmail::KillMail) -> QueryResult<()> {
+        use super::schema;
+        use diesel::connection::Connection;
+        use diesel::RunQueryDsl;
+
+        conn.transaction::<_, _, _>(|| {
+            diesel::insert_into(schema::killmails::table)
+                   .values(&killmail::KillMail::from(killmail))
+                   .execute(conn)?;
+            diesel::insert_into(schema::victims::table)
+                   .values(&victim::Victim::from(killmail))
+                   .execute(conn)?;
+            diesel::insert_into(schema::attackers::table)
+                   .values(&get_attackers(killmail))
+                   .execute(conn)?;
+            diesel::insert_into(schema::items::table)
+                   .values(&get_items(killmail))
+                   .execute(conn)?;
+            Ok(())
+        })
+    }
+
+    // pub fn load(conn: &Connection, id: &Integer) -> QueryResult<object::Object>  {
+    //     use diesel::prelude::*;
+    //     use crate::schema::objects::dsl as table;
+    //     table::objects.filter(table::object_id.eq(id)).first(conn)
+    // }
+
+    pub fn exists(conn: &Connection, killmail_id: Integer) -> bool {
+        use diesel::prelude::*;
+        use super::schema::killmails::dsl as table;
+        table::killmails.find(killmail_id).select(table::killmail_id).first(conn) == Ok(killmail_id)
+    }
+}
+
 
 pub struct CategoriesApi;
 impl CategoriesApi {

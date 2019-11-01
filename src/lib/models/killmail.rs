@@ -1,8 +1,12 @@
 use std::convert::From;
 use std::convert::Into;
+use chrono::Utc;
+
 use crate::api;
 use crate::schema::killmails;
-use super::{Integer, DateTime};
+use super::{Integer, DateTime, Connection, QueryResult};
+use super::victim::Victim;
+use super::attacker::Attacker;
 
 #[derive(Queryable, Insertable)]
 #[table_name = "killmails"]
@@ -12,6 +16,23 @@ pub struct KillMail {
     pub solar_system_id: Integer,
     pub moon_id: Option<Integer>,
     pub war_id: Option<Integer>,
+}
+impl KillMail {
+    pub fn load(conn: &Connection, id: Integer) -> QueryResult<api::killmail::KillMail> {
+        use diesel::prelude::*;
+        use crate::schema::killmails::dsl as table;
+        let killmail: KillMail = table::killmails.find(&id).first::<Self>(conn)?;
+
+        Ok(api::killmail::KillMail {
+            killmail_id: killmail.killmail_id,
+            killmail_time: chrono::DateTime::from_utc(killmail.killmail_time, Utc),
+            solar_system_id: killmail.solar_system_id,
+            moon_id: killmail.moon_id,
+            war_id: killmail.war_id,
+            victim: Victim::load(conn, id)?,
+            attackers: Attacker::load(conn, id)?,
+        })
+    }
 }
 impl From<&api::killmail::KillMail> for KillMail{
     fn from(src: &api::killmail::KillMail) -> Self {
@@ -24,24 +45,5 @@ impl From<&api::killmail::KillMail> for KillMail{
         }
     }
 }
-
-/*
-impl Into<api::killmail::KillMail> for KillMail{
-    fn into(self) -> api::killmail::KillMail {
-
-        api::killmail::KillMail {
-            killmail_id: self.killmail_id,
-            killmail_time: self.killmail_time,
-            solar_system_id: self.solar_system_id,
-            moon_id: self.moon_id,
-            war_id: self.war_id,
-            victim:
-        }
-
-    pub victim: Victim,
-    pub attackers: Vec<Attacker>,
-    }
-}
-*/
 
 

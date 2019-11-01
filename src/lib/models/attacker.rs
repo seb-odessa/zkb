@@ -1,24 +1,9 @@
 use std::convert::From;
 use crate::api;
 use crate::schema::attackers;
-use super::{Integer, OptInteger, Float, Bool};
+use super::{Integer, OptInteger, Float, Bool, Connection, QueryResult};
 
-// CREATE TABLE IF NOT EXISTS attackers(
-//     attacker_id INTEGER NOT NULL PRIMARY KEY,
-//     killmail_id INTEGER NOT NULL,
-//     security_status REAL NOT NULL,
-//     final_blow BOOLEAN NOT NULL,
-//     damage_done INTEGER NOT NULL,
-//     ship_type_id INTEGER,
-//     alliance_id INTEGER,
-//     character_id INTEGER,
-//     corporation_id INTEGER,
-//     faction_id INTEGER,
-//     weapon_type_id INTEGER,
-//     FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
-// );
-
-#[derive(Queryable, Insertable, Default)]
+#[derive(Insertable)]
 #[table_name = "attackers"]
 pub struct Attacker {
     pub killmail_id: Integer,
@@ -32,7 +17,11 @@ pub struct Attacker {
     pub faction_id: OptInteger,
     pub weapon_type_id: OptInteger,
 }
-
+impl Attacker {
+    pub fn load(conn: &Connection, id: Integer) -> QueryResult<Vec<api::killmail::Attacker>> {
+        Loadable::load(conn, id).and_then(|rows| Ok(rows.into_iter().map(|a| Attacker::from(a).into()).collect()))
+    }
+}
 impl From<&api::killmail::Attacker> for Attacker{
     fn from(src: &api::killmail::Attacker) -> Self {
         Self {
@@ -49,40 +38,56 @@ impl From<&api::killmail::Attacker> for Attacker{
         }
     }
 }
+impl Into<api::killmail::Attacker> for Attacker{
+    fn into(self) -> api::killmail::Attacker {
+        api::killmail::Attacker {
+            ship_type_id: self.ship_type_id,
+            character_id: self.character_id,
+            corporation_id: self.corporation_id,
+            alliance_id: self.alliance_id,
+            faction_id: self.faction_id,
+            damage_done: self.damage_done,
+            final_blow: self.final_blow,
+            security_status: self.security_status,
+            weapon_type_id: self.weapon_type_id,
+        }
+    }
+}
+impl From<Loadable> for Attacker{
+    fn from(src: Loadable) -> Self {
+        Self {
+            killmail_id: src.killmail_id,
+            ship_type_id: src.ship_type_id,
+            character_id: src.character_id,
+            corporation_id: src.corporation_id,
+            alliance_id: src.alliance_id,
+            faction_id: src.faction_id,
+            damage_done: src.damage_done,
+            final_blow: src.final_blow,
+            security_status: src.security_status,
+            weapon_type_id: src.weapon_type_id,
+        }
+    }
+}
+#[derive(Queryable)]
+struct Loadable {
+    pub attacker_id: Integer,
+    pub killmail_id: Integer,
+    pub security_status: Float,
+    pub final_blow: Bool,
+    pub damage_done: Integer,
+    pub ship_type_id: OptInteger,
+    pub alliance_id: OptInteger,
+    pub character_id: OptInteger,
+    pub corporation_id: OptInteger,
+    pub faction_id: OptInteger,
+    pub weapon_type_id: OptInteger,
+}
 
-impl Attacker {
-    // pub fn load(src: &api::killmail::KillMail) -> Vec<Self> {
-    //     let mut res = Vec::new();
-    //     for i in 0..src.attackers.len()
-    //     {
-    //         let mut attacker = Self::from(&src.attackers[i]);
-    //         attacker.killmail_id = src.killmail_id;
-    //         res.push(attacker);
-    //     }
-    //     return res;
-    // }
-
-
-
-
-//     pub fn load(conn: &Connection, killmail_id: Integer) -> QueryResult<Vec<Self>> {
-//         use diesel::prelude::*;
-//         use schema::attackers::dsl as table;
-// //        attackers::dsl::attackers.filter(table::killmail_id.eq(&killmail_id)).load(conn)
-
-//         table::attackers
-//             .select(table::killmail_id)
-//             .select(table::security_status)
-//             .select(table::final_blow)
-//             .select(table::damage_done)
-//             .select(table::ship_type_id)
-//             .select(table::alliance_id)
-//             .select(table::character_id)
-//             .select(table::corporation_id)
-//             .select(table::faction_id)
-//             .select(table::weapon_type_id)
-//             .filter(table::killmail_id.eq(&killmail_id)).load(conn)
-
-//         //attackers::dsl::attackers.find(killmail_id).first::<Self>(conn)
-//     }
+impl Loadable {
+    pub fn load(conn: &Connection, id: Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+        use crate::schema::attackers::dsl as table;
+        table::attackers.filter(table::killmail_id.eq(&id)).load(conn)
+    }
 }

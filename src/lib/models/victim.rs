@@ -15,6 +15,11 @@ pub struct Victim {
     pub corporation_id: OptInteger,
     pub faction_id: OptInteger,
 }
+impl Victim {
+    pub fn load(conn: &Connection, id: Integer) -> QueryResult<api::killmail::Victim> {
+        Loadable::load(conn, id).and_then(|row| Ok(Victim::from(row).into()))
+    }
+}
 impl From<&api::killmail::KillMail> for Victim{
     fn from(src: &api::killmail::KillMail) -> Self {
         Self {
@@ -42,8 +47,8 @@ impl Into<api::killmail::Victim> for Victim{
         }
     }
 }
-impl From<&Loadable> for Victim{
-    fn from(src: &Loadable) -> Self {
+impl From<Loadable> for Victim{
+    fn from(src: Loadable) -> Self {
         Self {
             killmail_id: src.killmail_id,
             ship_type_id: src.ship_type_id,
@@ -70,10 +75,10 @@ struct Loadable {
 }
 
 impl Loadable {
-    pub fn load(conn: &Connection, killmail_id: Integer) -> QueryResult<Vec<Self>> {
+    pub fn load(conn: &Connection, id: Integer) -> QueryResult<Self> {
         use diesel::prelude::*;
         use crate::schema::victims::dsl as table;
-        table::victims.filter(table::killmail_id.eq(&killmail_id)).load(conn)
+        table::victims.filter(table::killmail_id.eq(&id)).first(conn)
     }
 }
 

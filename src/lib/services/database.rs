@@ -46,11 +46,21 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
         if let Some(msg) = context.database.pop() {
             match msg {
                 Message::SaveKill(killmail) => {
-                    match DB::save(&conn, &killmail) {
+                    match KillmailsApi::save(&conn, &killmail) {
                         Ok(()) => info!("saved killmail {} queue length: {}", killmail.killmail_id, context.database.len()),
                         Err(e) => warn!("was not able to save killmail: {}", e)
                     }
                     handle_killmail(&context.database, &killmail);
+                },
+                Message::LoadKill(id) => {
+                    info!("Load killmail {} queue length: {}", id, context.database.len());
+                    match killmail::KillMail::load(&conn, id) {
+                        Ok(killmail) => {
+                            info!("loaded killmail {} queue length: {}", killmail.killmail_id, context.database.len());
+                            context.responses.push(Message::Respond(killmail))
+                        },
+                        Err(e) => warn!("was not able to load killmail: {}", e)
+                    }
                 },
                 Message::CheckObject(id) => {
                     if !ObjectsApi::exist(&conn, &id) {

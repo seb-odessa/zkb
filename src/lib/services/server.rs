@@ -15,11 +15,12 @@ fn quit(context: web::Data<AppContext>) -> String {
 fn ping(context: web::Data<AppContext>) -> String {
     context.database.push(Message::Ping);
     context.resolver.push(Message::Ping);    
-    format!("Quit\n")
+    format!("Ping\n")
 }
 
-fn killmail(info: web::Path<i32>, _context: web::Data<AppContext>) -> Result<String> {
+fn killmail(info: web::Path<i32>, context: web::Data<AppContext>) -> Result<String> {
     info!("/killmail/{}", info);
+    context.database.push(Message::LoadKill(*info.as_ref()));
     // if let Ok(systems) = context.systems.try_lock() {
     //     let name = info.into_inner();
     //     let id: i32 = systems.get(&name).cloned().unwrap_or_default();
