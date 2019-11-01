@@ -24,7 +24,7 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
         }
         if let Some(msg) = context.saver.pop() {
             match msg {
-                Message::Killmail(killmail) => {
+                Message::SaveKillamil(killmail) => {
                     if !DB::exists(&conn, killmail.killmail_id) {
                         match DB::save(&conn, &killmail) {
                             Ok(()) => info!("saved killmail {} queue length: {}", killmail.killmail_id, context.saver.len()),
@@ -54,7 +54,7 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         context.resolver.push(Message::Resolve((id, true)));
                     }
                 },
-                Message::Object(object) => {
+                Message::SaveObject(object) => {
                     if !ObjectsApi::exist(&conn, &object.id) {
                         match ObjectsApi::save(&conn, &object) {
                             Ok(_) => info!("saved {:?}. Queue length {}", object, context.resolver.len()),

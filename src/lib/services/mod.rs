@@ -17,8 +17,8 @@ pub enum Command{
 #[derive(Debug, PartialEq)]
 pub enum Message{
     Ping,
-    Killmail(KillMail),
-    Object(Object),
+    SaveKillamil(KillMail),
+    SaveObject(Object),
     CheckObject(i32),
     Resolve((i32, bool)),
 }

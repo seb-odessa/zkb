@@ -24,7 +24,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                     killmail.get_total_sum(),
                     killmail.get_system_full_name()
                 );
-                context.saver.push(Message::Killmail(killmail));
+                context.saver.push(Message::SaveKillamil(killmail));
             }
         }
         if !enabled {
