@@ -86,13 +86,21 @@ impl DB {
 }
 
 pub struct KillmailsApi;
-impl KillmailsApi{
-    /** Saves killmail into DB */
+impl KillmailsApi {
+
     pub fn save(conn: &Connection, killmail: &api::killmail::KillMail) -> QueryResult<()> {
+        if (!KillmailsApi::exist(conn, killmail.killmail_id)) {
+            KillmailsApi::do_save(conn, killmail)
+        } else {
+            Ok(())
+        }
+    }
+
+    fn do_save(conn: &Connection, killmail: &api::killmail::KillMail) -> QueryResult<()> {
         use super::schema;
         use diesel::connection::Connection;
         use diesel::RunQueryDsl;
-
+    
         conn.transaction::<_, _, _>(|| {
             diesel::insert_into(schema::killmails::table)
                    .values(&killmail::KillMail::from(killmail))
@@ -116,7 +124,7 @@ impl KillmailsApi{
     //     table::objects.filter(table::object_id.eq(id)).first(conn)
     // }
 
-    pub fn exists(conn: &Connection, killmail_id: Integer) -> bool {
+    pub fn exist(conn: &Connection, killmail_id: Integer) -> bool {
         use diesel::prelude::*;
         use super::schema::killmails::dsl as table;
         table::killmails.find(killmail_id).select(table::killmail_id).first(conn) == Ok(killmail_id)

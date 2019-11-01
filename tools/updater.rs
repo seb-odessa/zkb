@@ -11,7 +11,7 @@ fn flush(records: &Vec<KillMail>) -> Option<usize> {
     let conn = DB::connection();
     let mut map = HashMap::new();
     for km in records {
-        if !KillmailsApi::exists(&conn, km.killmail_id) {
+        if !KillmailsApi::exist(&conn, km.killmail_id) {
             map.insert(km.killmail_id, km.clone());
         }
     }
