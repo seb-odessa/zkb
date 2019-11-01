@@ -10,21 +10,21 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
         while let Some(package) = api::gw::get_package(&context.client) {
             if let Some(Command::Quit) = context.commands.pop() {
                 context.commands.push(Command::Quit);
-                context.saver.push(Message::Ping);
+                context.database.push(Message::Ping);
                 info!("received Command::Quit");            
                 enabled = false;
                 break;
             }
             if let Some(content) = package.content {
                 let killmail = content.killmail;
-                info!("received {} {} {}/{} {}",
+                info!("{} {} {}/{} {}",
                     killmail.killmail_time.time().to_string(),
                     killmail.href(),
                     killmail.get_dropped_sum(),
                     killmail.get_total_sum(),
                     killmail.get_system_full_name()
                 );
-                context.saver.push(Message::SaveKillamil(killmail));
+                context.database.push(Message::SaveKill(killmail));
             }
         }
         if !enabled {

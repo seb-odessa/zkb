@@ -17,8 +17,10 @@ pub enum Command{
 #[derive(Debug, PartialEq)]
 pub enum Message{
     Ping,
-    SaveKillamil(KillMail),
+    SaveKill(KillMail),
+    LoadKill(i32),
     SaveObject(Object),
+    LoadObject(i32),
     CheckObject(i32),
     Resolve((i32, bool)),
 }
@@ -33,8 +35,9 @@ pub struct AppContext {
     pub client: String,
     pub timeout: u64,
     pub commands: Commands,
-    pub saver: Queue,
+    pub database: Queue,
     pub resolver: Queue,
+    pub responses: Queue,
 }
 impl AppContext {
 
@@ -44,8 +47,9 @@ impl AppContext {
             client: client.into(),
             timeout: timeout,
             commands: Commands::new(Arc::new((Mutex::new(false), Condvar::new()))),
-            saver: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
+            database: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
             resolver: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
+            responses:Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
         }
     }
 }

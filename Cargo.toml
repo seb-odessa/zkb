@@ -41,8 +41,7 @@ path = "tools/updater.rs"
     lazy_static = "1.4"
     actix-web = "1.0"
     actix-rt = "0.2"
-    actix-server = "0.7"
-    futures = "0.1"
+#    futures = "0.1"
 
 
 

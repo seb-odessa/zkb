@@ -41,7 +41,7 @@ fn main() {
         scope.builder()
              .name("DB provider".to_string())
              .spawn(|_| database::run(conn, context.clone()))
-             .expect("Failed to create Saver");
+             .expect("Failed to create database");
     })
     .unwrap();
     info!("Application finished");

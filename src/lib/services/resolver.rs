@@ -14,21 +14,17 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
             match msg {
                 Message::Resolve((id, first)) => {
                     if let Some(object) = Object::new(&id) {
-                        info!("received {:?}. Queue length {}", object, context.resolver.len());
-                        context.saver.push(Message::SaveObject(object));
+                        info!("{:?}. Queue length {}", object, context.resolver.len());
+                        context.database.push(Message::SaveObject(object));
                     } else {
                         warn!("failed to query object id {}. Queue length {}", id, context.resolver.len());
-                        if first {
-                            // try again if it was first time
+                        if first {  // try again if it was first time
                             context.resolver.push(Message::Resolve((id, false)));
                         }
                     }
                 },
-                Message::Ping => {
-                    info!("received Message::Ping");
-                },
                 message => {
-                    warn!("received unexpected message: {:?} ", message);
+                    warn!("received: {:?} ", message);
                 }
             }
         }

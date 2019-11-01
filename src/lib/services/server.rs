@@ -1,4 +1,4 @@
-use crate::services::{AppContext, Command};
+use crate::services::{AppContext, Command, Message};
 
 use actix_rt;
 use actix_web::{web, App, HttpServer, Result};
@@ -12,14 +12,14 @@ fn quit(context: web::Data<AppContext>) -> String {
     format!("Quit\n")
 }
 
-fn stat(context: web::Data<AppContext>) -> String {
-    let mut result = String::new();
-    write!(&mut result, "Statistics:\n").unwrap();
-    return result;
+fn ping(context: web::Data<AppContext>) -> String {
+    context.database.push(Message::Ping);
+    context.resolver.push(Message::Ping);    
+    format!("Quit\n")
 }
 
-fn system(info: web::Path<String>, context: web::Data<AppContext>) -> Result<String> {
-    info!("/system/{}", info);
+fn killmail(info: web::Path<i32>, _context: web::Data<AppContext>) -> Result<String> {
+    info!("/killmail/{}", info);
     // if let Ok(systems) = context.systems.try_lock() {
     //     let name = info.into_inner();
     //     let id: i32 = systems.get(&name).cloned().unwrap_or_default();
@@ -38,8 +38,8 @@ pub fn run(context: web::Data<AppContext>) {
         App::new()
             .register_data(context.clone())
             .route("/quit", web::get().to(quit))
-            .route("/stat", web::get().to(stat))
-            .route("/system/{id}", web::get().to(system))
+            .route("/ping", web::get().to(ping))
+            .route("/killmail/{id}", web::get().to(killmail))
     })
     .bind(address)
     .unwrap()
