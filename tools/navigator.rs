@@ -5,7 +5,7 @@ extern crate diesel_migrations;
 
 use lib::api::gw;
 use lib::api::object::Object;
-use lib::api::killmail::KillMail;
+use lib::api::killmail::Killmail;
 use lib::models::*;
 
 use actix_rt;
@@ -21,7 +21,7 @@ use std::collections::HashMap;
 #[derive(Debug, PartialEq)]
 pub enum Message{
     Quit,
-    Killmail(KillMail),
+    Killmail(Killmail),
     Object(Object),
     CheckObject(i32),
     Wait(u64),

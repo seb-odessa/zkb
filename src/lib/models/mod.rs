@@ -56,7 +56,7 @@ impl DB {
     //     HashSet::from_iter(vector.iter().cloned())
     // }
 
-    // pub fn save_all(conn: &Connection, killmail: &Vec<api::killmail::KillMail>) -> QueryResult<()> {
+    // pub fn save_all(conn: &Connection, killmail: &Vec<api::killmail::Killmail>) -> QueryResult<()> {
     //     use super::schema;
     //     use diesel::connection::Connection;
     //     use diesel::RunQueryDsl;
@@ -68,7 +68,7 @@ impl DB {
 
     //     for killmail in killmail.iter() {
     //         victims.push(victim::Victim::from(killmail));
-    //         killmails.push(killmail::KillMail::from(killmail));
+    //         killmails.push(killmail::Killmail::from(killmail));
     //         attackers.append(&mut get_attackers(killmail));
     //         items.append(&mut get_items(killmail));
     //     }
@@ -86,7 +86,7 @@ impl DB {
 pub struct KillmailsApi;
 impl KillmailsApi {
 
-    pub fn save(conn: &Connection, killmail: &api::killmail::KillMail) -> QueryResult<()> {
+    pub fn save(conn: &Connection, killmail: &api::killmail::Killmail) -> QueryResult<()> {
         if !KillmailsApi::exist(conn, killmail.killmail_id) {
             KillmailsApi::do_save(conn, killmail)
         } else {
@@ -94,14 +94,14 @@ impl KillmailsApi {
         }
     }
 
-    fn do_save(conn: &Connection, killmail: &api::killmail::KillMail) -> QueryResult<()> {
+    fn do_save(conn: &Connection, killmail: &api::killmail::Killmail) -> QueryResult<()> {
         use super::schema;
         use diesel::connection::Connection;
         use diesel::RunQueryDsl;
 
         conn.transaction::<_, _, _>(|| {
             diesel::insert_into(schema::killmails::table)
-                   .values(&killmail::KillMail::from(killmail))
+                   .values(&killmail::Killmail::from(killmail))
                    .execute(conn)?;
             diesel::insert_into(schema::victims::table)
                    .values(&victim::Victim::from(killmail))
@@ -185,7 +185,7 @@ impl ObjectsApi {
     }
 }
 
-fn get_attackers(killmail: &api::killmail::KillMail) -> Vec<attacker::Attacker> {
+fn get_attackers(killmail: &api::killmail::Killmail) -> Vec<attacker::Attacker> {
     let mut result = Vec::new();
     for attacker in &killmail.attackers {
         let mut obj = attacker::Attacker::from(attacker);
@@ -195,7 +195,7 @@ fn get_attackers(killmail: &api::killmail::KillMail) -> Vec<attacker::Attacker> 
     return result;
 }
 
-fn get_items(killmail: &api::killmail::KillMail) -> Vec<item::Item> {
+fn get_items(killmail: &api::killmail::Killmail) -> Vec<item::Item> {
     let mut result = Vec::new();
     if let Some(ref items) = &killmail.victim.items {
         for item in items {

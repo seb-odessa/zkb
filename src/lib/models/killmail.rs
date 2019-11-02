@@ -6,15 +6,15 @@ use super::{Integer, OptInteger, OptString, DateTime, Connection, QueryResult};
 
 #[derive(Insertable, Associations)]
 #[table_name = "killmails"]
-pub struct KillMail {
+pub struct Killmail {
     pub killmail_id: Integer,
     pub killmail_time: DateTime,
     pub solar_system_id: Integer,
     pub moon_id: Option<Integer>,
     pub war_id: Option<Integer>,
 }
-impl From<&api::killmail::KillMail> for KillMail {
-    fn from(src: &api::killmail::KillMail) -> Self {
+impl From<&api::killmail::Killmail> for Killmail {
+    fn from(src: &api::killmail::Killmail) -> Self {
         Self {
             killmail_id: src.killmail_id,
             killmail_time: src.killmail_time.naive_utc(),

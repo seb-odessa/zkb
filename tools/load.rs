@@ -3,7 +3,7 @@
 extern crate log;
 
 use lib::api;
-use lib::api::killmail::KillMail;
+use lib::api::killmail::Killmail;
 use lib::models::{DB, Hash};
 use std::collections::HashMap;
 use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};
@@ -26,7 +26,7 @@ pub enum Message<T> {
     Work(T),
 }
 
-fn receiver(src: &SegQueue<Message<Id>>, dst: &SegQueue<Message<KillMail>>) {
+fn receiver(src: &SegQueue<Message<Id>>, dst: &SegQueue<Message<Killmail>>) {
     loop {
         if let Ok(msg) = src.pop() {
             match msg {
@@ -52,7 +52,7 @@ fn receiver(src: &SegQueue<Message<Id>>, dst: &SegQueue<Message<KillMail>>) {
     }
 }
 
-fn flush(records: &Vec<KillMail>) -> Option<usize> {
+fn flush(records: &Vec<Killmail>) -> Option<usize> {
     let conn = DB::connection();
     match DB::save_all(&conn, &records) {
         Ok(()) => {
@@ -67,7 +67,7 @@ fn flush(records: &Vec<KillMail>) -> Option<usize> {
 }
 
 
-fn saver(src: &SegQueue<Message<KillMail>>, year: i32, month: u32, day: u32, start: usize, total: usize) {
+fn saver(src: &SegQueue<Message<Killmail>>, year: i32, month: u32, day: u32, start: usize, total: usize) {
     let mut counter = start;
     print!("{:4}-{:02}-{:02} Loading {:5}/{:5}\r", year, month, day, counter, total);
     std::io::stdout().flush().unwrap_or_default();

@@ -9,7 +9,7 @@ use crate::provider;
 pub type ItemsOptional = Option<Vec<Item>>;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct KillMail {
+pub struct Killmail {
     pub killmail_id: IntRequired,
     pub killmail_time: TimeRequired,
     pub solar_system_id: IntRequired,
@@ -18,13 +18,13 @@ pub struct KillMail {
     pub victim: Victim,
     pub attackers: Vec<Attacker>,
 }
-impl TryFrom<String> for KillMail {
+impl TryFrom<String> for Killmail {
     type Error = serde_json::Error;
     fn try_from(json: String) -> Result<Self, Self::Error> {
         serde_json::from_str(&json)
     }
 }
-impl KillMail {
+impl Killmail {
     pub fn href(&self)->String {
         format!("https://zkillboard.com/kill/{}/", self.killmail_id)
     }
@@ -51,15 +51,15 @@ impl KillMail {
         {
             items.as_ref().map_or(0.0, |items|{
                 items.iter().map(|item| {
-                    KillMail::get_sum(&Some(item.item_type_id), &get_quantity(item), get_price)
+                    Killmail::get_sum(&Some(item.item_type_id), &get_quantity(item), get_price)
                     +
-                    KillMail::items_sum(&item.items, get_quantity, get_price)
+                    Killmail::items_sum(&item.items, get_quantity, get_price)
             }).fold(0.0, |acc, x| acc + x)
         })
     }
 
     pub fn get_dropped_sum(&self) -> u64 {
-        KillMail::items_sum(
+        Killmail::items_sum(
             &self.victim.items,
             &|item: &Item| {item.quantity_dropped},
             &provider::get_avg_price) as u64
@@ -67,12 +67,12 @@ impl KillMail {
 
     pub fn get_destroyed_sum(&self) -> u64 {
         (
-            KillMail::items_sum(
+            Killmail::items_sum(
                 &self.victim.items,
                 &|item: &Item| {item.quantity_destroyed},
                 &provider::get_avg_price)
             +
-            KillMail::get_sum(&Some(self.victim.ship_type_id), &Some(1), &provider::get_avg_price)
+            Killmail::get_sum(&Some(self.victim.ship_type_id), &Some(1), &provider::get_avg_price)
         )
         as u64
     }
@@ -300,7 +300,7 @@ mod tests {
             let json = serde_json::to_string(&rec);
             assert!(json.is_ok());
 
-            let val = KillMail::try_from(json.unwrap());
+            let val = Killmail::try_from(json.unwrap());
             assert!(val.is_ok());
             let record = val.unwrap();
             assert_eq!(2, record.attackers.len());

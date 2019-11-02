@@ -1,4 +1,4 @@
-use super::killmail::KillMail;
+use super::killmail::Killmail;
 use std::convert::TryFrom;
 use serde::{Deserialize, Serialize};
 
@@ -30,7 +30,7 @@ impl TryFrom<String> for Zkb {
 pub struct PackageContent {
     #[serde(alias = "killID")]
     pub id: i32,
-    pub killmail: KillMail,
+    pub killmail: Killmail,
     pub zkb: Zkb,
 }
 impl PackageContent {

@@ -15,8 +15,8 @@ pub struct Victim {
     pub corporation_id: OptInteger,
     pub faction_id: OptInteger,
 }
-impl From<&api::killmail::KillMail> for Victim{
-    fn from(src: &api::killmail::KillMail) -> Self {
+impl From<&api::killmail::Killmail> for Victim{
+    fn from(src: &api::killmail::Killmail) -> Self {
         Self {
             killmail_id: src.killmail_id,
             ship_type_id: src.victim.ship_type_id,
