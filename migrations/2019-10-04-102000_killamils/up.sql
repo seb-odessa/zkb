@@ -80,6 +80,30 @@ LEFT JOIN objects corps ON (corporation_id = corps.object_id)
 LEFT JOIN objects allis ON (alliance_id = allis.object_id)
 LEFT JOIN objects facts ON (faction_id = facts.object_id);
 
+CREATE VIEW IF NOT EXISTS named_attackers AS
+SELECT
+	attacker_id,
+	killmail_id,
+	damage_done,
+	final_blow,
+	security_status,
+	ship_type_id       as ship_id,
+	ships.object_name  as ship_name,
+	character_id,
+	chars.object_name  as character_name,
+	corporation_id,
+	corps.object_name  as corporation_name,
+	alliance_id,
+	allis.object_name  as alliance_name,
+	faction_id,
+	facts.object_name  as faction_name
+FROM attackers
+LEFT JOIN objects ships ON (ship_type_id = ships.object_id)
+LEFT JOIN objects chars ON (character_id = chars.object_id)
+LEFT JOIN objects corps ON (corporation_id = corps.object_id)
+LEFT JOIN objects allis ON (alliance_id = allis.object_id)
+LEFT JOIN objects facts ON (faction_id = facts.object_id);
+
 
 CREATE INDEX IF NOT EXISTS k_time_idx        ON killmails(killmail_time);
 CREATE INDEX IF NOT EXISTS k_system_idx      ON killmails(solar_system_id);

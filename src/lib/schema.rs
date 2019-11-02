@@ -15,6 +15,29 @@ table! {
 }
 
 table! {
+    named_attackers (attacker_id) {
+        attacker_id -> Integer,
+        killmail_id -> Integer,
+        security_status -> Float,
+        final_blow -> Bool,
+        damage_done -> Integer,
+        ship_id -> Nullable<Integer>,
+        ship_name -> Nullable<Text>,
+        character_id -> Nullable<Integer>,
+        character_name -> Nullable<Text>,
+        corporation_id -> Nullable<Integer>,
+        corporation_name -> Nullable<Text>,
+        alliance_id -> Nullable<Integer>,
+        alliance_name -> Nullable<Text>,
+        faction_id -> Nullable<Integer>,
+    	faction_name -> Nullable<Text>,
+        weapon_id -> Nullable<Integer>,
+        weapon_name -> Nullable<Text>,
+    }
+}
+
+
+table! {
     categories (category_id) {
         category_id -> Integer,
         category_name -> Text,
@@ -104,4 +127,5 @@ allow_tables_to_appear_in_same_query!(
     objects,
     victims,
     named_victims,
+    named_attackers,
 );
