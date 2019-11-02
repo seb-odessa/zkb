@@ -3,7 +3,7 @@ use crate::services::{AppContext, Command, Message};
 use actix_rt;
 use actix_web::{web, App, HttpServer, Result};
 
-use std::fmt::Write;
+// use std::fmt::Write;
 
 fn quit(context: web::Data<AppContext>) -> String {
     info!("server received Command::Quit");
@@ -14,7 +14,7 @@ fn quit(context: web::Data<AppContext>) -> String {
 
 fn ping(context: web::Data<AppContext>) -> String {
     context.database.push(Message::Ping);
-    context.resolver.push(Message::Ping);    
+    context.resolver.push(Message::Ping);
     format!("Ping\n")
 }
 

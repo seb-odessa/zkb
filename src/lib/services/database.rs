@@ -54,13 +54,13 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                 },
                 Message::LoadKill(id) => {
                     info!("Load killmail {} queue length: {}", id, context.database.len());
-                    match killmail::KillMail::load(&conn, id) {
-                        Ok(killmail) => {
-                            info!("loaded killmail {} queue length: {}", killmail.killmail_id, context.database.len());
-                            context.responses.push(Message::Respond(killmail))
-                        },
-                        Err(e) => warn!("was not able to load killmail: {}", e)
-                    }
+                    // match killmail::KillMail::load(&conn, id) {
+                    //     Ok(killmail) => {
+                    //         info!("loaded killmail {} queue length: {}", killmail.killmail_id, context.database.len());
+                    //         context.responses.push(Message::Respond(killmail))
+                    //     },
+                    //     Err(e) => warn!("was not able to load killmail: {}", e)
+                    // }
                 },
                 Message::CheckObject(id) => {
                     if !ObjectsApi::exist(&conn, &id) {

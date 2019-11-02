@@ -72,6 +72,24 @@ table! {
     }
 }
 
+table! {
+    named_victims (victim_id) {
+        victim_id -> Integer,
+        killmail_id -> Integer,
+        damage_taken -> Integer,
+        ship_id -> Integer,
+        ship_name -> Text,
+        character_id -> Nullable<Integer>,
+        character_name -> Nullable<Text>,
+        corporation_id -> Nullable<Integer>,
+        corporation_name -> Nullable<Text>,
+        alliance_id -> Nullable<Integer>,
+        alliance_name -> Nullable<Text>,
+        faction_id -> Nullable<Integer>,
+    	faction_name -> Nullable<Text>,
+    }
+}
+
 joinable!(attackers -> killmails (killmail_id));
 joinable!(items -> killmails (killmail_id));
 joinable!(objects -> categories (category_id));
@@ -85,4 +103,5 @@ allow_tables_to_appear_in_same_query!(
     kills,
     objects,
     victims,
+    named_victims,
 );

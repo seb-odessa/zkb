@@ -8,17 +8,17 @@ edition = "2018"
 name = "lib"
 path = "src/lib/lib.rs"
 
-[[bin]]
-name = "load"
-path = "tools/load.rs"
+#[[bin]]
+#name = "load"
+#path = "tools/load.rs"
 
-[[bin]]
-name = "monitor"
-path = "tools/monitor.rs"
+#[[bin]]
+#name = "monitor"
+#path = "tools/monitor.rs"
 
-[[bin]]
-name = "updater"
-path = "tools/updater.rs"
+#[[bin]]
+#name = "updater"
+#path = "tools/updater.rs"
 
 #[[bin]]
 #name = "navigator"

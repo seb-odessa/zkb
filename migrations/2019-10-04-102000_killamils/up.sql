@@ -1,5 +1,17 @@
 -- Your SQL goes here
 
+CREATE TABLE IF NOT EXISTS categories(
+    category_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
+    category_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE
+);
+
+CREATE TABLE IF NOT EXISTS objects(
+    object_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
+    category_id INTEGER NOT NULL,
+    object_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE,
+    FOREIGN KEY(category_id) REFERENCES categories(category_id)
+);
+
 CREATE TABLE IF NOT EXISTS killmails(
     killmail_id INTEGER NOT NULL PRIMARY KEY,
     killmail_time DATETIME NOT NULL,
@@ -32,7 +44,7 @@ CREATE TABLE IF NOT EXISTS victims(
     character_id	INTEGER,
     corporation_id	INTEGER,
     faction_id	INTEGER,
-    FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
+    FOREIGN KEY(killmail_id)    REFERENCES killmails(killmail_id)
 );
 
 CREATE TABLE IF NOT EXISTS items(
@@ -46,17 +58,28 @@ CREATE TABLE IF NOT EXISTS items(
     FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
 );
 
-CREATE TABLE IF NOT EXISTS categories(
-    category_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
-    category_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE
-);
+CREATE VIEW IF NOT EXISTS named_victims AS
+SELECT
+	victim_id,
+	killmail_id,
+	damage_taken,
+	ship_type_id       as ship_id,
+	ships.object_name  as ship_name,
+	character_id,
+	chars.object_name  as character_name,
+	corporation_id,
+	corps.object_name  as corporation_name,
+	alliance_id,
+	allis.object_name  as alliance_name,
+	faction_id,
+	facts.object_name  as faction_name
+FROM victims
+LEFT JOIN objects ships ON (ship_type_id = ships.object_id)
+LEFT JOIN objects chars ON (character_id = chars.object_id)
+LEFT JOIN objects corps ON (corporation_id = corps.object_id)
+LEFT JOIN objects allis ON (alliance_id = allis.object_id)
+LEFT JOIN objects facts ON (faction_id = facts.object_id);
 
-CREATE TABLE IF NOT EXISTS objects(
-    object_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
-    category_id INTEGER NOT NULL,
-    object_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE,
-    FOREIGN KEY(category_id) REFERENCES categories(category_id)
-);
 
 CREATE INDEX IF NOT EXISTS k_time_idx        ON killmails(killmail_time);
 CREATE INDEX IF NOT EXISTS k_system_idx      ON killmails(solar_system_id);
