@@ -57,6 +57,20 @@ table! {
 }
 
 table! {
+    named_items (item_id) {
+        item_id -> Integer,
+        killmail_id -> Integer,
+        item_type_id -> Integer,
+        item_type_name -> Nullable<Text>,
+        singleton -> Integer,
+        flag -> Integer,
+        quantity_destroyed -> Nullable<Integer>,
+        quantity_dropped -> Nullable<Integer>,
+    }
+}
+
+
+table! {
     killmails (killmail_id) {
         killmail_id -> Integer,
         killmail_time -> Timestamp,
@@ -137,6 +151,7 @@ allow_tables_to_appear_in_same_query!(
     kills,
     objects,
     victims,
+    named_items,
     named_victims,
     named_attackers,
     named_killmails,

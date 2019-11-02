@@ -116,7 +116,17 @@ FROM killmails
 LEFT JOIN objects systems ON (solar_system_id = systems.object_id)
 LEFT JOIN objects moons ON (moon_id = moons.object_id);
 
-
+CREATE VIEW IF NOT EXISTS named_items AS
+SELECT
+	item_id,
+	killmail_id,
+	item_type_id,
+	object_name as item_type_name,
+	quantity_destroyed,
+	quantity_dropped,
+	singleton,
+	flag
+FROM items LEFT JOIN objects ON (item_type_id = object_id);
 
 CREATE INDEX IF NOT EXISTS k_time_idx        ON killmails(killmail_time);
 CREATE INDEX IF NOT EXISTS k_system_idx      ON killmails(solar_system_id);
