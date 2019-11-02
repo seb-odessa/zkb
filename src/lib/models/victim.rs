@@ -36,7 +36,7 @@ pub struct VictimNamed {
     pub killmail_id: Integer,
     pub damage_taken: Integer,
     pub ship_id: Integer,
-    pub ship_name: String,
+    pub ship_name: OptString,
     pub character_id: OptInteger,
     pub character_name: OptString,
     pub corporation_id: OptInteger,

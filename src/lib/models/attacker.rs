@@ -2,7 +2,6 @@ use std::convert::From;
 use crate::api;
 use crate::schema::attackers;
 use crate::schema::named_attackers;
-
 use super::{Integer, OptInteger, OptString, Float, Bool, Connection, QueryResult};
 
 #[derive(Insertable, Associations)]

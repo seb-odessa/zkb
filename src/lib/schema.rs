@@ -67,6 +67,17 @@ table! {
 }
 
 table! {
+    named_killmails (killmail_id) {
+        killmail_id -> Integer,
+        killmail_time -> Timestamp,
+        system_id -> Integer,
+        system_name -> Nullable<Text>,
+        moon_id -> Nullable<Integer>,
+        war_id -> Nullable<Integer>,
+    }
+}
+
+table! {
     kills (killmail_id) {
         killmail_id -> Integer,
         killmail_hash -> Text,
@@ -101,7 +112,7 @@ table! {
         killmail_id -> Integer,
         damage_taken -> Integer,
         ship_id -> Integer,
-        ship_name -> Text,
+        ship_name -> Nullable<Text>,
         character_id -> Nullable<Integer>,
         character_name -> Nullable<Text>,
         corporation_id -> Nullable<Integer>,
@@ -128,4 +139,5 @@ allow_tables_to_appear_in_same_query!(
     victims,
     named_victims,
     named_attackers,
+    named_killmails,
 );
