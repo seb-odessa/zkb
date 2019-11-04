@@ -1,24 +1,10 @@
 use std::convert::From;
 use crate::api;
 use crate::schema::attackers;
-use super::{Integer, OptInteger, Float, Bool};
+use crate::schema::named_attackers;
+use super::{Integer, OptInteger, OptString, Float, Bool, Connection, QueryResult};
 
-// CREATE TABLE IF NOT EXISTS attackers(
-//     attacker_id INTEGER NOT NULL PRIMARY KEY,
-//     killmail_id INTEGER NOT NULL,
-//     security_status REAL NOT NULL,
-//     final_blow BOOLEAN NOT NULL,
-//     damage_done INTEGER NOT NULL,
-//     ship_type_id INTEGER,
-//     alliance_id INTEGER,
-//     character_id INTEGER,
-//     corporation_id INTEGER,
-//     faction_id INTEGER,
-//     weapon_type_id INTEGER,
-//     FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
-// );
-
-#[derive(Queryable, Insertable, Default)]
+#[derive(Insertable)]
 #[table_name = "attackers"]
 pub struct Attacker {
     pub killmail_id: Integer,
@@ -32,7 +18,6 @@ pub struct Attacker {
     pub faction_id: OptInteger,
     pub weapon_type_id: OptInteger,
 }
-
 impl From<&api::killmail::Attacker> for Attacker{
     fn from(src: &api::killmail::Attacker) -> Self {
         Self {
@@ -50,39 +35,30 @@ impl From<&api::killmail::Attacker> for Attacker{
     }
 }
 
-impl Attacker {
-    // pub fn load(src: &api::killmail::KillMail) -> Vec<Self> {
-    //     let mut res = Vec::new();
-    //     for i in 0..src.attackers.len()
-    //     {
-    //         let mut attacker = Self::from(&src.attackers[i]);
-    //         attacker.killmail_id = src.killmail_id;
-    //         res.push(attacker);
-    //     }
-    //     return res;
-    // }
-
-
-
-
-//     pub fn load(conn: &Connection, killmail_id: Integer) -> QueryResult<Vec<Self>> {
-//         use diesel::prelude::*;
-//         use schema::attackers::dsl as table;
-// //        attackers::dsl::attackers.filter(table::killmail_id.eq(&killmail_id)).load(conn)
-
-//         table::attackers
-//             .select(table::killmail_id)
-//             .select(table::security_status)
-//             .select(table::final_blow)
-//             .select(table::damage_done)
-//             .select(table::ship_type_id)
-//             .select(table::alliance_id)
-//             .select(table::character_id)
-//             .select(table::corporation_id)
-//             .select(table::faction_id)
-//             .select(table::weapon_type_id)
-//             .filter(table::killmail_id.eq(&killmail_id)).load(conn)
-
-//         //attackers::dsl::attackers.find(killmail_id).first::<Self>(conn)
-//     }
+#[derive(Queryable, Associations, Debug, PartialEq)]
+#[table_name = "named_attackers"]
+pub struct AttackerNamed {
+    pub attacker_id: Integer,
+    pub killmail_id: Integer,
+    pub security_status: Float,
+    pub final_blow: Bool,
+    pub damage_done: Integer,
+    pub ship_id: OptInteger,
+    pub ship_name: OptString,
+    pub character_id: OptInteger,
+    pub character_name: OptString,
+    pub corporation_id: OptInteger,
+    pub corporation_name: OptString,
+    pub alliance_id: OptInteger,
+    pub alliance_name: OptString,
+    pub faction_id: OptInteger,
+    pub faction_name: OptString,
+    pub weapon_id: OptInteger,
+    pub weapon_name: OptString,
+}
+impl AttackerNamed {
+    pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+        named_attackers::table.filter(named_attackers::killmail_id.eq(id)).load(conn)
+    }
 }

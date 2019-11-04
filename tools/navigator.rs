@@ -5,7 +5,7 @@ extern crate diesel_migrations;
 
 use lib::api::gw;
 use lib::api::object::Object;
-use lib::api::killmail::KillMail;
+use lib::api::killmail::Killmail;
 use lib::models::*;
 
 use actix_rt;
@@ -21,7 +21,7 @@ use std::collections::HashMap;
 #[derive(Debug, PartialEq)]
 pub enum Message{
     Quit,
-    Killmail(KillMail),
+    Killmail(Killmail),
     Object(Object),
     CheckObject(i32),
     Wait(u64),
@@ -121,8 +121,8 @@ fn saver(context: web::Data<AppContext>) {
             match msg {
                 Message::Killmail(killmail) => {
                     if let Ok(ref conn) = context.connection.try_lock() {
-                        if !DB::exists(&conn, killmail.killmail_id) {
-                            match DB::save(&conn, &killmail) {
+                        if !KillmailsApi::exists(&conn, killmail.killmail_id) {
+                            match KillmailsApi::save(&conn, &killmail) {
                                 Ok(()) => info!("saver saved killmail {} queue length: {}", killmail.killmail_id, context.saver_queue.len()),
                                 Err(e) => error!("saver was not able to save killmail: {}", e)
                             }

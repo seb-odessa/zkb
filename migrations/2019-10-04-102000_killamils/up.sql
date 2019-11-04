@@ -1,5 +1,17 @@
 -- Your SQL goes here
 
+CREATE TABLE IF NOT EXISTS categories(
+    category_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
+    category_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE
+);
+
+CREATE TABLE IF NOT EXISTS objects(
+    object_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
+    category_id INTEGER NOT NULL,
+    object_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE,
+    FOREIGN KEY(category_id) REFERENCES categories(category_id)
+);
+
 CREATE TABLE IF NOT EXISTS killmails(
     killmail_id INTEGER NOT NULL PRIMARY KEY,
     killmail_time DATETIME NOT NULL,
@@ -32,7 +44,7 @@ CREATE TABLE IF NOT EXISTS victims(
     character_id	INTEGER,
     corporation_id	INTEGER,
     faction_id	INTEGER,
-    FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
+    FOREIGN KEY(killmail_id)    REFERENCES killmails(killmail_id)
 );
 
 CREATE TABLE IF NOT EXISTS items(
@@ -46,17 +58,79 @@ CREATE TABLE IF NOT EXISTS items(
     FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
 );
 
-CREATE TABLE IF NOT EXISTS categories(
-    category_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
-    category_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE
-);
+CREATE VIEW IF NOT EXISTS named_victims AS
+SELECT
+	victim_id,
+	killmail_id,
+	damage_taken,
+	ship_type_id       as ship_id,
+	ships.object_name  as ship_name,
+	character_id,
+	chars.object_name  as character_name,
+	corporation_id,
+	corps.object_name  as corporation_name,
+	alliance_id,
+	allis.object_name  as alliance_name,
+	faction_id,
+	facts.object_name  as faction_name
+FROM victims
+LEFT JOIN objects ships ON (ship_type_id = ships.object_id)
+LEFT JOIN objects chars ON (character_id = chars.object_id)
+LEFT JOIN objects corps ON (corporation_id = corps.object_id)
+LEFT JOIN objects allis ON (alliance_id = allis.object_id)
+LEFT JOIN objects facts ON (faction_id = facts.object_id);
 
-CREATE TABLE IF NOT EXISTS objects(
-    object_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
-    category_id INTEGER NOT NULL,
-    object_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE,
-    FOREIGN KEY(category_id) REFERENCES categories(category_id)
-);
+CREATE VIEW IF NOT EXISTS named_attackers AS
+SELECT
+	attacker_id,
+	killmail_id,
+	damage_done,
+	final_blow,
+	security_status,
+	ship_type_id       as ship_id,
+	ships.object_name  as ship_name,
+	character_id,
+	chars.object_name  as character_name,
+	corporation_id,
+	corps.object_name  as corporation_name,
+	alliance_id,
+	allis.object_name  as alliance_name,
+	faction_id,
+	facts.object_name  as faction_name,
+	weapon_type_id	   as weapon_id,
+	weapn.object_name  as weapon_name
+FROM attackers
+LEFT JOIN objects ships ON (ship_type_id = ships.object_id)
+LEFT JOIN objects chars ON (character_id = chars.object_id)
+LEFT JOIN objects corps ON (corporation_id = corps.object_id)
+LEFT JOIN objects allis ON (alliance_id = allis.object_id)
+LEFT JOIN objects facts ON (faction_id = facts.object_id)
+LEFT JOIN objects weapn ON (weapon_type_id = weapn.object_id);
+
+CREATE VIEW IF NOT EXISTS named_killmails AS
+SELECT
+	killmail_id,
+	killmail_time,
+	solar_system_id  	 as system_id,
+	systems.object_name  as system_name,
+	moon_id,
+    moons.object_name    as moon_name,
+	war_id
+FROM killmails
+LEFT JOIN objects systems ON (solar_system_id = systems.object_id)
+LEFT JOIN objects moons ON (moon_id = moons.object_id);
+
+CREATE VIEW IF NOT EXISTS named_items AS
+SELECT
+	item_id,
+	killmail_id,
+	item_type_id,
+	object_name as item_type_name,
+	quantity_destroyed,
+	quantity_dropped,
+	singleton,
+	flag
+FROM items LEFT JOIN objects ON (item_type_id = object_id);
 
 CREATE INDEX IF NOT EXISTS k_time_idx        ON killmails(killmail_time);
 CREATE INDEX IF NOT EXISTS k_system_idx      ON killmails(solar_system_id);

@@ -1,10 +1,10 @@
 use std::convert::From;
 use crate::api;
 use crate::schema::items;
-use super::{Integer, OptInteger, Connection, QueryResult};
+use crate::schema::named_items;
+use super::{Integer, OptInteger, OptString, Connection, QueryResult};
 
-
-#[derive(Insertable, Default)]
+#[derive(Insertable)]
 #[table_name = "items"]
 pub struct Item {
     pub killmail_id: Integer,
@@ -27,39 +27,24 @@ impl From<&api::killmail::Item> for Item{
         }
     }
 }
-impl From<&Loadable> for Item{
-    fn from(src: &Loadable) -> Self {
-        Self {
-            killmail_id: src.killmail_id,
-            item_type_id: src.item_type_id,
-            singleton: src.singleton,
-            flag: src.flag,
-            quantity_destroyed: src.quantity_destroyed,
-            quantity_dropped: src.quantity_dropped,
-        }
-    }
-}
 
 
-#[derive(Queryable)]
-struct Loadable {
+#[derive(Queryable, Associations, Debug, PartialEq)]
+#[table_name = "named_items"]
+pub struct ItemNamed {
     pub item_id: Integer,
     pub killmail_id: Integer,
     pub item_type_id: Integer,
+    pub item_type_name: OptString,
     pub singleton: Integer,
     pub flag: Integer,
     pub quantity_destroyed: OptInteger,
     pub quantity_dropped: OptInteger,
 }
-
-impl Loadable {
-    pub fn load(conn: &Connection, killmail_id: Integer) -> QueryResult<Vec<Self>> {
+impl ItemNamed {
+    pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
         use diesel::prelude::*;
-        use crate::schema::items::dsl as table;
-        table::items.filter(table::killmail_id.eq(&killmail_id)).load(conn)
+        named_items::table.filter(named_items::killmail_id.eq(id)).load(conn)
     }
 }
-
-
-
 

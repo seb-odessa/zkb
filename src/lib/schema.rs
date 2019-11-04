@@ -15,6 +15,29 @@ table! {
 }
 
 table! {
+    named_attackers (attacker_id) {
+        attacker_id -> Integer,
+        killmail_id -> Integer,
+        security_status -> Float,
+        final_blow -> Bool,
+        damage_done -> Integer,
+        ship_id -> Nullable<Integer>,
+        ship_name -> Nullable<Text>,
+        character_id -> Nullable<Integer>,
+        character_name -> Nullable<Text>,
+        corporation_id -> Nullable<Integer>,
+        corporation_name -> Nullable<Text>,
+        alliance_id -> Nullable<Integer>,
+        alliance_name -> Nullable<Text>,
+        faction_id -> Nullable<Integer>,
+    	faction_name -> Nullable<Text>,
+        weapon_id -> Nullable<Integer>,
+        weapon_name -> Nullable<Text>,
+    }
+}
+
+
+table! {
     categories (category_id) {
         category_id -> Integer,
         category_name -> Text,
@@ -34,11 +57,37 @@ table! {
 }
 
 table! {
+    named_items (item_id) {
+        item_id -> Integer,
+        killmail_id -> Integer,
+        item_type_id -> Integer,
+        item_type_name -> Nullable<Text>,
+        singleton -> Integer,
+        flag -> Integer,
+        quantity_destroyed -> Nullable<Integer>,
+        quantity_dropped -> Nullable<Integer>,
+    }
+}
+
+
+table! {
     killmails (killmail_id) {
         killmail_id -> Integer,
         killmail_time -> Timestamp,
         solar_system_id -> Integer,
         moon_id -> Nullable<Integer>,
+        war_id -> Nullable<Integer>,
+    }
+}
+
+table! {
+    named_killmails (killmail_id) {
+        killmail_id -> Integer,
+        killmail_time -> Timestamp,
+        system_id -> Integer,
+        system_name -> Nullable<Text>,
+        moon_id -> Nullable<Integer>,
+        moon_name -> Nullable<Text>,
         war_id -> Nullable<Integer>,
     }
 }
@@ -72,6 +121,24 @@ table! {
     }
 }
 
+table! {
+    named_victims (victim_id) {
+        victim_id -> Integer,
+        killmail_id -> Integer,
+        damage_taken -> Integer,
+        ship_id -> Integer,
+        ship_name -> Nullable<Text>,
+        character_id -> Nullable<Integer>,
+        character_name -> Nullable<Text>,
+        corporation_id -> Nullable<Integer>,
+        corporation_name -> Nullable<Text>,
+        alliance_id -> Nullable<Integer>,
+        alliance_name -> Nullable<Text>,
+        faction_id -> Nullable<Integer>,
+    	faction_name -> Nullable<Text>,
+    }
+}
+
 joinable!(attackers -> killmails (killmail_id));
 joinable!(items -> killmails (killmail_id));
 joinable!(objects -> categories (category_id));
@@ -85,4 +152,8 @@ allow_tables_to_appear_in_same_query!(
     kills,
     objects,
     victims,
+    named_items,
+    named_victims,
+    named_attackers,
+    named_killmails,
 );

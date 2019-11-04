@@ -1,5 +1,5 @@
 use crate::api;
-use std::collections::HashSet;
+//use std::collections::HashSet;
 
 
 pub mod kill;
@@ -15,12 +15,42 @@ pub use diesel::sqlite::SqliteConnection as Connection;
 pub type Bool = bool;
 pub type Integer = i32;
 pub type OptInteger = Option<Integer>;
+pub type OptString = Option<String>;
 pub type Float = f32;
 pub type Hash = String;
 pub type Date = chrono::NaiveDate;
 pub type DateTime = chrono::NaiveDateTime;
 pub type QueryResult<T> = std::result::Result<T, diesel::result::Error>;
 
+
+#[derive(Debug, PartialEq)]
+pub struct KillReport {
+    pub killmail_id: Integer,
+    pub killmail_time: DateTime,
+    pub system_id: Integer,
+    pub system_name: OptString,
+    pub moon_id: OptInteger,
+    pub moon_name: OptString,
+    pub war_id: OptInteger,
+    pub victim: victim::VictimNamed,
+    pub attackers: Vec<attacker::AttackerNamed>,
+}
+impl KillReport {
+    pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
+        let killmail = killmail::KillmailNamed::load(conn, id)?;
+        Ok(Self {
+            killmail_id: killmail.killmail_id,
+            killmail_time: killmail.killmail_time,
+            system_id: killmail.system_id,
+            system_name: killmail.system_name,
+            moon_id: killmail.moon_id,
+            moon_name: killmail.moon_name,
+            war_id: killmail.war_id,
+            victim: victim::VictimNamed::load(conn, id)?,
+            attackers: attacker::AttackerNamed::load(conn, id)?,
+        })
+    }
+}
 
 pub struct DB;
 impl DB {
@@ -30,48 +60,77 @@ impl DB {
         Connection::establish(&url).expect(&format!("Error connection to {}", url))
     }
 
-    /** Loads kills from DB by the date */
-    pub fn load_kills(conn: &Connection, date: &Date) -> QueryResult<Vec<kill::Kill>> {
-        use diesel::prelude::*;
-        use super::schema::kills::dsl as table;
-        table::kills.filter(table::killmail_date.eq(&date)).load(conn)
+    // pub fn load_kills(conn: &Connection, date: &Date) -> QueryResult<Vec<kill::Kill>> {
+    //     use diesel::prelude::*;
+    //     use super::schema::kills::dsl as table;
+    //     table::kills.filter(table::killmail_date.eq(&date)).load(conn)
+    // }
+
+    // pub fn save_kills(conn: &Connection, kills: &Vec<kill::Kill>) -> QueryResult<usize> {
+    //     use diesel::prelude::*;
+    //     use super::schema;
+    //     diesel::insert_into(schema::kills::table).values(kills).execute(conn)
+    // }
+
+    // pub fn get_saved_killmails(conn: &Connection, date: &Date) -> HashSet<Integer> {
+    //     let start =date.and_hms(0, 0, 0);
+    //     let end =date.and_hms(23, 59, 59);
+
+    //     use diesel::prelude::*;
+    //     use std::iter::FromIterator;
+    //     use super::schema::killmails::dsl as table;
+    //     let vector = table::killmails
+    //                 .filter(table::killmail_time.between(&start, &end))
+    //                 .select(table::killmail_id).load(conn).unwrap();
+    //     HashSet::from_iter(vector.iter().cloned())
+    // }
+
+    // pub fn save_all(conn: &Connection, killmail: &Vec<api::killmail::Killmail>) -> QueryResult<()> {
+    //     use super::schema;
+    //     use diesel::connection::Connection;
+    //     use diesel::RunQueryDsl;
+
+    //     let mut killmails = Vec::new();
+    //     let mut victims = Vec::new();
+    //     let mut attackers = Vec::new();
+    //     let mut items = Vec::new();
+
+    //     for killmail in killmail.iter() {
+    //         victims.push(victim::Victim::from(killmail));
+    //         killmails.push(killmail::Killmail::from(killmail));
+    //         attackers.append(&mut get_attackers(killmail));
+    //         items.append(&mut get_items(killmail));
+    //     }
+
+    //     conn.transaction::<_, _, _>(|| {
+    //         diesel::insert_into(schema::killmails::table).values(&killmails).execute(conn)?;
+    //         diesel::insert_into(schema::attackers::table).values(&attackers).execute(conn)?;
+    //         diesel::insert_into(schema::victims::table).values(&victims).execute(conn)?;
+    //         diesel::insert_into(schema::items::table).values(&items).execute(conn)?;
+    //         Ok(())
+    //     })
+    // }
+}
+
+pub struct KillmailsApi;
+impl KillmailsApi {
+
+    pub fn save(conn: &Connection, killmail: &api::killmail::Killmail) -> QueryResult<()> {
+        if !KillmailsApi::exist(conn, killmail.killmail_id) {
+            KillmailsApi::do_save(conn, killmail)
+        } else {
+            Ok(())
+        }
     }
 
-    /** Saves kills into DB */
-    pub fn save_kills(conn: &Connection, kills: &Vec<kill::Kill>) -> QueryResult<usize> {
-        use diesel::prelude::*;
-        use super::schema;
-        diesel::insert_into(schema::kills::table).values(kills).execute(conn)
-    }
-
-    pub fn get_saved_killmails(conn: &Connection, date: &Date) -> HashSet<Integer> {
-        let start =date.and_hms(0, 0, 0);
-        let end =date.and_hms(23, 59, 59);
-
-        use diesel::prelude::*;
-        use std::iter::FromIterator;
-        use super::schema::killmails::dsl as table;
-        let vector = table::killmails
-                    .filter(table::killmail_time.between(&start, &end))
-                    .select(table::killmail_id).load(conn).unwrap();
-        HashSet::from_iter(vector.iter().cloned())
-    }
-
-    pub fn exists(conn: &Connection, killmail_id: Integer) -> bool {
-        use diesel::prelude::*;
-        use super::schema::killmails::dsl as table;
-        table::killmails.find(killmail_id).select(table::killmail_id).first(conn) == Ok(killmail_id)
-    }
-
-    /** Saves killmail into DB */
-    pub fn save(conn: &Connection, killmail: &api::killmail::KillMail) -> QueryResult<()> {
+    fn do_save(conn: &Connection, killmail: &api::killmail::Killmail) -> QueryResult<()> {
         use super::schema;
         use diesel::connection::Connection;
         use diesel::RunQueryDsl;
 
         conn.transaction::<_, _, _>(|| {
             diesel::insert_into(schema::killmails::table)
-                   .values(&killmail::KillMail::from(killmail))
+                   .values(&killmail::Killmail::from(killmail))
                    .execute(conn)?;
             diesel::insert_into(schema::victims::table)
                    .values(&victim::Victim::from(killmail))
@@ -86,33 +145,19 @@ impl DB {
         })
     }
 
-    /** Saves vector of killmail into DB */
-    pub fn save_all(conn: &Connection, killmail: &Vec<api::killmail::KillMail>) -> QueryResult<()> {
-        use super::schema;
-        use diesel::connection::Connection;
-        use diesel::RunQueryDsl;
+    // pub fn load(conn: &Connection, id: &Integer) -> QueryResult<object::Object>  {
+    //     use diesel::prelude::*;
+    //     use crate::schema::objects::dsl as table;
+    //     table::objects.filter(table::object_id.eq(id)).first(conn)
+    // }
 
-        let mut killmails = Vec::new();
-        let mut victims = Vec::new();
-        let mut attackers = Vec::new();
-        let mut items = Vec::new();
-
-        for killmail in killmail.iter() {
-            victims.push(victim::Victim::from(killmail));
-            killmails.push(killmail::KillMail::from(killmail));
-            attackers.append(&mut get_attackers(killmail));
-            items.append(&mut get_items(killmail));
-        }
-
-        conn.transaction::<_, _, _>(|| {
-            diesel::insert_into(schema::killmails::table).values(&killmails).execute(conn)?;
-            diesel::insert_into(schema::attackers::table).values(&attackers).execute(conn)?;
-            diesel::insert_into(schema::victims::table).values(&victims).execute(conn)?;
-            diesel::insert_into(schema::items::table).values(&items).execute(conn)?;
-            Ok(())
-        })
+    pub fn exist(conn: &Connection, killmail_id: Integer) -> bool {
+        use diesel::prelude::*;
+        use super::schema::killmails::dsl as table;
+        table::killmails.find(killmail_id).select(table::killmail_id).first(conn) == Ok(killmail_id)
     }
 }
+
 
 pub struct CategoriesApi;
 impl CategoriesApi {
@@ -169,7 +214,7 @@ impl ObjectsApi {
     }
 }
 
-fn get_attackers(killmail: &api::killmail::KillMail) -> Vec<attacker::Attacker> {
+fn get_attackers(killmail: &api::killmail::Killmail) -> Vec<attacker::Attacker> {
     let mut result = Vec::new();
     for attacker in &killmail.attackers {
         let mut obj = attacker::Attacker::from(attacker);
@@ -179,7 +224,7 @@ fn get_attackers(killmail: &api::killmail::KillMail) -> Vec<attacker::Attacker> 
     return result;
 }
 
-fn get_items(killmail: &api::killmail::KillMail) -> Vec<item::Item> {
+fn get_items(killmail: &api::killmail::Killmail) -> Vec<item::Item> {
     let mut result = Vec::new();
     if let Some(ref items) = &killmail.victim.items {
         for item in items {

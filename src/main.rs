@@ -1,14 +1,48 @@
-extern crate chrono;
+#[macro_use]
+extern crate log;
+#[macro_use]
+extern crate diesel_migrations;
 
-use chrono::{Duration, TimeZone, Utc};
+use actix_web::web;
+use crossbeam_utils::thread::scope;
+
+use lib::services::*;
+use lib::models::DB;
+
+embed_migrations!("migrations");
 
 fn main() {
-    
-    let mut date = Utc.ymd(2018, 11, 1);
-    let end = Utc.ymd(2019, 12, 1);
-    while date < end {
-        println!(" {:}", &date);
-        date = date + Duration::days(1);
-//        Duration::days(1);
-    }
+    env_logger::init();
+
+//    std::env::set_var("DATABASE_URL", ":memory:");
+    let conn = DB::connection();
+    info!("Connection established");
+    embedded_migrations::run(&conn).expect("Database migration failed");
+    info!("Database migration complete");
+    let context = web::Data::new(AppContext::new("127.0.0.1:8088", "seb_odessa", 15));
+    info!("Application context constructed");
+    scope(|scope| {
+        scope.builder()
+             .name("API Server".to_string())
+             .spawn(|_| server::run(context.clone()))
+             .expect("Failed to create API Server");
+        scope.builder()
+             .name("Monitor".to_string())
+             .spawn(|_| monitor::run(context.clone()))
+             .expect("Failed to create Monitor");
+        scope.builder()
+             .name("Name Resolver".to_string())
+             .spawn(|_| resolver::run(context.clone()))
+             .expect("Failed to create Name Resolver");
+        scope.builder()
+             .name("Name Resolver".to_string())
+             .spawn(|_| resolver::run(context.clone()))
+             .expect("Failed to create Name Resolver");
+        scope.builder()
+             .name("DB provider".to_string())
+             .spawn(|_| database::run(conn, context.clone()))
+             .expect("Failed to create database");
+    })
+    .unwrap();
+    info!("Application finished");
 }

@@ -8,21 +8,21 @@ edition = "2018"
 name = "lib"
 path = "src/lib/lib.rs"
 
-[[bin]]
-name = "load"
-path = "tools/load.rs"
+#[[bin]]
+#name = "load"
+#path = "tools/load.rs"
 
-[[bin]]
-name = "monitor"
-path = "tools/monitor.rs"
+#[[bin]]
+#name = "monitor"
+#path = "tools/monitor.rs"
 
-[[bin]]
-name = "updater"
-path = "tools/updater.rs"
+#[[bin]]
+#name = "updater"
+#path = "tools/updater.rs"
 
-[[bin]]
-name = "navigator"
-path = "tools/navigator.rs"
+#[[bin]]
+#name = "navigator"
+#path = "tools/navigator.rs"
 
 [dependencies]
     serde = { version = "1.0", features = ["derive"]}
@@ -41,8 +41,7 @@ path = "tools/navigator.rs"
     lazy_static = "1.4"
     actix-web = "1.0"
     actix-rt = "0.2"
-    actix-server = "0.7"
-    futures = "0.1"
+#    futures = "0.1"
 
 
 

@@ -1,6 +1,6 @@
 use curl::easy::Easy;
 use curl::Error;
-use super::killmail::KillMail;
+use super::killmail::Killmail;
 use super::zkb::Package;
 use std::convert::TryFrom;
 
@@ -68,12 +68,12 @@ pub fn get_history(year: i32, month: u32, day: u32) -> String {
     }
 }
 
-pub fn get_killamil(killmail_id: i32, hash: &str) -> Option<KillMail> {
+pub fn get_killamil(killmail_id: i32, hash: &str) -> Option<Killmail> {
     // https://esi.evetech.net/latest/killmails/78146996/4ceed992204ea5cab36f9543e80b90f0417534f5/?datasource=tranquility
     let url = format!("https://esi.evetech.net/latest/killmails/{}/{}/?datasource=tranquility", killmail_id, hash);
     if let Some(response) = get(&url).ok() {
         let json = String::from_utf8_lossy(&response).to_string();
-        KillMail::try_from(json).ok()
+        Killmail::try_from(json).ok()
     } else {
         None
     }

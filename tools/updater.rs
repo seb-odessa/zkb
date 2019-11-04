@@ -2,16 +2,16 @@
 extern crate log;
 
 use lib::api;
-use lib::api::killmail::KillMail;
-use lib::models::DB;
+use lib::api::killmail::Killmail;
+use lib::models::{DB, KillmailsApi};
 use std::thread;
 use std::collections::HashMap;
 
-fn flush(records: &Vec<KillMail>) -> Option<usize> {
+fn flush(records: &Vec<Killmail>) -> Option<usize> {
     let conn = DB::connection();
     let mut map = HashMap::new();
     for km in records {
-        if !DB::exists(&conn, km.killmail_id) {
+        if !KillmailsApi::exist(&conn, km.killmail_id) {
             map.insert(km.killmail_id, km.clone());
         }
     }
@@ -28,7 +28,7 @@ fn flush(records: &Vec<KillMail>) -> Option<usize> {
 }
 
 fn run_updater(id: String, timeout: u32) {
-    let mut records: Vec<KillMail> = Vec::new();
+    let mut records: Vec<Killmail> = Vec::new();
     loop {
         while let Some(response) = api::gw::get_package(&id) {
             if let Some(content) = response.content {
