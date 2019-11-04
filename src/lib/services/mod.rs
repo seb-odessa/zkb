@@ -5,6 +5,7 @@ pub mod database;
 
 use crate::api::object::Object;
 use crate::api::killmail::Killmail;
+use crate::models::KillReport;
 use std::sync::{Arc, Mutex, Condvar};
 
 
@@ -23,7 +24,7 @@ pub enum Message{
     LoadObject(i32),
     CheckObject(i32),
     Resolve((i32, bool)),
-    Respond(Killmail),
+    Respond(KillReport),
 }
 
 

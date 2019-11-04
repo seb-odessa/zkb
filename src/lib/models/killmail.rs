@@ -4,7 +4,8 @@ use crate::schema::killmails;
 use crate::schema::named_killmails;
 use super::{Integer, OptInteger, OptString, DateTime, Connection, QueryResult};
 
-#[derive(Insertable, Associations)]
+
+#[derive(Insertable)]
 #[table_name = "killmails"]
 pub struct Killmail {
     pub killmail_id: Integer,
@@ -25,7 +26,7 @@ impl From<&api::killmail::Killmail> for Killmail {
     }
 }
 
-#[derive(Queryable, Associations)]
+#[derive(Queryable, Associations, Debug)]
 #[table_name = "named_killmails"]
 pub struct KillmailNamed {
     pub killmail_id: Integer,
@@ -33,11 +34,12 @@ pub struct KillmailNamed {
     pub system_id: Integer,
     pub system_name: OptString,
     pub moon_id: OptInteger,
+    pub moon_name: OptString,
     pub war_id: OptInteger,
 }
 impl KillmailNamed {
-    pub fn load(conn: &Connection, id: Integer) -> QueryResult<Self> {
+    pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
         use diesel::prelude::*;
-        named_killmails::table.filter(named_killmails::killmail_id.eq(&id)).first(conn)
+        named_killmails::table.filter(named_killmails::killmail_id.eq(id)).first(conn)
     }
 }

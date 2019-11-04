@@ -1,7 +1,7 @@
 use crate::schema::objects;
 use super::Integer;
 
-#[derive(Queryable, Insertable, Associations)]
+#[derive(Queryable, Insertable, Associations, Debug)]
 #[table_name = "objects"]
 pub struct Object {
     pub object_id: Integer,

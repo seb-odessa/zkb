@@ -4,7 +4,7 @@ use crate::schema::victims;
 use crate::schema::named_victims;
 use super::{Integer, OptInteger, OptString, Connection, QueryResult};
 
-#[derive(Insertable, Associations)]
+#[derive(Insertable)]
 #[table_name = "victims"]
 pub struct Victim {
     pub killmail_id: Integer,
@@ -29,7 +29,7 @@ impl From<&api::killmail::Killmail> for Victim{
     }
 }
 
-#[derive(Queryable, Associations)]
+#[derive(Queryable, Associations, Debug, PartialEq)]
 #[table_name = "named_victims"]
 pub struct VictimNamed {
     pub victim_id: Integer,
@@ -47,9 +47,9 @@ pub struct VictimNamed {
     pub faction_name: OptString,
 }
 impl VictimNamed {
-    pub fn load(conn: &Connection, id: Integer) -> QueryResult<Self> {
+    pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
         use diesel::prelude::*;
-        named_victims::table.filter(named_victims::killmail_id.eq(&id)).first(conn)
+        named_victims::table.filter(named_victims::killmail_id.eq(id)).first(conn)
     }
 }
 

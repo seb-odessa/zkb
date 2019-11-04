@@ -4,7 +4,7 @@ use crate::schema::attackers;
 use crate::schema::named_attackers;
 use super::{Integer, OptInteger, OptString, Float, Bool, Connection, QueryResult};
 
-#[derive(Insertable, Associations)]
+#[derive(Insertable)]
 #[table_name = "attackers"]
 pub struct Attacker {
     pub killmail_id: Integer,
@@ -35,7 +35,7 @@ impl From<&api::killmail::Attacker> for Attacker{
     }
 }
 
-#[derive(Queryable, Associations)]
+#[derive(Queryable, Associations, Debug, PartialEq)]
 #[table_name = "named_attackers"]
 pub struct AttackerNamed {
     pub attacker_id: Integer,
@@ -57,8 +57,8 @@ pub struct AttackerNamed {
     pub weapon_name: OptString,
 }
 impl AttackerNamed {
-    pub fn load(conn: &Connection, id: Integer) -> QueryResult<Self> {
+    pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
         use diesel::prelude::*;
-        named_attackers::table.filter(named_attackers::killmail_id.eq(&id)).first(conn)
+        named_attackers::table.filter(named_attackers::killmail_id.eq(id)).load(conn)
     }
 }

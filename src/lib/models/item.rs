@@ -4,7 +4,7 @@ use crate::schema::items;
 use crate::schema::named_items;
 use super::{Integer, OptInteger, OptString, Connection, QueryResult};
 
-#[derive(Insertable, Default)]
+#[derive(Insertable)]
 #[table_name = "items"]
 pub struct Item {
     pub killmail_id: Integer,
@@ -29,7 +29,7 @@ impl From<&api::killmail::Item> for Item{
 }
 
 
-#[derive(Queryable, Associations)]
+#[derive(Queryable, Associations, Debug, PartialEq)]
 #[table_name = "named_items"]
 pub struct ItemNamed {
     pub item_id: Integer,
@@ -42,9 +42,9 @@ pub struct ItemNamed {
     pub quantity_dropped: OptInteger,
 }
 impl ItemNamed {
-    pub fn load(conn: &Connection, id: Integer) -> QueryResult<Self> {
+    pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
         use diesel::prelude::*;
-        named_items::table.filter(named_items::killmail_id.eq(&id)).first(conn)
+        named_items::table.filter(named_items::killmail_id.eq(id)).load(conn)
     }
 }
 

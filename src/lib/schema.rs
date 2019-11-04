@@ -87,6 +87,7 @@ table! {
         system_id -> Integer,
         system_name -> Nullable<Text>,
         moon_id -> Nullable<Integer>,
+        moon_name -> Nullable<Text>,
         war_id -> Nullable<Integer>,
     }
 }

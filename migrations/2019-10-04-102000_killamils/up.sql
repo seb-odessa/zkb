@@ -96,13 +96,16 @@ SELECT
 	alliance_id,
 	allis.object_name  as alliance_name,
 	faction_id,
-	facts.object_name  as faction_name
+	facts.object_name  as faction_name,
+	weapon_type_id	   as weapon_id,
+	weapn.object_name  as weapon_name
 FROM attackers
 LEFT JOIN objects ships ON (ship_type_id = ships.object_id)
 LEFT JOIN objects chars ON (character_id = chars.object_id)
 LEFT JOIN objects corps ON (corporation_id = corps.object_id)
 LEFT JOIN objects allis ON (alliance_id = allis.object_id)
-LEFT JOIN objects facts ON (faction_id = facts.object_id);
+LEFT JOIN objects facts ON (faction_id = facts.object_id)
+LEFT JOIN objects weapn ON (weapon_type_id = weapn.object_id);
 
 CREATE VIEW IF NOT EXISTS named_killmails AS
 SELECT
@@ -111,6 +114,7 @@ SELECT
 	solar_system_id  	 as system_id,
 	systems.object_name  as system_name,
 	moon_id,
+    moons.object_name    as moon_name,
 	war_id
 FROM killmails
 LEFT JOIN objects systems ON (solar_system_id = systems.object_id)
