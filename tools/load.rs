@@ -3,7 +3,7 @@
 extern crate log;
 
 use lib::api;
-use lib::api::killmail::Killmail;
+use lib::api::Killmail;
 use lib::models::{DB, Hash};
 use std::collections::HashMap;
 use chrono::{Duration, TimeZone, Datelike, Utc, NaiveDate};

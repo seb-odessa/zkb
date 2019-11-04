@@ -6,7 +6,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
     loop {
         if let Some(Command::Quit) = context.commands.pop() {
             context.commands.push(Command::Quit);
-            context.resolver.push(Message::Ping);
+            context.resolver.push(Message::Ping); // ping other threads if any
             info!("received Command::Quit");
             break;
         }

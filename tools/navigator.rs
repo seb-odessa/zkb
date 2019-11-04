@@ -4,8 +4,8 @@ extern crate log;
 extern crate diesel_migrations;
 
 use lib::api::gw;
-use lib::api::object::Object;
-use lib::api::killmail::Killmail;
+use lib::api::Object;
+use lib::api::Killmail;
 use lib::models::*;
 
 use actix_rt;

@@ -1,4 +1,4 @@
-use super::killmail::Killmail;
+use super::Killmail;
 use std::convert::TryFrom;
 use serde::{Deserialize, Serialize};
 

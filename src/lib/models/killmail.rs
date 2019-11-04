@@ -14,8 +14,8 @@ pub struct Killmail {
     pub moon_id: Option<Integer>,
     pub war_id: Option<Integer>,
 }
-impl From<&api::killmail::Killmail> for Killmail {
-    fn from(src: &api::killmail::Killmail) -> Self {
+impl From<&api::Killmail> for Killmail {
+    fn from(src: &api::Killmail) -> Self {
         Self {
             killmail_id: src.killmail_id,
             killmail_time: src.killmail_time.naive_utc(),

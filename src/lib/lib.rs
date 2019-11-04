@@ -12,5 +12,6 @@ pub mod models;
 pub mod schema;
 pub mod provider;
 pub mod services;
+pub mod reports;
 
 

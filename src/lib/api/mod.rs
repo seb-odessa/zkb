@@ -10,6 +10,12 @@ pub mod object;
 pub mod price;
 pub mod constellation;
 
+pub use killmail::Killmail;
+pub use killmail::Victim;
+pub use killmail::Attacker;
+pub use killmail::Item;
+pub use object::Object;
+
 pub type BoolRequired = bool;
 pub type IntRequired = i32;
 pub type FloatRequired = f32;

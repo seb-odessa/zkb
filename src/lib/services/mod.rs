@@ -3,9 +3,8 @@ pub mod monitor;
 pub mod resolver;
 pub mod database;
 
-use crate::api::object::Object;
-use crate::api::killmail::Killmail;
-use crate::models::KillReport;
+use crate::api;
+use crate::reports;
 use std::sync::{Arc, Mutex, Condvar};
 
 
@@ -18,13 +17,13 @@ pub enum Command{
 #[derive(Debug, PartialEq)]
 pub enum Message{
     Ping,
-    SaveKill(Killmail),
+    SaveKill(api::Killmail),
     LoadKill(i32),
-    SaveObject(Object),
+    SaveObject(api::Object),
     LoadObject(i32),
     CheckObject(i32),
     Resolve((i32, bool)),
-    Respond(KillReport),
+    Respond(reports::Killmail),
 }
 
 

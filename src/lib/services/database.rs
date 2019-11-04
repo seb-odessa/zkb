@@ -1,6 +1,7 @@
 use crate::api;
 use crate::services::*;
 use crate::models::*;
+use crate::reports::*;
 use crate::services::{AppContext, Command, Message};
 
 fn enqueue_check(queue: &Queue, id: &i32) {
@@ -13,7 +14,7 @@ fn try_enqueue_check(queue: &Queue, id: &Option<i32>) {
     }
 }
 
-fn handle_killmail(queue: &Queue, killmail: &api::killmail::Killmail) {
+fn handle_killmail(queue: &Queue, killmail: &api::Killmail) {
     enqueue_check(queue, &killmail.solar_system_id);
     try_enqueue_check(queue, &killmail.moon_id);
     try_enqueue_check(queue, &killmail.war_id);
@@ -50,7 +51,6 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
     loop {
         if let Some(Command::Quit) = context.commands.pop() {
             context.commands.push(Command::Quit);
-            context.resolver.push(Message::Ping);
             info!("received Command::Quit");
             break;
         }
@@ -65,7 +65,7 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                 },
                 Message::LoadKill(id) => {
                     info!("Load killmail {} queue length: {}", id, context.database.len());
-                    match KillReport::load(&conn, &id) {
+                    match Killmail::load(&conn, &id) {
                         Ok(killmail) => {
                             info!("loaded killmail {} queue length: {}", killmail.killmail_id, context.database.len());
                             context.responses.push(Message::Respond(killmail))

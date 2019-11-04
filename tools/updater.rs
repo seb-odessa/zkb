@@ -2,7 +2,7 @@
 extern crate log;
 
 use lib::api;
-use lib::api::killmail::Killmail;
+use lib::api::Killmail;
 use lib::models::{DB, KillmailsApi};
 use std::thread;
 use std::collections::HashMap;

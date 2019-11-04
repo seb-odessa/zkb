@@ -1,6 +1,6 @@
 use curl::easy::Easy;
 use curl::Error;
-use super::killmail::Killmail;
+use super::Killmail;
 use super::zkb::Package;
 use std::convert::TryFrom;
 
