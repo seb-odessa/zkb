@@ -19,17 +19,17 @@ fn main() {
     info!("Connection established");
     embedded_migrations::run(&conn).expect("Database migration failed");
     info!("Database migration complete");
-    let context = web::Data::new(AppContext::new("127.0.0.1:8088", "seb_odessa", 10));
+    let context = web::Data::new(AppContext::new("127.0.0.1:8088", "seb_odessa", 15));
     info!("Application context constructed");
     scope(|scope| {
         scope.builder()
              .name("API Server".to_string())
              .spawn(|_| server::run(context.clone()))
              .expect("Failed to create API Server");
-     //    scope.builder()
-     //         .name("Monitor".to_string())
-     //         .spawn(|_| monitor::run(context.clone()))
-     //         .expect("Failed to create Monitor");
+        scope.builder()
+             .name("Monitor".to_string())
+             .spawn(|_| monitor::run(context.clone()))
+             .expect("Failed to create Monitor");
         scope.builder()
              .name("Name Resolver".to_string())
              .spawn(|_| resolver::run(context.clone()))

@@ -30,6 +30,17 @@ fn handle_killmail(queue: &Queue, killmail: &api::killmail::Killmail) {
         try_enqueue_check(queue, &attacker.faction_id);
         try_enqueue_check(queue, &attacker.weapon_type_id);
     }
+    if let Some(items) = &killmail.victim.items {
+        for item in items {            
+            enqueue_check(queue, &item.item_type_id);
+            if let Some(items) = &item.items {
+                for item in items {            
+                    enqueue_check(queue, &item.item_type_id);            
+                }
+            }
+        }        
+    }
+
     //@todo handle items as well
 }
 
