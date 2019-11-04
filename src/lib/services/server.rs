@@ -1,7 +1,7 @@
 use crate::services::{AppContext, Command, Message};
 
 use actix_rt;
-use actix_web::{web, App, HttpServer, Result};
+use actix_web::{web, App, HttpServer, HttpResponse};
 
 // use std::fmt::Write;
 
@@ -21,19 +21,22 @@ fn ping(context: web::Data<AppContext>) -> String {
     format!("Ping\n")
 }
 
-fn killmail(info: web::Path<i32>, context: web::Data<AppContext>) -> Result<String> {
+fn killmail(info: web::Path<i32>, context: web::Data<AppContext>) -> HttpResponse {
     info!("/killmail/{}", info);
     let id = *info.as_ref();
     context.database.push(Message::LoadKill(id));
     let mut response = String::from("Not found");
     if let Some(Message::Respond(report)) = context.responses.pop() {
         if report.killmail_id == id {
-            response = format!("{:?}\n", report);
+            response = format!("{}", report);
         } else {
             context.responses.push(Message::Respond(report))
         }
     }
-    Ok(response)
+    HttpResponse::Ok()
+        .content_type("text/html; charset=UTF-8")
+        .header("X-Header", "zkb")
+        .body(response)
 }
 
 pub fn run(context: web::Data<AppContext>) {

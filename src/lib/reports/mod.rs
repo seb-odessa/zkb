@@ -35,8 +35,40 @@ impl Killmail {
     }
 }
 
+fn href(category: &'static str, id: &Option<i32>, name: &Option<String>) -> String {
+    format!("<a href=\"https://zkillboard.com/{}/{}/\">{}</a>", 
+        category, 
+        id.as_ref().cloned().unwrap_or(0), 
+        name.as_ref().cloned().unwrap_or_default())
+}
+
 impl fmt::Display for Killmail {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}, {}", self.killmail_id, self.killmail_time.to_string())
+        write!(f, "<div>\n")?;
+        write!(f, "{}\n", href("kill", &Some(self.killmail_id), &Some(self.killmail_time.to_string())))?;
+        write!(f, "&nbsp;&nbsp;&nbsp;\n")?;
+        write!(f, "{}\n", href("system", &Some(self.system_id), &self.system_name))?;
+        write!(f, "<div>\n")?;
+
+        write!(f, "<table>\n")?;
+        write!(f, "<tr><th>Damage</th><th>Ship</th><th>Character</th><th>Corporation</th><th>Alliance</th><th>Weapon</th></tr>\n")?;
+        write!(f, "<tr><td align=\"right\">{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td></td></tr>\n",
+            self.victim.damage_taken,
+            href("item", &Some(self.victim.ship_id), &self.victim.ship_name),
+            href("character", &self.victim.character_id, &self.victim.character_name),
+            href("corporation", &self.victim.corporation_id, &self.victim.corporation_name),
+            href("alliance", &self.victim.alliance_id, &self.victim.alliance_name),
+        )?;
+        for attacker in &self.attackers {
+            write!(f, "<tr><td  align=\"right\">{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>\n",
+                attacker.damage_done,
+                href("item", &attacker.ship_id, &attacker.ship_name),
+                href("character", &attacker.character_id, &attacker.character_name),
+                href("corporation", &attacker.corporation_id, &attacker.corporation_name),
+                href("alliance", &attacker.alliance_id, &attacker.alliance_name),
+                href("item", &attacker.weapon_id, &attacker.weapon_name),
+            )?;
+        }
+        write!(f, "</table>\n")
     }
 }
