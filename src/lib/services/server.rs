@@ -26,11 +26,13 @@ fn killmail(info: web::Path<i32>, context: web::Data<AppContext>) -> HttpRespons
     let id = *info.as_ref();
     context.database.push(Message::LoadKill(id));
     let mut response = String::from("Not found");
-    if let Some(Message::Respond(report)) = context.responses.pop() {
-        if report.killmail_id == id {
-            response = format!("{}", report);
-        } else {
-            context.responses.push(Message::Respond(report))
+    if let Some(Message::Respond(msg)) = context.responses.pop() {
+        if let Some(report) = msg {
+            if report.killmail_id == id {
+                response = format!("{}", report);
+            } else {
+                context.responses.push(Message::Respond(Some(report)))
+            }
         }
     }
     HttpResponse::Ok()

@@ -23,7 +23,7 @@ pub enum Message{
     LoadObject(i32),
     CheckObject(i32),
     Resolve((i32, bool)),
-    Respond(reports::Killmail),
+    Respond(Option<reports::Killmail>),
 }
 
 

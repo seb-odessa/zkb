@@ -17,7 +17,7 @@ fn try_enqueue_check(queue: &Queue, id: &Option<i32>) {
 fn handle_killmail(queue: &Queue, killmail: &api::Killmail) {
     enqueue_check(queue, &killmail.solar_system_id);
     try_enqueue_check(queue, &killmail.moon_id);
-    try_enqueue_check(queue, &killmail.war_id);
+    //try_enqueue_check(queue, &killmail.war_id);
     enqueue_check(queue, &killmail.victim.ship_type_id);
     try_enqueue_check(queue, &killmail.victim.character_id);
     try_enqueue_check(queue, &killmail.victim.corporation_id);
@@ -68,9 +68,12 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                     match Killmail::load(&conn, &id) {
                         Ok(killmail) => {
                             info!("loaded killmail {} queue length: {}", killmail.killmail_id, context.database.len());
-                            context.responses.push(Message::Respond(killmail))
+                            context.responses.push(Message::Respond(Some(killmail)))
                         },
-                        Err(e) => warn!("was not able to load killmail: {}", e)
+                        Err(e) => {
+                            warn!("was not able to load killmail: {}", e);
+                            context.responses.push(Message::Respond(None))
+                        }
                     }
                 },
                 Message::CheckObject(id) => {
