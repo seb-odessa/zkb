@@ -42,9 +42,8 @@ path = "src/lib/lib.rs"
     actix-web = "1.0"
     actix-rt = "0.2"
     dns-lookup = "1.0"
-    md5 = "0.7"
 
-    
+
 
 
 

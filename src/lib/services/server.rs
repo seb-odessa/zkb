@@ -7,7 +7,7 @@ use actix_web::{web, App, HttpServer, HttpResponse};
 
 fn quit(context: web::Data<AppContext>) -> String {
     info!("server received Command::Quit");
-    context.commands.push(Command::Quit);    
+    context.commands.push(Command::Quit);
     context.database.push(Message::Ping);
     context.resolver.push(Message::Ping);
     context.responses.push(Message::Ping);
@@ -21,20 +21,29 @@ fn ping(context: web::Data<AppContext>) -> String {
     format!("Ping\n")
 }
 
+
 fn killmail(info: web::Path<i32>, context: web::Data<AppContext>) -> HttpResponse {
     info!("/killmail/{}", info);
     let id = *info.as_ref();
     context.database.push(Message::LoadKill(id));
-    let mut response = String::from("Not found");
-    if let Some(Message::Respond(msg)) = context.responses.pop() {
-        if let Some(report) = msg {
+    let mut response = String::new();
+    while let Some(msg) = context.responses.pop() {
+        if let Message::ReportKill(report) = msg {
             if report.killmail_id == id {
                 response = format!("{}", report);
+                break;
             } else {
-                context.responses.push(Message::Respond(Some(report)))
+                context.responses.push(Message::ReportKill(report));
             }
+        } else if let Message::NotFound(id) = msg {
+                response = format!("Killmail {} was not found in database", id);
+                break;
+        } else {
+            warn!("Unexpected {:?}", &msg);
+            context.responses.push(msg);
         }
     }
+
     HttpResponse::Ok()
         .content_type("text/html; charset=UTF-8")
         .header("X-Header", "zkb")
