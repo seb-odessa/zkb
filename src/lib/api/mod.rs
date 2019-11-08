@@ -10,6 +10,7 @@ pub mod object;
 pub mod price;
 pub mod constellation;
 pub mod stargate;
+pub mod names;
 
 pub use killmail::Killmail;
 pub use killmail::Victim;

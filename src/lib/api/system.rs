@@ -38,9 +38,17 @@ impl System {
         Constellation::new(&self.constellation_id)
     }
 
+    pub fn get_region_id(&self) -> Option<i32> {
+        self.get_constellation().map(|o| o.region_id)
+    }
+
+    pub fn get_region_name(&self) -> Option<String> {
+        self.get_constellation().map(|o| get_name(&o.region_id))
+    }
+
     pub fn get_full_name(&self) -> String {
         format!("{}/{}({:0.1})",
-            self.get_constellation().map(|o| get_name(&o.region_id)).unwrap_or_default(),
+            self.get_region_name().unwrap_or_default(),
             self.name,
             self.security_status
             )
