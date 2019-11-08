@@ -15,8 +15,12 @@ embed_migrations!("migrations");
 
 fn main() {
     env_logger::init();
+    //    std::env::set_var("DATABASE_URL", ":memory:");
 
-//    std::env::set_var("DATABASE_URL", ":memory:");
+
+    let iface = std::env::var("ZKB_INTERFACE").expect("ZKB_INTERFACE environment variable required");
+    info!("Will use {} interface", iface);
+
     let conn = DB::connection();
     info!("Connection established");
     embedded_migrations::run(&conn).expect("Database migration failed");
@@ -29,7 +33,7 @@ fn main() {
     info!("Minimal allowed date: {}", allowed.to_string());
 
     
-    let context = web::Data::new(AppContext::new("127.0.0.1:8088", &api_id, 15, Some(allowed)));
+    let context = web::Data::new(AppContext::new(&iface, &api_id, 15, Some(allowed)));
     info!("Application context constructed");
     scope(|scope| {
         scope.builder()

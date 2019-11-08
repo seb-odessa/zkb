@@ -4,7 +4,7 @@ use actix_rt;
 use actix_web::{web, App, HttpServer, HttpResponse};
 
 fn quit(context: web::Data<AppContext>) -> String {
-    info!("server received Command::Quit");
+    info!("/quit");
     context.commands.push(Command::Quit);
     context.database.push(Message::Ping);
     context.resolver.push(Message::Ping);
@@ -14,8 +14,11 @@ fn quit(context: web::Data<AppContext>) -> String {
 }
 
 fn ping(context: web::Data<AppContext>) -> String {
+    info!("/ping");
+    context.commands.push(Command::Quit);
     context.database.push(Message::Ping);
     context.resolver.push(Message::Ping);
+    context.responses.push(Message::Ping);
     format!("Ping\n")
 }
 
@@ -83,11 +86,11 @@ pub fn run(context: web::Data<AppContext>) {
     HttpServer::new(move || {
         App::new()
             .register_data(context.clone())
-            .route("/quit", web::get().to(quit))
-            .route("/ping", web::get().to(ping))
-            .route("/killmail/{id}", web::get().to(killmail))
-            .route("/system/{id}", web::get().to(system))
-            .route("/ids/{name}", web::get().to(ids))
+            .route("/navigator/quit", web::get().to(quit))
+            .route("/navigator/ping", web::get().to(ping))
+            .route("/navigator/killmail/{id}", web::get().to(killmail))
+            .route("/navigator/system/{id}", web::get().to(system))
+            .route("/navigator/ids/{name}", web::get().to(ids))
     })
     .bind(address)
     .unwrap()
