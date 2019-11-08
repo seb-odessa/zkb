@@ -78,6 +78,20 @@ fn killmail(info: web::Path<i32>, context: web::Data<AppContext>) -> HttpRespons
     response(body)
 }
 
+fn history(info: web::Path<(i32, i32)>, context: web::Data<AppContext>) -> HttpResponse {
+    info!("/history/{:?}", info);
+    let system = info.0;
+    let minutes = info.1;
+    context.database.push(Message::LoadHistory((system, minutes)));
+    let mut body = String::new();
+    if let Some(msg) = context.responses.pop() {
+        if let Message::ReportHistory(history) = msg {
+            body = format!("{}", history);
+        }
+    }
+    response(body)
+}
+
 pub fn run(context: web::Data<AppContext>) {
     let address = context.server.clone();
     let timeout = context.timeout;
@@ -90,6 +104,7 @@ pub fn run(context: web::Data<AppContext>) {
             .route("/navigator/killmail/{id}", web::get().to(killmail))
             .route("/navigator/system/{id}", web::get().to(system))
             .route("/navigator/ids/{name}", web::get().to(ids))
+            .route("/navigator/history/{system}/{minutes}", web::get().to(history))
     })
     .bind(address)
     .unwrap()

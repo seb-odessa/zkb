@@ -75,6 +75,10 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         }
                     }
                 },
+                Message::LoadHistory((system_id, minutes)) => {
+                    let history = history::History::load(&conn, &system_id, &minutes);
+                    context.responses.push(Message::ReportHistory(history));
+                }
                 Message::CheckObject(id) => {
                     if !ObjectsApi::exist(&conn, &id) {
                         context.resolver.push(Message::Resolve((id, true)));

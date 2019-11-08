@@ -35,14 +35,13 @@ impl Killmail {
         })
     }
 }
-
 impl fmt::Display for Killmail {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "<div>\n")?;
         write!(f, "{}\n", zkb_href("kill", &Some(self.killmail_id), &Some(self.killmail_time.to_string())))?;
         write!(f, "&nbsp;&nbsp;&nbsp;\n")?;
         write!(f, "{}\n", zkb_href("system", &Some(self.system_id), &self.system_name))?;
-        write!(f, "<div>\n")?;
+        write!(f, "</div>\n")?;
 
         write!(f, "<table>\n")?;
         write!(f, "<tr><th>Damage</th><th>Ship</th><th>Weapon</th><th>Character</th><th>Corporation</th><th>Alliance</th></tr>\n")?;

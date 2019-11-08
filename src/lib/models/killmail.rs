@@ -1,4 +1,6 @@
 use std::convert::From;
+use chrono::{Duration, Utc};
+
 use crate::api;
 use crate::schema::killmails;
 use crate::schema::named_killmails;
@@ -41,5 +43,17 @@ impl KillmailNamed {
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
         use diesel::prelude::*;
         named_killmails::table.filter(named_killmails::killmail_id.eq(id)).first(conn)
+    }
+    
+    pub fn load_ids_for_last_minutes(conn: &Connection, system_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Integer>> {
+        use diesel::prelude::*;
+        
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        let end = DateTime::from(Utc::now().naive_utc());
+        named_killmails::table
+            .filter(named_killmails::killmail_time.between(start, end))
+            .filter(named_killmails::system_id.eq(system_id))
+            .select(named_killmails::killmail_id)
+            .load(conn)
     }
 }

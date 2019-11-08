@@ -24,6 +24,8 @@ pub enum Message{
     CheckObject(i32),
     Resolve((i32, bool)),
     ReportKill(reports::Killmail),
+    LoadHistory((i32, i32)),
+    ReportHistory(reports::History),
     NotFound(i32),
 }
 
