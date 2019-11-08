@@ -15,7 +15,6 @@ fn quit(context: web::Data<AppContext>) -> String {
 
 fn ping(context: web::Data<AppContext>) -> String {
     info!("/ping");
-    context.commands.push(Command::Quit);
     context.database.push(Message::Ping);
     context.resolver.push(Message::Ping);
     context.responses.push(Message::Ping);
