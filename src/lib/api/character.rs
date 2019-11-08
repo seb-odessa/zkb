@@ -36,13 +36,6 @@ impl TryFrom<String> for Character {
         serde_json::from_str(&json)
     }
 }
-impl TryFrom<i32> for Character {
-    type Error = serde_json::Error;
-    fn try_from(id: i32) -> Result<Self, Self::Error> {
-        let response = gw::eve_api(&format!("characters/{}", id)).unwrap_or_default();
-        Self::try_from(response)
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -50,10 +43,11 @@ mod tests {
 
     #[test]
     fn from_api() {
-        let response = Character::new(&109299958);
+        let response = Character::new(&95465499);
         assert!(response.is_some());
         let character = response.unwrap();
         assert_eq!(character.race_id, 2);
+        assert_eq!(character.ancestry_id, Some(19));
         assert_eq!(&character.name, "CCP Bartender");
         assert_eq!(&character.gender, "male");
     }

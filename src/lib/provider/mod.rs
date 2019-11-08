@@ -1,5 +1,6 @@
 use crate::api::object::Object;
 use crate::api::system::System;
+use crate::api::stargate::Stargate;
 use crate::api::character::Character;
 use crate::api::constellation::Constellation;
 use std::collections::HashMap;
@@ -16,6 +17,7 @@ pub use prices::get_adj_price;
 lazy_static! {
     static ref OBJECTS: Mutex<HashMap<i32, Object>> = Mutex::new(HashMap::new());
     static ref SYSTEMS: Mutex<cache::Cache<i32, System>> = Mutex::new(cache::Cache::new());
+    static ref STARGATES: Mutex<HashMap<i32, Stargate>> = Mutex::new(HashMap::new());
     static ref CHARACTER: Mutex<cache::Cache<i32, Character>> = Mutex::new(cache::Cache::new());
     static ref CONSTELLATION: Mutex<cache::Cache<i32, Constellation>> = Mutex::new(cache::Cache::new());
 }
@@ -37,9 +39,29 @@ pub fn get_object<L>(key: &i32, loader: &L) -> Option<Object>
             }
         }
     }
-
     return object;
 }
+
+pub fn get_stargate<L>(key: &i32, loader: &L) -> Option<Stargate>
+    where L: Fn(&i32)->Option<Stargate>
+{
+    let mut object = if let Ok(map) = STARGATES.try_lock() {
+        map.get(key).cloned()
+    } else {
+        None
+    };
+
+    if object.is_none() {
+        if let Some(received) = loader(key) {
+            object = Some(received.clone());
+            if let Ok(ref mut map) = STARGATES.try_lock() {
+                map.entry(*key).or_insert(received);
+            }
+        }
+    }
+    return object;
+}
+
 
 pub fn get_system<L>(key: &i32, loader: &L) -> Option<System>
     where

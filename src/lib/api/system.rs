@@ -67,7 +67,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_new() {
+    fn from_api() {
         let maybe = System::new(&30002659);
         assert!(maybe.is_some());
         let system = maybe.unwrap();
