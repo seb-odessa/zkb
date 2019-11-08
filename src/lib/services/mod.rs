@@ -6,7 +6,7 @@ pub mod database;
 use crate::api;
 use crate::reports;
 use std::sync::{Arc, Mutex, Condvar};
-
+use chrono::{DateTime, Utc};
 
 #[derive(Debug, PartialEq)]
 pub enum Command{
@@ -36,6 +36,7 @@ pub struct AppContext {
     pub server: String,
     pub client: String,
     pub timeout: u64,
+    pub allowed: Option<DateTime<Utc>>,
     pub commands: Commands,
     pub database: Queue,
     pub resolver: Queue,
@@ -43,11 +44,12 @@ pub struct AppContext {
 }
 impl AppContext {
 
-    pub fn new<S: Into<String>>(address: S, client: S, timeout: u64) -> Self {
+    pub fn new<S: Into<String>>(address: S, client: S, timeout: u64, allowed: Option<DateTime<Utc>>) -> Self {
         Self {
             server: address.into(),
             client: client.into(),
             timeout: timeout,
+            allowed: allowed,
             commands: Commands::new(Arc::new((Mutex::new(false), Condvar::new()))),
             database: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
             resolver: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),

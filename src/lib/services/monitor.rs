@@ -14,14 +14,21 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
         if let Some(package) = api::gw::get_package(&context.client) {
             if let Some(content) = package.content {
                 let killmail = content.killmail;
-                info!("{} {} {}/{} {}",
+                info!("{} {} {} {}/{} {}",                    
                     killmail.killmail_time.time().to_string(),
+                    killmail.killmail_time.date().to_string(),
                     killmail.href(),
                     killmail.get_dropped_sum(),
                     killmail.get_total_sum(),
                     killmail.get_system_full_name()
                 );
-                context.database.push(Message::SaveKill(killmail));
+                if let Some(allowed) = &context.allowed {
+                    if *allowed < killmail.killmail_time {
+                        context.database.push(Message::SaveKill(killmail));
+                    } else {
+                        warn!("Killmail {} is too old {} will skipped.", killmail.killmail_id, killmail.killmail_time);        
+                    }
+                }
             } else {
                 let timeout = context.timeout.into();
                 info!("monitor will suspended {} sec", timeout);
