@@ -54,6 +54,7 @@ impl KillmailNamed {
             .filter(named_killmails::killmail_time.between(start, end))
             .filter(named_killmails::system_id.eq(system_id))
             .select(named_killmails::killmail_id)
+            .order(named_killmails::killmail_time.desc())
             .load(conn)
     }
 }
