@@ -6,6 +6,7 @@ extern crate serde_json;
 extern crate log;
 #[macro_use]
 extern crate lazy_static;
+extern crate uuid;
 
 pub mod api;
 pub mod models;

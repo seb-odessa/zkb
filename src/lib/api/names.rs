@@ -33,7 +33,6 @@ impl Names {
 
     pub fn new(name: &String) -> Option<Self> {
         Self::load(name)
-        //provider::get_object(id, &Self::load)
     }
 
 }

@@ -1,8 +1,11 @@
 use crate::api;
-use super::{zkb_href, link_system};
+use crate::services::Context;
+use crate::services::server::get_root;
 
-use std::fmt;
+use std::fmt::Write;
+use std::fmt::write;
 
+const FAIL: &'static str = "Error occurred while trying to write in String";
 
 #[derive(Debug, PartialEq)]
 pub struct Names {
@@ -13,37 +16,52 @@ impl Names {
     pub fn new(name: &String) -> Option<Self> {
         api::names::Names::new(name).map(|names| Self{ name: name.clone(), names: names })
     }
-}
 
-fn try_write(f: &mut fmt::Formatter<'_>, items: &Option<Vec<api::names::Item>>) -> fmt::Result {
-    if let Some(items) = items {
-        for item in items {
-            write!(f, "<div>{} = &gt {} </div>", item.id, item.name)?;
-        }        
-    }
-    write!(f, "")
-}
-
-impl fmt::Display for Names {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "<div>&lt{}&gt</div>", self.name)?;
-        try_write(f, &self.names.agents)?;
-        try_write(f, &self.names.alliances)?;
-        try_write(f, &self.names.characters)?;
-        try_write(f, &self.names.constellations)?;
-        try_write(f, &self.names.corporations)?;
-        try_write(f, &self.names.factions)?;
-        try_write(f, &self.names.inventory_types)?;
-        try_write(f, &self.names.regions)?;
-        try_write(f, &self.names.stations)?;
-        if let Some(items) = &self.names.systems {
+    fn fmt(output: &mut dyn Write, root: &String, api: &str, items: &Option<Vec<api::names::Item>>) {
+        if let Some(items) = items {
             for item in items {
-                write!(f, "<div>{} = &gt {} ({})</div>", 
-                    item.id, 
-                    link_system(&item.id, &item.name),
-                    zkb_href("system", &Some(item.id), &Some(String::from("zkb"))))?;
-            }        
+                if api.is_empty() {
+                    write(
+                        output,
+                        format_args!("<div>{} =&gt {}",item.id,item.name)
+                    )
+                } else {
+                    write(
+                        output,
+                        format_args!(
+                            r##"
+                            <div>&nbsp;{id}&nbsp;=&gt;&nbsp;[{api}]&nbsp;
+                            <a href="{root}/{api}/{id}">{name}</a>&nbsp;
+                            <a href="https://zkillboard.com/{api}/{id}/">zkb</a></div>"##,
+                            root=root,
+                            api=api,
+                            id=item.id,
+                            name=item.name
+                        )
+                    )
+                }.expect(FAIL);
+            }
         }
-        write!(f, "")
+    }
+
+    pub fn report(name: &String, ctx: &Context) -> String {
+        let mut output = String::new();
+        let root = get_root(&ctx);
+        write(&mut output, format_args!("<div>&lt{}&gt</div>", name)).expect(FAIL);
+        if let Some(name) = Names::new(name) {
+            Self::fmt(&mut output, &root, "", &name.names.agents);
+            Self::fmt(&mut output, &root, "alliance", &name.names.alliances);
+            Self::fmt(&mut output, &root, "character", &name.names.characters);
+            Self::fmt(&mut output, &root, "", &name.names.constellations);
+            Self::fmt(&mut output, &root, "corporation", &name.names.corporations);
+            Self::fmt(&mut output, &root, "", &name.names.factions);
+            Self::fmt(&mut output, &root, "", &name.names.inventory_types);
+            Self::fmt(&mut output, &root, "region", &name.names.regions);
+            Self::fmt(&mut output, &root, "", &name.names.stations);
+            Self::fmt(&mut output, &root, "system", &name.names.systems);
+        } else {
+            write(&mut output, format_args!("{} not found", name)).expect(FAIL);
+        }
+        return output;
     }
 }

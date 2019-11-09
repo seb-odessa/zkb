@@ -27,12 +27,12 @@ fn main() {
     info!("Database migration complete");
     let api_id = format!("{}", dns_lookup::get_hostname().unwrap_or(String::from("seb_odessa")));
     info!("ZKB API ID: {}", api_id);
-    
+
     let utc = Utc::now() - Duration::days(64);
     let allowed = DateTime::from(utc);
     info!("Minimal allowed date: {}", allowed.to_string());
 
-    
+
     let context = web::Data::new(AppContext::new(&iface, &api_id, 15, Some(allowed)));
     info!("Application context constructed");
     scope(|scope| {
@@ -40,10 +40,10 @@ fn main() {
              .name("API Server".to_string())
              .spawn(|_| server::run(context.clone()))
              .expect("Failed to create API Server");
-        scope.builder()
-             .name("Monitor".to_string())
-             .spawn(|_| monitor::run(context.clone()))
-             .expect("Failed to create Monitor");
+     //    scope.builder()
+     //         .name("Monitor".to_string())
+     //         .spawn(|_| monitor::run(context.clone()))
+     //         .expect("Failed to create Monitor");
         scope.builder()
              .name("Name Resolver".to_string())
              .spawn(|_| resolver::run(context.clone()))

@@ -7,6 +7,9 @@ use crate::api;
 use crate::reports;
 use std::sync::{Arc, Mutex, Condvar};
 use chrono::{DateTime, Utc};
+use actix_web::web;
+
+pub type Context = web::Data<AppContext>;
 
 #[derive(Debug, PartialEq)]
 pub enum Command{
