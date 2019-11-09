@@ -1,8 +1,9 @@
+pub mod names;
 pub mod killmail;
 pub mod history;
 pub mod system;
 pub mod region;
-pub mod names;
+pub mod stargate;
 pub mod constellation;
 
 use crate::services::Context;
@@ -13,6 +14,7 @@ pub use killmail::Killmail;
 pub use history::History;
 pub use system::System;
 pub use region::Region;
+pub use stargate::Stargate;
 pub use constellation::Constellation;
 
 pub const FAIL: &'static str = "Error occurred while trying to write in String";
@@ -25,10 +27,11 @@ pub fn load<S: Into<String>>(url: S, context: &Context) -> String {
     use uuid::Uuid;
     let id = Uuid::new_v4();
     format!(r##"
-        <div id ="{id}"/>
+        <div id ="{id}">
         <script>
             document.getElementById("{id}").innerHTML='<object type="text/html" data="{root}/{api}"/>';
-        </script>"##,
+        </script>
+        </div>"##,
         id=id,
         root=get_root(&context),
         api=url.into())

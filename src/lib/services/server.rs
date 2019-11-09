@@ -124,6 +124,8 @@ fn api(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
         "constellation" => reports::Constellation::report(&info.1, &ctx),
         "region" => reports::Region::report(&info.1, &ctx),
         "system" => reports::System::report(&info.1, &ctx),
+        "system_brief" => reports::System::brief(&info.1, &ctx),
+        "stargate" => reports::Stargate::report(&info.1, &ctx),
         _=> String::from("Unknown Type")
     };
 

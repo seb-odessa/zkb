@@ -14,11 +14,27 @@ pub struct System {
 }
 impl System {
 
+    pub fn brief(id: &i32, _ctx: &Context) -> String {
+        let mut output = String::new();
+        if let Some(object) = api::system::System::new(id) {
+            div(&mut output, "System", &href(object.zkb(), object.name.clone()));
+        } else {
+            div(&mut output, "System", &format!("{} not found", id));
+        }
+        return output;
+    }
+
     pub fn report(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
         if let Some(object) = api::system::System::new(id) {
             div(&mut output, "System", &href(object.zkb(), object.name.clone()));
             lazy(&mut output, format!("api/constellation/{}", object.constellation_id), &ctx);
+            lazy(&mut output, format!("api/region/{}", object.get_region_id().unwrap_or_default()), &ctx);
+            if let Some(ref gates) = &object.stargates {
+                for gate_id in gates {
+                    lazy(&mut output, format!("api/stargate/{}", gate_id), &ctx);
+                }
+            }
         } else {
             div(&mut output, "System", &format!("{} not found", id));
         }
