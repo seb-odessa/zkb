@@ -26,6 +26,10 @@ impl System {
         Self::try_from(response).ok()
     }
 
+    pub fn zkb(&self) -> String {
+        format!("https://zkillboard.com/system/{}/", self.system_id)
+    }
+
     pub fn new(id: &IntRequired) -> Option<Self> {
         provider::get_system(id, &Self::load)
     }

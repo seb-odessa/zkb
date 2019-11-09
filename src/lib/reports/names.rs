@@ -1,11 +1,10 @@
 use crate::api;
 use crate::services::Context;
 use crate::services::server::get_root;
+use crate::reports::FAIL;
 
 use std::fmt::Write;
 use std::fmt::write;
-
-const FAIL: &'static str = "Error occurred while trying to write in String";
 
 #[derive(Debug, PartialEq)]
 pub struct Names {
@@ -55,7 +54,7 @@ impl Names {
             Self::fmt(&mut output, &root, "", &name.names.constellations);
             Self::fmt(&mut output, &root, "corporation", &name.names.corporations);
             Self::fmt(&mut output, &root, "", &name.names.factions);
-            Self::fmt(&mut output, &root, "", &name.names.inventory_types);
+            Self::fmt(&mut output, &root, "item", &name.names.inventory_types);
             Self::fmt(&mut output, &root, "region", &name.names.regions);
             Self::fmt(&mut output, &root, "", &name.names.stations);
             Self::fmt(&mut output, &root, "system", &name.names.systems);

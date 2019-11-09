@@ -1,4 +1,5 @@
 use crate::services::{Context, Command, Message};
+use crate::reports;
 use uuid::Uuid;
 
 use actix_rt;
@@ -116,6 +117,22 @@ fn history(info: web::Path<(i32, i32)>, context: Context) -> HttpResponse {
     response(body)
 }
 
+fn api(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
+    info!("/api/{}/{}", info.0, info.1);
+
+    let body = match info.0.as_ref() {
+        "constellation" => reports::Constellation::report(&info.1, &ctx),
+        "region" => reports::Region::report(&info.1, &ctx),
+        "system" => reports::System::report(&info.1, &ctx),
+        _=> String::from("Unknown Type")
+    };
+
+    HttpResponse::Ok()
+        .content_type("text/html; charset=UTF-8")
+        .header("X-Header", "zkb")
+        .body(body)
+}
+
 pub fn run(context: Context) {
     let address = context.server.clone();
     let timeout = context.timeout;
@@ -132,6 +149,8 @@ pub fn run(context: Context) {
 
             .route("/navigator/page/{a}", web::get().to(page))
             .route("/navigator/inner_page/{a}", web::get().to(inner_page))
+
+            .route("/navigator/api/{type}/{id}", web::get().to(api))
 
     })
     .bind(address)

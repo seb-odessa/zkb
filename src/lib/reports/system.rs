@@ -1,6 +1,8 @@
 use crate::api;
 use super::{zkb_href, link_system};
-
+use crate::services::Context;
+use crate::reports::lazy;
+use crate::reports::{div, href};
 use std::fmt;
 
 
@@ -11,6 +13,18 @@ pub struct System {
     neighbors: Vec<api::system::System>,
 }
 impl System {
+
+    pub fn report(id: &i32, ctx: &Context) -> String {
+        let mut output = String::new();
+        if let Some(object) = api::system::System::new(id) {
+            div(&mut output, "System", &href(object.zkb(), object.name.clone()));
+            lazy(&mut output, format!("api/constellation/{}", object.constellation_id), &ctx);
+        } else {
+            div(&mut output, "System", &format!("{} not found", id));
+        }
+        return output;
+    }
+
     pub fn new(id: &i32) -> Option<Self> {
         if let Some(system) = api::system::System::new(id) {
             let mut neighbors = Vec::new();
@@ -31,7 +45,7 @@ impl System {
             })
         } else {
             None
-        }        
+        }
     }
 }
 

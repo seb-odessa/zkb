@@ -8,6 +8,7 @@ pub mod system;
 pub mod character;
 pub mod object;
 pub mod price;
+pub mod region;
 pub mod constellation;
 pub mod stargate;
 pub mod names;
