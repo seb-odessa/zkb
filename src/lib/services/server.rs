@@ -31,7 +31,7 @@ fn response<S: Into<String>>(body: S) -> HttpResponse {
         .body(body.into())
 }
 
-pub fn get_root(context: &Context) -> String {
+pub fn root(context: &Context) -> String {
     format!("http://{}/navigator", &context.server)
 }
 
@@ -43,7 +43,7 @@ fn load<S: Into<String>>(url: S, context: &Context) -> String {
             document.getElementById("{id}").innerHTML='<object type="text/html" data="{root}/{api}"/>';
         </script>"##,
         id=id,
-        root=get_root(&context),
+        root=root(&context),
         api=url.into())
 }
 

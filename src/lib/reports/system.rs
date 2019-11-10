@@ -2,7 +2,7 @@ use crate::api;
 use super::{zkb_href, link_system};
 use crate::services::Context;
 use crate::reports::lazy;
-use crate::reports::{div, href};
+use crate::reports::{div, href, root};
 use std::fmt;
 
 
@@ -14,10 +14,11 @@ pub struct System {
 }
 impl System {
 
-    pub fn brief(id: &i32, _ctx: &Context) -> String {
+    pub fn brief(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
         if let Some(object) = api::system::System::new(id) {
-            div(&mut output, "System", &href(object.zkb(), object.name.clone()));
+            let url = format!("{}/api/system/{}", root(ctx), id);
+            div(&mut output, "System", &href(&url, &object.name));
         } else {
             div(&mut output, "System", &format!("{} not found", id));
         }
@@ -32,7 +33,9 @@ impl System {
             lazy(&mut output, format!("api/region/{}", object.get_region_id().unwrap_or_default()), &ctx);
             if let Some(ref gates) = &object.stargates {
                 for gate_id in gates {
-                    lazy(&mut output, format!("api/stargate/{}", gate_id), &ctx);
+                    if let Some(object) = api::stargate::Stargate::new(gate_id) {
+                        lazy(&mut output, format!("api/system_brief/{}", object.destination.system_id), &ctx);
+                    }
                 }
             }
         } else {

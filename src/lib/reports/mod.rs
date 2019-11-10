@@ -19,7 +19,7 @@ pub use constellation::Constellation;
 
 pub const FAIL: &'static str = "Error occurred while trying to write in String";
 
-pub fn get_root(context: &Context) -> String {
+pub fn root(context: &Context) -> String {
     format!("http://{}/navigator", &context.server)
 }
 
@@ -33,7 +33,7 @@ pub fn load<S: Into<String>>(url: S, context: &Context) -> String {
         </script>
         </div>"##,
         id=id,
-        root=get_root(&context),
+        root=root(&context),
         api=url.into())
 }
 
@@ -54,12 +54,15 @@ pub fn lazy<S: Into<String>>(output: &mut dyn Write, url: S, ctx: &Context) {
     std::fmt::write(
         output,
         format_args!(r##"
-        <div id ="{id}"/>
+        <div id = "{id}">...</div>
         <script>
-            document.getElementById("{id}").innerHTML='<object type="text/html" data="{root}/{api}"/>';
+            fetch("{root}/{api}")
+               .then(response => response.text())
+               .then(html => document.getElementById("{id}").innerHTML = html)
+               .catch((err) => console.log("Can’t access " + "{root}/{api}" + ": " + err));
         </script>"##,
         id=id,
-        root=get_root(ctx),
+        root=root(ctx),
         api=url.into())
     ).expect(FAIL);
 }
