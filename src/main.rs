@@ -17,7 +17,6 @@ fn main() {
     env_logger::init();
     //    std::env::set_var("DATABASE_URL", ":memory:");
 
-
     let iface = std::env::var("ZKB_INTERFACE").expect("ZKB_INTERFACE environment variable required");
     info!("Will use {} interface", iface);
 
@@ -40,10 +39,10 @@ fn main() {
              .name("API Server".to_string())
              .spawn(|_| server::run(context.clone()))
              .expect("Failed to create API Server");
-     //    scope.builder()
-     //         .name("Monitor".to_string())
-     //         .spawn(|_| monitor::run(context.clone()))
-     //         .expect("Failed to create Monitor");
+        scope.builder()
+             .name("Monitor".to_string())
+             .spawn(|_| monitor::run(context.clone()))
+             .expect("Failed to create Monitor");
         scope.builder()
              .name("Name Resolver".to_string())
              .spawn(|_| resolver::run(context.clone()))
