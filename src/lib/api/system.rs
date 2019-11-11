@@ -14,7 +14,7 @@ pub struct System {
     pub security_class: StrOptional,
     pub security_status: FloatRequired,
     pub constellation_id: IntRequired,
-    pub planets: Option<Vec<Planet>>;,
+    pub planets: Option<Vec<Planet>>,
     pub stargates: IdsOptional,
     pub stations: IdsOptional,
 }
