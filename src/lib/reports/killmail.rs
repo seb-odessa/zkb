@@ -43,7 +43,7 @@ impl fmt::Display for Killmail {
         write!(f, "{}\n", zkb_href("kill", &Some(self.killmail_id), &Some(self.killmail_time.to_string())))?;
         write!(f, "&nbsp;&nbsp;&nbsp;\n")?;
         write!(f, "&nbsp;{}&nbsp;", zkb_href("system", &Some(self.system_id), &self.system_name))?;
-        write!(f, "&nbsp;{}&nbsp;", zkb_href("contellation", &self.constellation_id, &self.constellation_name))?;
+        write!(f, "&nbsp;{}&nbsp;", zkb_href("constellation", &self.constellation_id, &self.constellation_name))?;
         write!(f, "&nbsp;{}&nbsp;", zkb_href("region", &self.region_id, &self.region_name))?;
         write!(f, "</div>\n")?;
 

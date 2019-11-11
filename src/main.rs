@@ -27,7 +27,7 @@ fn main() {
     let api_id = format!("{}", dns_lookup::get_hostname().unwrap_or(String::from("seb_odessa")));
     info!("ZKB API ID: {}", api_id);
 
-    let utc = Utc::now() - Duration::days(64);
+    let utc = Utc::now() - Duration::weeks(32);
     let allowed = DateTime::from(utc);
     info!("Minimal allowed date: {}", allowed.to_string());
 
