@@ -55,12 +55,25 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
         }
         if let Some(msg) = context.database.pop() {
             match msg {
-                Message::SaveKill(killmail) => {
-                    match KillmailsApi::save(&conn, &killmail) {
-                        Ok(()) => info!("saved killmail {} queue length: {}", killmail.killmail_id, context.database.len()),
-                        Err(e) => warn!("was not able to save killmail: {}", e)
+                Message::Save(model) => {
+                    match model {
+                        Model::Killmail(killmail) =>{
+                            match KillmailsApi::save(&conn, &killmail) {
+                                Ok(()) => info!("saved killmail {} queue length: {}", killmail.killmail_id, context.database.len()),
+                                Err(e) => warn!("was not able to save killmail: {}", e)
+                            }
+                            handle_killmail(&context.database, &killmail);
+                        },
+                        Model::Object(object) => {
+                            match ObjectsApi::save(&conn, &object) {
+                                Ok(_) => info!("saved {:?}. Queue length {}", object, context.resolver.len()),
+                                Err(e) => warn!("was not able to save object: {}", e)
+                            }
+                        },
+                        model => {
+                            warn!("Save not implemented for model: {:?}", model)
+                        }
                     }
-                    handle_killmail(&context.database, &killmail);
                 },
                 Message::LoadKill(id) => {
                     info!("Load killmail {} queue length: {}", id, context.database.len());
@@ -82,12 +95,6 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                 Message::CheckObject(id) => {
                     if !ObjectsApi::exist(&conn, &id) {
                         context.resolver.push(Message::Receive(Api::Object(id)));
-                    }
-                },
-                Message::SaveObject(object) => {
-                    match ObjectsApi::save(&conn, &object) {
-                        Ok(_) => info!("saved {:?}. Queue length {}", object, context.resolver.len()),
-                        Err(e) => warn!("was not able to save object: {}", e)
                     }
                 },
                 message => {

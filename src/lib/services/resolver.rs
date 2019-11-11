@@ -1,5 +1,5 @@
 use crate::api;
-use crate::services::{AppContext, Command, Message, Api};
+use crate::services::{AppContext, Command, Message, Api, Model};
 
 pub fn run(context: actix_web::web::Data<AppContext>) {
     info!("Started");
@@ -17,27 +17,24 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                         Api::Object(id) =>{
                             if let Some(object) = api::object::Object::new(&id) {
                                 info!("{:?}. Queue length {}", object, context.resolver.len());
-                                context.database.push(Message::SaveObject(object));
+                                context.database.push(Message::Save(Model::Object(object)));
                             }
                         },
                         Api::System(id) =>{
                             if let Some(object) = api::system::System::new(&id) {
                                 info!("{:?}. Queue length {}", object, context.resolver.len());
-                                //context.database.push(Message::SaveObject(object));
                                 warn!("Save System not impl");
                             }
                         },
                         Api::Stargate(id) =>{
                             if let Some(object) = api::stargate::Stargate::new(&id) {
                                 info!("{:?}. Queue length {}", object, context.resolver.len());
-                                //context.database.push(Message::SaveObject(object));
                                 warn!("Save Stargate not impl");
                             }
                         },
                         Api::Constellation(id) =>{
                             if let Some(object) = api::constellation::Constellation::new(&id) {
                                 info!("{:?}. Queue length {}", object, context.resolver.len());
-                                //context.database.push(Message::SaveObject(object));
                                 warn!("Save Constellation not impl");
                             }
                         },

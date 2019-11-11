@@ -1,5 +1,5 @@
 use crate::api;
-use crate::services::{AppContext, Command, Message};
+use crate::services::{AppContext, Command, Message, Model};
 
 use crossbeam_utils::sync::Parker;
 
@@ -8,13 +8,13 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
     loop {
         if let Some(Command::Quit) = context.commands.pop() {
             context.commands.push(Command::Quit);
-            info!("received Command::Quit");            
+            info!("received Command::Quit");
             break;
         }
         if let Some(package) = api::gw::get_package(&context.client) {
             if let Some(content) = package.content {
                 let killmail = content.killmail;
-                info!("{} {} {} {}/{} {}",                    
+                info!("{} {} {} {}/{} {}",
                     killmail.killmail_time.time().to_string(),
                     killmail.killmail_time.date().to_string(),
                     killmail.href(),
@@ -24,9 +24,9 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                 );
                 if let Some(allowed) = &context.allowed {
                     if *allowed < killmail.killmail_time {
-                        context.database.push(Message::SaveKill(killmail));
+                        context.database.push(Message::Save(Model::Killmail(killmail)));
                     } else {
-                        warn!("Killmail {} is too old {} will skipped.", killmail.killmail_id, killmail.killmail_time);        
+                        warn!("Killmail {} is too old {} will skipped.", killmail.killmail_id, killmail.killmail_time);
                     }
                 }
             } else {

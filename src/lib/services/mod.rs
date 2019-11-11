@@ -26,11 +26,19 @@ pub enum Api{
 }
 
 #[derive(Debug, PartialEq)]
+pub enum Model{
+    Object(api::object::Object),
+    System(api::system::System),
+    Stargate(api::stargate::Stargate),
+    Constellation(api::constellation::Constellation),
+    Killmail(api::killmail::Killmail),
+}
+
+
+#[derive(Debug, PartialEq)]
 pub enum Message{
     Ping,
-    SaveKill(api::Killmail),
     LoadKill(i32),
-    SaveObject(api::Object),
     LoadObject(i32),
     CheckObject(i32),
     ReportKill(reports::Killmail),
@@ -38,6 +46,7 @@ pub enum Message{
     ReportHistory(reports::History),
     NotFound(i32),
     Receive(Api),
+    Save(Model),
 }
 
 
