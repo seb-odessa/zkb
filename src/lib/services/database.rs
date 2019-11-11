@@ -131,9 +131,9 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                             }
                         },
                         Category::System(id) => {
-                            if !models::system::System::exist(&conn, &id) {
+//                            if !models::system::System::exist(&conn, &id) {
                                 context.resolver.push(Message::Receive(Api::System(id)));
-                            }
+//                            }
                         }
                         Category::Constellation(id) => {
                             if !models::constellation::Constellation::exist(&conn, &id) {
