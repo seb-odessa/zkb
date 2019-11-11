@@ -13,9 +13,10 @@ pub struct Killmail {
     pub killmail_time: DateTime,
     pub system_id: Integer,
     pub system_name: OptString,
-    pub moon_id: OptInteger,
-    pub moon_name: OptString,
-    pub war_id: OptInteger,
+    pub constellation_id: OptInteger,
+    pub constellation_name: OptString,
+    pub region_id: OptInteger,
+    pub region_name: OptString,
     pub victim: VictimNamed,
     pub attackers: Vec<AttackerNamed>,
 }
@@ -27,9 +28,10 @@ impl Killmail {
             killmail_time: killmail.killmail_time,
             system_id: killmail.system_id,
             system_name: killmail.system_name,
-            moon_id: killmail.moon_id,
-            moon_name: killmail.moon_name,
-            war_id: killmail.war_id,
+            constellation_id: killmail.constellation_id,
+            constellation_name: killmail.constellation_name,
+            region_id: killmail.region_id,
+            region_name: killmail.region_name,
             victim: VictimNamed::load(conn, id)?,
             attackers: AttackerNamed::load(conn, id)?,
         })
@@ -40,7 +42,9 @@ impl fmt::Display for Killmail {
         write!(f, "<div>\n")?;
         write!(f, "{}\n", zkb_href("kill", &Some(self.killmail_id), &Some(self.killmail_time.to_string())))?;
         write!(f, "&nbsp;&nbsp;&nbsp;\n")?;
-        write!(f, "{}\n", zkb_href("system", &Some(self.system_id), &self.system_name))?;
+        write!(f, "&nbsp;{}&nbsp;", zkb_href("system", &Some(self.system_id), &self.system_name))?;
+        write!(f, "&nbsp;{}&nbsp;", zkb_href("contellation", &self.constellation_id, &self.constellation_name))?;
+        write!(f, "&nbsp;{}&nbsp;", zkb_href("region", &self.region_id, &self.region_name))?;
         write!(f, "</div>\n")?;
 
         write!(f, "<table>\n")?;

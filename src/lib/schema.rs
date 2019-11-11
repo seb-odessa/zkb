@@ -84,9 +84,10 @@ table! {
         killmail_time -> Timestamp,
         system_id -> Integer,
         system_name -> Nullable<Text>,
-        moon_id -> Nullable<Integer>,
-        moon_name -> Nullable<Text>,
-        war_id -> Nullable<Integer>,
+        constellation_id -> Nullable<Integer>,
+        constellation_name -> Nullable<Text>,
+        region_id -> Nullable<Integer>,
+        region_name -> Nullable<Text>,
     }
 }
 

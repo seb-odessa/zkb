@@ -35,19 +35,20 @@ pub struct KillmailNamed {
     pub killmail_time: DateTime,
     pub system_id: Integer,
     pub system_name: OptString,
-    pub moon_id: OptInteger,
-    pub moon_name: OptString,
-    pub war_id: OptInteger,
+    pub constellation_id: OptInteger,
+    pub constellation_name: OptString,
+    pub region_id: OptInteger,
+    pub region_name: OptString,
 }
 impl KillmailNamed {
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
         use diesel::prelude::*;
         named_killmails::table.filter(named_killmails::killmail_id.eq(id)).first(conn)
     }
-    
+
     pub fn load_ids_for_last_minutes(conn: &Connection, system_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Integer>> {
         use diesel::prelude::*;
-        
+
         let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
         let end = DateTime::from(Utc::now().naive_utc());
         named_killmails::table

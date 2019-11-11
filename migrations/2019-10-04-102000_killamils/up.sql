@@ -148,15 +148,18 @@ CREATE VIEW IF NOT EXISTS named_killmails AS
 SELECT
 	killmail_id,
 	killmail_time,
-	solar_system_id  	 as system_id,
-	systems.object_name  as system_name,
-	moon_id,
-    moons.object_name    as moon_name,
-	war_id
+	system_names.object_id 			as system_id,
+	system_names.object_name  		as system_name,
+	constellation_names.object_id	as constellation_id,
+    constellation_names.object_name as constellation_name,
+	region_names.object_id			as region_id,
+    region_names.object_name 		as region_name
 FROM killmails
-LEFT JOIN objects systems ON (solar_system_id = systems.object_id)
-LEFT JOIN objects moons ON (moon_id = moons.object_id);
-
+LEFT join systems ON (solar_system_id = systems.system_id)
+LEFT join constellations ON (systems.constellation_id = constellations.constellation_id)
+LEFT JOIN objects system_names ON (solar_system_id = system_names.object_id)
+LEFT JOIN objects constellation_names ON (constellations.constellation_id = constellation_names.object_id)
+LEFT JOIN objects region_names ON (constellations.region_id = region_names.object_id)
 
 DROP VIEW IF EXISTS named_items;
 CREATE VIEW IF NOT EXISTS named_items AS
