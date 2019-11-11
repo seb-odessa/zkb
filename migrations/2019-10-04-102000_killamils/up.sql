@@ -76,8 +76,7 @@ CREATE INDEX IF NOT EXISTS p_system_idx        ON planets(system_id);
 
 CREATE TABLE IF NOT EXISTS constellations(
     constellation_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
-	region_id INTEGER NOT NULL,
-    type_id  INTEGER NOT NULL
+	region_id INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS c_region_idx        ON constellations(region_id);
 

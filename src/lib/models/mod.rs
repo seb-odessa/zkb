@@ -9,6 +9,7 @@ pub mod item;
 pub mod object;
 pub mod category;
 pub mod stargate;
+pub mod constellation;
 
 pub use diesel::sqlite::SqliteConnection as Connection;
 
