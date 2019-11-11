@@ -1,11 +1,12 @@
 use crate::api;
 use crate::services::*;
-use crate::models::*;
+use crate::models;
 use crate::reports::*;
 use crate::services::{AppContext, Command, Message, Category, Report};
+use models::Connection;
 
 fn enqueue_check(queue: &Queue, id: &i32) {
-    queue.push(Message::Exist(Category::Object(*id)));
+    queue.push(Message::Check(Category::Object(*id)));
 }
 
 fn try_enqueue_check(queue: &Queue, id: &Option<i32>) {
@@ -58,22 +59,34 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                 Message::Save(model) => {
                     match model {
                         Model::Killmail(killmail) =>{
-                            match KillmailsApi::save(&conn, &killmail) {
-                                Ok(()) => info!("saved killmail {} queue length: {}", killmail.killmail_id, context.database.len()),
-                                Err(e) => warn!("was not able to save killmail: {}", e)
+                            if let Err(err) = models::KillmailsApi::save(&conn, &killmail) {
+                                warn!("was not able to save killmail: {}", err);
                             }
                             handle_killmail(&context.database, &killmail);
+                            context.database.push(Message::Check(Category::System(killmail.killmail_id)));
                         },
                         Model::Object(object) => {
-                            match ObjectsApi::save(&conn, &object) {
-                                Ok(_) => info!("saved {:?}. Queue length {}", object, context.resolver.len()),
-                                Err(e) => warn!("was not able to save object: {}", e)
+                            if let Err(err) = models::ObjectsApi::save(&conn, &object) {
+                                warn!("was not able to save object: {}", err);
                             }
                         },
-                        model => {
-                            warn!("Save not implemented for model: {:?}", model)
-                        }
-                    }
+                        Model::System(object) => {
+                            if let Err(err) = models::system::System::save(&conn, &object) {
+                                warn!("was not able to save system: {}", err);
+                            }
+                        },
+                        Model::Constellation(object) => {
+                            if let Err(err) = models::constellation::Constellation::save(&conn, &object) {
+                                warn!("was not able to save constellation: {}", err);
+                            }
+                        },
+                        Model::Stargate(object) => {
+                            if let Err(err) = models::stargate::Stargate::save(&conn, &object) {
+                                warn!("was not able to save stargate: {}", err);
+                            }
+                        },
+                    };
+                    info!("database queue length: {}", context.database.len());
                 },
                 Message::Load(category) => {
                     match category {
@@ -99,11 +112,26 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         }
                     }
                 },
-                Message::Exist(category) => {
+                Message::Check(category) => {
                     match category {
                         Category::Object(id) =>{
-                            if !ObjectsApi::exist(&conn, &id) {
+                            if !models::ObjectsApi::exist(&conn, &id) {
                                 context.resolver.push(Message::Receive(Api::Object(id)));
+                            }
+                        },
+                        Category::System(id) => {
+                            if !models::system::System::exist(&conn, &id) {
+                                context.resolver.push(Message::Receive(Api::System(id)));
+                            }
+                        }
+                        Category::Constellation(id) => {
+                            if !models::constellation::Constellation::exist(&conn, &id) {
+                                context.resolver.push(Message::Receive(Api::Constellation(id)));
+                            }
+                        },
+                        Category::Stargate(id) => {
+                            if !models::stargate::Stargate::exist(&conn, &id) {
+                                context.resolver.push(Message::Receive(Api::Stargate(id)));
                             }
                         },
                         model => {

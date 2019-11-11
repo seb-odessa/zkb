@@ -38,6 +38,9 @@ pub enum Model{
 pub enum Category{
     Object(i32),
     Killmail(i32),
+    System(i32),
+    Stargate(i32),
+    Constellation(i32),
     History((i32, i32)),
 }
 
@@ -55,7 +58,7 @@ pub enum Message{
     Receive(Api),
     Save(Model),
     Load(Category),
-    Exist(Category),
+    Check(Category),
     Report(Report)
 }
 

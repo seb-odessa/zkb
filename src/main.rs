@@ -18,7 +18,7 @@ fn main() {
     //    std::env::set_var("DATABASE_URL", ":memory:");
 
     let iface = std::env::var("ZKB_INTERFACE").expect("ZKB_INTERFACE environment variable required");
-    info!("Will use {} interface", iface);
+    info!("Bind {} interface", iface);
 
     let conn = DB::connection();
     info!("Connection established");

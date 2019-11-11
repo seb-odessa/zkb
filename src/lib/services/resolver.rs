@@ -1,5 +1,5 @@
 use crate::api;
-use crate::services::{AppContext, Command, Message, Api, Model};
+use crate::services::{AppContext, Command, Message, Api, Model, Category};
 
 pub fn run(context: actix_web::web::Data<AppContext>) {
     info!("Started");
@@ -23,19 +23,27 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                         Api::System(id) =>{
                             if let Some(object) = api::system::System::new(&id) {
                                 info!("{:?}. Queue length {}", object, context.resolver.len());
+                                context.database.push(Message::Check(Category::Constellation(object.constellation_id)));
+                                if let Some(gates) = &object.stargates {
+                                    for id in gates {
+                                        context.database.push(Message::Check(Category::Stargate(*id)));
+                                    }
+                                }
+                                context.database.push(Message::Save(Model::System(object)));
+
                                 warn!("Save System not impl");
                             }
                         },
                         Api::Stargate(id) =>{
                             if let Some(object) = api::stargate::Stargate::new(&id) {
                                 info!("{:?}. Queue length {}", object, context.resolver.len());
-                                warn!("Save Stargate not impl");
+                                context.database.push(Message::Save(Model::Stargate(object)));
                             }
                         },
                         Api::Constellation(id) =>{
                             if let Some(object) = api::constellation::Constellation::new(&id) {
                                 info!("{:?}. Queue length {}", object, context.resolver.len());
-                                warn!("Save Constellation not impl");
+                                context.database.push(Message::Save(Model::Constellation(object)));
                             }
                         },
                     }
