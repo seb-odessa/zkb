@@ -103,18 +103,11 @@ fn killmail(info: web::Path<i32>, context: Context) -> HttpResponse {
     response(body)
 }
 
-fn history(info: web::Path<(i32, i32)>, context: Context) -> HttpResponse {
+fn history(info: web::Path<(i32, i32)>, ctx: Context) -> HttpResponse {
     info!("/history/{:?}", info);
     let system = info.0;
     let minutes = info.1;
-    context.database.push(Message::Load(Category::History((system, minutes))));
-    let mut body = String::new();
-    if let Some(msg) = context.responses.pop() {
-        if let Message::Report(Report::History(history)) = msg {
-            body = format!("{}", history);
-        }
-    }
-    response(body)
+    response(reports::History::report(&system, &minutes, &ctx))
 }
 
 fn api(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
@@ -126,6 +119,7 @@ fn api(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
         "system" => reports::System::report(&info.1, &ctx),
         "system_brief" => reports::System::brief(&info.1, &ctx),
         "stargate" => reports::Stargate::report(&info.1, &ctx),
+        "killmail_brief" => reports::Killmail::brief(&info.1, &ctx),
         _=> String::from("Unknown Type")
     };
 

@@ -1,7 +1,7 @@
 use crate::api;
 use crate::services::*;
 use crate::models;
-use crate::reports::*;
+use crate::reports;
 use crate::services::{AppContext, Command, Message, Category, Report};
 use models::Connection;
 
@@ -101,7 +101,7 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                 Message::Load(category) => {
                     match category {
                         Category::Killmail(id) =>{
-                            match Killmail::load(&conn, &id) {
+                            match reports::Killmail::load(&conn, &id) {
                                 Ok(killmail) => {
                                     info!("loaded killmail {} queue length: {}", killmail.killmail_id, context.database.len());
                                     context.responses.push(Message::Report(Report::Killmail(killmail)));
@@ -113,7 +113,7 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                             }
                         },
                         Category::History((system_id, minutes)) => {
-                            let history = history::History::load(&conn, &system_id, &minutes);
+                            let history = reports::history::History::load(&conn, &system_id, &minutes);
                             info!("loaded {} minutes history for {}, queue length: {}", minutes, system_id, context.database.len());
                             context.responses.push(Message::Report(Report::History(history)));
                         },

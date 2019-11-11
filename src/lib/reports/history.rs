@@ -1,10 +1,14 @@
 use crate::models::*;
 use super::{zkb_href, link_killmail, Killmail};
+use crate::services::Context;
+use crate::services::server::root;
+use crate::reports::FAIL;
+
 use std::fmt;
 
 #[derive(Debug, PartialEq)]
 pub struct History {
-    
+
     kills: Vec<Killmail>,
 }
 impl History {
@@ -19,6 +23,22 @@ impl History {
             }
         }
         Self{ kills: killmails }
+    }
+
+    pub fn report(system: &Integer, minutes: &Integer, ctx: &Context) -> String {
+        use crate::services::*;
+
+        let mut output = String::new();
+        let root = root(&ctx);
+        ctx.database.push(Message::Load(Category::History((*system, *minutes))));
+        while let Some(msg) = ctx.responses.pop() {
+            if let Message::Report(Report::History(history)) = msg {
+                for killmail in &history.kills{
+                    killmail.write(&mut output, &root);
+                }
+            }
+        }
+        return output;
     }
 }
 impl fmt::Display for History {
