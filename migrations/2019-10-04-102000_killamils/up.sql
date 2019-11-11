@@ -92,6 +92,7 @@ CREATE INDEX IF NOT EXISTS s_dst_stargate_id   ON stargates(dst_stargate_id);
 CREATE INDEX IF NOT EXISTS s_dst_system_id     ON stargates(dst_system_id);
 
 
+DROP VIEW IF EXISTS named_victims;
 CREATE VIEW IF NOT EXISTS named_victims AS
 SELECT
 	victim_id,
@@ -114,6 +115,7 @@ LEFT JOIN objects corps ON (corporation_id = corps.object_id)
 LEFT JOIN objects allis ON (alliance_id = allis.object_id)
 LEFT JOIN objects facts ON (faction_id = facts.object_id);
 
+DROP VIEW IF EXISTS named_attackers;
 CREATE VIEW IF NOT EXISTS named_attackers AS
 SELECT
 	attacker_id,
@@ -141,6 +143,7 @@ LEFT JOIN objects allis ON (alliance_id = allis.object_id)
 LEFT JOIN objects facts ON (faction_id = facts.object_id)
 LEFT JOIN objects weapn ON (weapon_type_id = weapn.object_id);
 
+DROP VIEW IF EXISTS named_killmails;
 CREATE VIEW IF NOT EXISTS named_killmails AS
 SELECT
 	killmail_id,
@@ -154,6 +157,8 @@ FROM killmails
 LEFT JOIN objects systems ON (solar_system_id = systems.object_id)
 LEFT JOIN objects moons ON (moon_id = moons.object_id);
 
+
+DROP VIEW IF EXISTS named_items;
 CREATE VIEW IF NOT EXISTS named_items AS
 SELECT
 	item_id,

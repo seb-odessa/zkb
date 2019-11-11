@@ -26,11 +26,13 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                             if let Some(object) = api::system::System::new(&id) {
                                 info!("Received System({})", id);
                                 context.database.push(Message::Check(Category::Constellation(object.constellation_id)));
+                                context.database.push(Message::Check(Category::Object(object.constellation_id)));
                                 if let Some(gates) = &object.stargates {
                                     for id in gates {
                                         context.database.push(Message::Check(Category::Stargate(*id)));
                                     }
                                 }
+                                context.database.push(Message::Check(Category::Object(object.system_id)));
                                 context.database.push(Message::Save(Model::System(object)));
                             } else {
                                 warn!("Failed to resolve System({})", id);
