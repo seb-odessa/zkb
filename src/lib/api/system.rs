@@ -5,8 +5,6 @@ use crate::api::constellation::Constellation;
 use std::convert::TryFrom;
 use serde::{Deserialize, Serialize};
 
-pub type PlanetOptional = Option<Vec<Planet>>;
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct System {
     pub system_id: IntRequired,
@@ -16,7 +14,7 @@ pub struct System {
     pub security_class: StrOptional,
     pub security_status: FloatRequired,
     pub constellation_id: IntRequired,
-    pub planets: PlanetOptional,
+    pub planets: Option<Vec<Planet>>;,
     pub stargates: IdsOptional,
     pub stations: IdsOptional,
 }

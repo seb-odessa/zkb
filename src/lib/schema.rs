@@ -36,7 +36,6 @@ table! {
     }
 }
 
-
 table! {
     categories (category_id) {
         category_id -> Integer,
@@ -68,7 +67,6 @@ table! {
         quantity_dropped -> Nullable<Integer>,
     }
 }
-
 
 table! {
     killmails (killmail_id) {
@@ -155,5 +153,5 @@ allow_tables_to_appear_in_same_query!(
     named_items,
     named_victims,
     named_attackers,
-    named_killmails,
+    named_killmails,    
 );

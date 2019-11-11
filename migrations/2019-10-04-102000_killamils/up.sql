@@ -58,6 +58,41 @@ CREATE TABLE IF NOT EXISTS items(
     FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
 );
 
+CREATE TABLE IF NOT EXISTS systems(
+    system_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
+    star_id INTEGER,
+	security_status REAL NOT NULL,
+	constellation_id INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS s_constellations_idx        ON systems(constellation_id);
+CREATE INDEX IF NOT EXISTS s_security_status_idx       ON systems(security_status);
+
+CREATE TABLE IF NOT EXISTS planets(
+    planet_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
+	type_id INTEGER NOT NULL,
+	system_id INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS p_system_idx        ON planets(system_id);
+
+CREATE TABLE IF NOT EXISTS constellations(
+    constellation_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
+	region_id INTEGER NOT NULL,
+    type_id  INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS c_region_idx        ON constellations(region_id);
+
+CREATE TABLE IF NOT EXISTS stargates(
+    stargate_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
+	type_id INTEGER NOT NULL,
+	system_id INTEGER NOT NULL,
+	arrival_stargate_id INTEGER NOT NULL,
+    arrival_system_id INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS s_system_idx        ON stargates(system_id);
+CREATE INDEX IF NOT EXISTS s_dst_stargate_id   ON stargates(arrival_stargate_id);
+CREATE INDEX IF NOT EXISTS s_dst_system_id    ON stargates(arrival_system_id);
+
+
 CREATE VIEW IF NOT EXISTS named_victims AS
 SELECT
 	victim_id,
