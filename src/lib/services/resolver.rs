@@ -50,6 +50,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                         Api::Constellation(id) =>{
                             if let Some(object) = api::constellation::Constellation::new(&id) {
                                 info!("Received Constellation({})", id);
+                                context.database.push(Message::Check(Category::Object(object.region_id)));
                                 context.database.push(Message::Save(Model::Constellation(object)));
                             } else {
                                 warn!("Failed to resolve Constellation({})", id);
