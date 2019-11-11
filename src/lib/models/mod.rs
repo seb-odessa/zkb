@@ -8,6 +8,7 @@ pub mod victim;
 pub mod item;
 pub mod object;
 pub mod category;
+pub mod stargate;
 
 pub use diesel::sqlite::SqliteConnection as Connection;
 
