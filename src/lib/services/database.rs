@@ -62,7 +62,7 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                             if let Err(err) = models::KillmailsApi::save(&conn, &killmail) {
                                 warn!("was not able to save killmail: {}", err);
                             } else {
-                                info!("Killmail {} was saved", killmail.killmail_id);
+                                info!("Killmail({}) saved, queue length: {}", killmail.killmail_id, context.database.len());
                             }
 
                             handle_killmail(&context.database, &killmail);
@@ -72,28 +72,28 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                             if let Err(err) = models::ObjectsApi::save(&conn, &object) {
                                 warn!("was not able to save object: {}", err);
                             } else {
-                                info!("Object {} was saved", object.id);
+                                info!("Object({}) saved, queue length: {}", object.id, context.database.len());
                             }
                         },
                         Model::System(object) => {
                             if let Err(err) = models::system::System::save(&conn, &object) {
                                 warn!("was not able to save system: {}", err);
                             } else {
-                                info!("System {} was saved", object.system_id);
+                                info!("System({}) saved, queue length: {}", object.system_id, context.database.len());
                             }
                         },
                         Model::Constellation(object) => {
                             if let Err(err) = models::constellation::Constellation::save(&conn, &object) {
                                 warn!("was not able to save constellation: {}", err);
                             } else {
-                                info!("Constellation {} was saved", object.constellation_id);
+                                info!("Constellation({}) saved, queue length: {}", object.constellation_id, context.database.len());
                             }
                         },
                         Model::Stargate(object) => {
                             if let Err(err) = models::stargate::Stargate::save(&conn, &object) {
                                 warn!("was not able to save stargate: {}", err);
                             } else {
-                                info!("Stargate {} was saved", object.stargate_id);
+                                info!("Stargate({}) saved, queue length: {}", object.stargate_id, context.database.len());
                             }
                         },
                     };

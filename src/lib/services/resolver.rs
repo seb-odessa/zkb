@@ -16,7 +16,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                     match cmd {
                         Api::Object(id) =>{
                             if let Some(object) = api::object::Object::new(&id) {
-                                info!("Received Object({})", id);
+                                info!("Received Object({}) queue length: {}", id, context.resolver.len());
                                 context.database.push(Message::Save(Model::Object(object)));
                             } else {
                                 warn!("Failed to resolve Object({})", id);
@@ -24,7 +24,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                         },
                         Api::System(id) =>{
                             if let Some(object) = api::system::System::new(&id) {
-                                info!("Received System({})", id);
+                                info!("Received System({}) queue length: {}", id, context.resolver.len());
                                 context.database.push(Message::Check(Category::Constellation(object.constellation_id)));
                                 context.database.push(Message::Check(Category::Object(object.constellation_id)));
                                 if let Some(gates) = &object.stargates {
@@ -41,7 +41,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                         },
                         Api::Stargate(id) =>{
                             if let Some(object) = api::stargate::Stargate::new(&id) {
-                                info!("Received Stargate({})", id);
+                                info!("Received Stargate({}) queue length: {}", id, context.resolver.len());
                                 context.database.push(Message::Save(Model::Stargate(object)));
                             } else {
                                 warn!("Failed to resolve Stargate({})", id);
@@ -49,7 +49,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                         },
                         Api::Constellation(id) =>{
                             if let Some(object) = api::constellation::Constellation::new(&id) {
-                                info!("Received Constellation({})", id);
+                                info!("Received Constellation({}) queue length: {}", id, context.resolver.len());
                                 context.database.push(Message::Check(Category::Object(object.region_id)));
                                 context.database.push(Message::Save(Model::Constellation(object)));
                             } else {
@@ -57,7 +57,6 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                             }
                         },
                     };
-                    info!("resolver queue length: {}", context.resolver.len());
                 },
                 message => {
                     warn!("received: {:?} ", message);
