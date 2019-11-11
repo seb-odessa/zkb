@@ -85,12 +85,12 @@ CREATE TABLE IF NOT EXISTS stargates(
     stargate_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
 	type_id INTEGER NOT NULL,
 	system_id INTEGER NOT NULL,
-	arrival_stargate_id INTEGER NOT NULL,
-    arrival_system_id INTEGER NOT NULL
+	dst_stargate_id INTEGER NOT NULL,
+    dst_system_id INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS s_system_idx        ON stargates(system_id);
-CREATE INDEX IF NOT EXISTS s_dst_stargate_id   ON stargates(arrival_stargate_id);
-CREATE INDEX IF NOT EXISTS s_dst_system_id    ON stargates(arrival_system_id);
+CREATE INDEX IF NOT EXISTS s_dst_stargate_id   ON stargates(dst_stargate_id);
+CREATE INDEX IF NOT EXISTS s_dst_system_id     ON stargates(dst_system_id);
 
 
 CREATE VIEW IF NOT EXISTS named_victims AS

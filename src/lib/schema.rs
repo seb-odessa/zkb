@@ -137,10 +137,39 @@ table! {
     }
 }
 
+table! {
+    systems (system_id) {
+        system_id -> Integer,
+        star_id -> Nullable<Integer>,
+        security_status -> Float,
+        constellation_id -> Integer,
+    }
+}
+
+table! {
+    constellations (constellation_id) {
+        constellation_id -> Integer,
+        type_id -> Integer,
+		region_id -> Integer,
+    }
+}
+
+table! {
+    stargates (stargate_id) {
+        stargate_id -> Integer,
+        type_id -> Integer,
+		system_id -> Integer,
+		dst_stargate_id -> Integer,
+		dst_system_id -> Integer,
+    }
+}
+
 joinable!(attackers -> killmails (killmail_id));
 joinable!(items -> killmails (killmail_id));
 joinable!(objects -> categories (category_id));
 joinable!(victims -> killmails (killmail_id));
+joinable!(systems -> constellations (constellation_id));
+joinable!(stargates -> systems (system_id));
 
 allow_tables_to_appear_in_same_query!(
     attackers,
@@ -153,5 +182,5 @@ allow_tables_to_appear_in_same_query!(
     named_items,
     named_victims,
     named_attackers,
-    named_killmails,    
+    named_killmails,
 );
