@@ -2,10 +2,10 @@ use crate::api;
 use crate::services::*;
 use crate::models::*;
 use crate::reports::*;
-use crate::services::{AppContext, Command, Message};
+use crate::services::{AppContext, Command, Message, Category, Report};
 
 fn enqueue_check(queue: &Queue, id: &i32) {
-    queue.push(Message::CheckObject(*id));
+    queue.push(Message::Exist(Category::Object(*id)));
 }
 
 fn try_enqueue_check(queue: &Queue, id: &Option<i32>) {
@@ -81,7 +81,7 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                             match Killmail::load(&conn, &id) {
                                 Ok(killmail) => {
                                     info!("loaded killmail {} queue length: {}", killmail.killmail_id, context.database.len());
-                                    context.responses.push(Message::ReportKill(killmail));
+                                    context.responses.push(Message::Report(Report::Killmail(killmail)));
                                 },
                                 Err(e) => {
                                     warn!("was not able to load killmail: {}", e);
@@ -92,17 +92,23 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         Category::History((system_id, minutes)) => {
                             let history = history::History::load(&conn, &system_id, &minutes);
                             info!("loaded {} minutes history for {}, queue length: {}", minutes, system_id, context.database.len());
-                            context.responses.push(Message::ReportHistory(history));
+                            context.responses.push(Message::Report(Report::History(history)));
                         },
                         model => {
-                            warn!("Save not implemented for model: {:?}", model)
+                            warn!("Save not implemented for {:?}", model)
                         }
                     }
                 },
-
-                Message::CheckObject(id) => {
-                    if !ObjectsApi::exist(&conn, &id) {
-                        context.resolver.push(Message::Receive(Api::Object(id)));
+                Message::Exist(category) => {
+                    match category {
+                        Category::Object(id) =>{
+                            if !ObjectsApi::exist(&conn, &id) {
+                                context.resolver.push(Message::Receive(Api::Object(id)));
+                            }
+                        },
+                        model => {
+                            warn!("Exist not implemented for {:?}", model)
+                        }
                     }
                 },
                 message => {

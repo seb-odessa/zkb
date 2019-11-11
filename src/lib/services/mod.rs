@@ -41,17 +41,22 @@ pub enum Category{
     History((i32, i32)),
 }
 
+#[derive(Debug, PartialEq)]
+pub enum Report{
+    Killmail(reports::Killmail),
+    History(reports::History),
+}
+
 
 #[derive(Debug, PartialEq)]
 pub enum Message{
     Ping,
-    CheckObject(i32),
-    ReportKill(reports::Killmail),
-    ReportHistory(reports::History),
     NotFound(i32),
     Receive(Api),
     Save(Model),
-    Load(Category)
+    Load(Category),
+    Exist(Category),
+    Report(Report)
 }
 
 

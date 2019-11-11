@@ -1,4 +1,4 @@
-use crate::services::{Context, Command, Message, Category};
+use crate::services::{Context, Command, Message, Category, Report};
 use crate::reports;
 use uuid::Uuid;
 
@@ -85,12 +85,12 @@ fn killmail(info: web::Path<i32>, context: Context) -> HttpResponse {
     context.database.push(Message::Load(Category::Killmail(id)));
     let mut body = String::new();
     while let Some(msg) = context.responses.pop() {
-        if let Message::ReportKill(report) = msg {
+        if let Message::Report(Report::Killmail(report)) = msg {
             if report.killmail_id == id {
                 body = format!("{}", report);
                 break;
             } else {
-                context.responses.push(Message::ReportKill(report));
+                context.responses.push(Message::Report(Report::Killmail(report)));
             }
         } else if let Message::NotFound(id) = msg {
                 body = format!("Killmail {} was not found in database", id);
@@ -110,7 +110,7 @@ fn history(info: web::Path<(i32, i32)>, context: Context) -> HttpResponse {
     context.database.push(Message::Load(Category::History((system, minutes))));
     let mut body = String::new();
     if let Some(msg) = context.responses.pop() {
-        if let Message::ReportHistory(history) = msg {
+        if let Message::Report(Report::History(history)) = msg {
             body = format!("{}", history);
         }
     }
