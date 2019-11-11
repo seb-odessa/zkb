@@ -61,28 +61,39 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         Model::Killmail(killmail) =>{
                             if let Err(err) = models::KillmailsApi::save(&conn, &killmail) {
                                 warn!("was not able to save killmail: {}", err);
+                            } else {
+                                info!("Killmail {} was saved", killmail.killmail_id);
                             }
+
                             handle_killmail(&context.database, &killmail);
-                            context.database.push(Message::Check(Category::System(killmail.killmail_id)));
+                            context.database.push(Message::Check(Category::System(killmail.solar_system_id)));
                         },
                         Model::Object(object) => {
                             if let Err(err) = models::ObjectsApi::save(&conn, &object) {
                                 warn!("was not able to save object: {}", err);
+                            } else {
+                                info!("Object {} was saved", object.id);
                             }
                         },
                         Model::System(object) => {
                             if let Err(err) = models::system::System::save(&conn, &object) {
                                 warn!("was not able to save system: {}", err);
+                            } else {
+                                info!("System {} was saved", object.system_id);
                             }
                         },
                         Model::Constellation(object) => {
                             if let Err(err) = models::constellation::Constellation::save(&conn, &object) {
                                 warn!("was not able to save constellation: {}", err);
+                            } else {
+                                info!("Constellation {} was saved", object.constellation_id);
                             }
                         },
                         Model::Stargate(object) => {
                             if let Err(err) = models::stargate::Stargate::save(&conn, &object) {
                                 warn!("was not able to save stargate: {}", err);
+                            } else {
+                                info!("Stargate {} was saved", object.stargate_id);
                             }
                         },
                     };
