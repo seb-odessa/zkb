@@ -18,6 +18,14 @@ pub enum Command{
 }
 
 #[derive(Debug, PartialEq)]
+pub enum Api{
+    Object(i32),
+    System(i32),
+    Stargate(i32),
+    Constellation(i32),
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Message{
     Ping,
     SaveKill(api::Killmail),
@@ -25,11 +33,11 @@ pub enum Message{
     SaveObject(api::Object),
     LoadObject(i32),
     CheckObject(i32),
-    Resolve((i32, bool)),
     ReportKill(reports::Killmail),
     LoadHistory((i32, i32)),
     ReportHistory(reports::History),
     NotFound(i32),
+    Receive(Api),
 }
 
 

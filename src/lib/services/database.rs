@@ -81,7 +81,7 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                 }
                 Message::CheckObject(id) => {
                     if !ObjectsApi::exist(&conn, &id) {
-                        context.resolver.push(Message::Resolve((id, true)));
+                        context.resolver.push(Message::Receive(Api::Object(id)));
                     }
                 },
                 Message::SaveObject(object) => {

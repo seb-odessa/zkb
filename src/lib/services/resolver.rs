@@ -1,5 +1,5 @@
-use crate::api::object::Object;
-use crate::services::{AppContext, Command, Message};
+use crate::api;
+use crate::services::{AppContext, Command, Message, Api};
 
 pub fn run(context: actix_web::web::Data<AppContext>) {
     info!("Started");
@@ -12,15 +12,35 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
         }
         if let Some(msg) = context.resolver.pop() {
             match msg {
-                Message::Resolve((id, first)) => {
-                    if let Some(object) = Object::new(&id) {
-                        info!("{:?}. Queue length {}", object, context.resolver.len());
-                        context.database.push(Message::SaveObject(object));
-                    } else {
-                        warn!("failed to query object id {}. Queue length {}", id, context.resolver.len());
-                        if first {  // try again if it was first time
-                            context.resolver.push(Message::Resolve((id, false)));
-                        }
+                Message::Receive(cmd) => {
+                    match cmd {
+                        Api::Object(id) =>{
+                            if let Some(object) = api::object::Object::new(&id) {
+                                info!("{:?}. Queue length {}", object, context.resolver.len());
+                                context.database.push(Message::SaveObject(object));
+                            }
+                        },
+                        Api::System(id) =>{
+                            if let Some(object) = api::system::System::new(&id) {
+                                info!("{:?}. Queue length {}", object, context.resolver.len());
+                                //context.database.push(Message::SaveObject(object));
+                                warn!("Save System not impl");
+                            }
+                        },
+                        Api::Stargate(id) =>{
+                            if let Some(object) = api::stargate::Stargate::new(&id) {
+                                info!("{:?}. Queue length {}", object, context.resolver.len());
+                                //context.database.push(Message::SaveObject(object));
+                                warn!("Save Stargate not impl");
+                            }
+                        },
+                        Api::Constellation(id) =>{
+                            if let Some(object) = api::constellation::Constellation::new(&id) {
+                                info!("{:?}. Queue length {}", object, context.resolver.len());
+                                //context.database.push(Message::SaveObject(object));
+                                warn!("Save Constellation not impl");
+                            }
+                        },
                     }
                 },
                 message => {
