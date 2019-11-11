@@ -1,7 +1,7 @@
 use std::convert::From;
 use crate::api;
 use crate::schema::stargates;
-use super::{Integer};
+use super::{Connection, QueryResult, Integer};
 
 #[derive(Insertable)]
 #[table_name = "stargates"]
@@ -25,4 +25,18 @@ impl From<&api::stargate::Stargate> for Stargate{
     }
 }
 
+impl Stargate {
+    pub fn save(conn: &Connection, object: &api::stargate::Stargate) -> QueryResult<bool>  {
+        use crate::schema;
+        use crate::diesel::RunQueryDsl;
+        diesel::insert_into(schema::stargates::table)
+                   .values(Self::from(object))
+                   .execute(conn).and_then(|count| Ok(1 == count))
+    }
 
+    pub fn exist(conn: &Connection, id: &Integer) -> bool {
+        use diesel::prelude::*;
+        use crate::schema::stargates::dsl as table;
+        table::stargates.find(id).select(table::stargate_id).first(conn) == Ok(*id)
+    }
+}

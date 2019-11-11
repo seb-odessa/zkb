@@ -1,7 +1,7 @@
 use std::convert::From;
 use crate::api;
 use crate::schema::systems;
-use super::{Integer, OptInteger, Float};
+use super::{Connection, QueryResult, Integer, OptInteger, Float};
 
 #[derive(Insertable)]
 #[table_name = "systems"]
@@ -22,5 +22,19 @@ impl From<&api::system::System> for System {
         }
     }
 }
+impl System {
+    pub fn save(conn: &Connection, object: &api::system::System) -> QueryResult<bool>  {
+        use crate::schema;
+        use crate::diesel::RunQueryDsl;
+        diesel::insert_into(schema::systems::table)
+                   .values(Self::from(object))
+                   .execute(conn).and_then(|count| Ok(1 == count))
+    }
 
+    pub fn exist(conn: &Connection, id: &Integer) -> bool {
+        use diesel::prelude::*;
+        use crate::schema::systems::dsl as table;
+        table::systems.find(id).select(table::system_id).first(conn) == Ok(*id)
+    }
+}
 

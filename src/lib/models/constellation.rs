@@ -1,7 +1,7 @@
 use std::convert::From;
 use crate::api;
 use crate::schema::constellations;
-use super::{Integer};
+use super::{Connection, QueryResult, Integer};
 
 #[derive(Insertable)]
 #[table_name = "constellations"]
@@ -19,4 +19,18 @@ impl From<&api::constellation::Constellation> for Constellation{
     }
 }
 
+impl Constellation {
+    pub fn save(conn: &Connection, object: &api::constellation::Constellation) -> QueryResult<bool>  {
+        use crate::schema;
+        use crate::diesel::RunQueryDsl;
+        diesel::insert_into(schema::constellations::table)
+                   .values(Self::from(object))
+                   .execute(conn).and_then(|count| Ok(1 == count))
+    }
 
+    pub fn exist(conn: &Connection, id: &Integer) -> bool {
+        use diesel::prelude::*;
+        use crate::schema::constellations::dsl as table;
+        table::constellations.find(id).select(table::constellation_id).first(conn) == Ok(*id)
+    }
+}
