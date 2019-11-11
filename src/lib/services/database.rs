@@ -97,7 +97,6 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                             }
                         },
                     };
-                    info!("database queue length: {}", context.database.len());
                 },
                 Message::Load(category) => {
                     match category {
