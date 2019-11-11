@@ -159,7 +159,7 @@ LEFT join systems ON (solar_system_id = systems.system_id)
 LEFT join constellations ON (systems.constellation_id = constellations.constellation_id)
 LEFT JOIN objects system_names ON (solar_system_id = system_names.object_id)
 LEFT JOIN objects constellation_names ON (constellations.constellation_id = constellation_names.object_id)
-LEFT JOIN objects region_names ON (constellations.region_id = region_names.object_id)
+LEFT JOIN objects region_names ON (constellations.region_id = region_names.object_id);
 
 DROP VIEW IF EXISTS named_items;
 CREATE VIEW IF NOT EXISTS named_items AS
