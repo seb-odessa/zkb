@@ -75,23 +75,31 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         }
                     }
                 },
-                Message::LoadKill(id) => {
-                    info!("Load killmail {} queue length: {}", id, context.database.len());
-                    match Killmail::load(&conn, &id) {
-                        Ok(killmail) => {
-                            info!("loaded killmail {} queue length: {}", killmail.killmail_id, context.database.len());
-                            context.responses.push(Message::ReportKill(killmail));
+                Message::Load(category) => {
+                    match category {
+                        Category::Killmail(id) =>{
+                            match Killmail::load(&conn, &id) {
+                                Ok(killmail) => {
+                                    info!("loaded killmail {} queue length: {}", killmail.killmail_id, context.database.len());
+                                    context.responses.push(Message::ReportKill(killmail));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load killmail: {}", e);
+                                    context.responses.push(Message::NotFound(id));
+                                }
+                            }
                         },
-                        Err(e) => {
-                            warn!("was not able to load killmail: {}", e);
-                            context.responses.push(Message::NotFound(id));
+                        Category::History((system_id, minutes)) => {
+                            let history = history::History::load(&conn, &system_id, &minutes);
+                            info!("loaded {} minutes history for {}, queue length: {}", minutes, system_id, context.database.len());
+                            context.responses.push(Message::ReportHistory(history));
+                        },
+                        model => {
+                            warn!("Save not implemented for model: {:?}", model)
                         }
                     }
                 },
-                Message::LoadHistory((system_id, minutes)) => {
-                    let history = history::History::load(&conn, &system_id, &minutes);
-                    context.responses.push(Message::ReportHistory(history));
-                }
+
                 Message::CheckObject(id) => {
                     if !ObjectsApi::exist(&conn, &id) {
                         context.resolver.push(Message::Receive(Api::Object(id)));

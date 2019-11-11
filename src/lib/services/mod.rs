@@ -34,19 +34,24 @@ pub enum Model{
     Killmail(api::killmail::Killmail),
 }
 
+#[derive(Debug, PartialEq)]
+pub enum Category{
+    Object(i32),
+    Killmail(i32),
+    History((i32, i32)),
+}
+
 
 #[derive(Debug, PartialEq)]
 pub enum Message{
     Ping,
-    LoadKill(i32),
-    LoadObject(i32),
     CheckObject(i32),
     ReportKill(reports::Killmail),
-    LoadHistory((i32, i32)),
     ReportHistory(reports::History),
     NotFound(i32),
     Receive(Api),
     Save(Model),
+    Load(Category)
 }
 
 

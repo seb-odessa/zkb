@@ -1,4 +1,4 @@
-use crate::services::{Context, Command, Message};
+use crate::services::{Context, Command, Message, Category};
 use crate::reports;
 use uuid::Uuid;
 
@@ -82,7 +82,7 @@ fn system(info: web::Path<i32>, _context: Context) -> HttpResponse {
 fn killmail(info: web::Path<i32>, context: Context) -> HttpResponse {
     info!("/killmail/{}", info);
     let id = *info.as_ref();
-    context.database.push(Message::LoadKill(id));
+    context.database.push(Message::Load(Category::Killmail(id)));
     let mut body = String::new();
     while let Some(msg) = context.responses.pop() {
         if let Message::ReportKill(report) = msg {
@@ -107,7 +107,7 @@ fn history(info: web::Path<(i32, i32)>, context: Context) -> HttpResponse {
     info!("/history/{:?}", info);
     let system = info.0;
     let minutes = info.1;
-    context.database.push(Message::LoadHistory((system, minutes)));
+    context.database.push(Message::Load(Category::History((system, minutes))));
     let mut body = String::new();
     if let Some(msg) = context.responses.pop() {
         if let Message::ReportHistory(history) = msg {
