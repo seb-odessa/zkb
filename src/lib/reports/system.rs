@@ -1,9 +1,11 @@
 use crate::api;
-use super::{zkb_href, link_system};
+use super::{zkb_href, link_system, FAIL};
 use crate::services::Context;
 use crate::reports::lazy;
 use crate::reports::{div, href, root};
 use std::fmt;
+use std::fmt::Write;
+use std::fmt::write;
 
 
 #[derive(Debug, PartialEq)]
@@ -14,12 +16,23 @@ pub struct System {
 }
 impl System {
 
+    pub fn write(output: &mut dyn Write, system: &api::system::System, root: &String) {
+        let url = format!("{}/api/system/{}", root, system.system_id);
+        let name = format!("{} ({:.1})", system.name, system.security_status);
+        std::fmt::write(
+            output,
+            format_args!(
+                "<div>System: {url} {zkb}</div>",
+                url = href(&url, &name),
+                zkb = href(system.zkb(), String::from("(zkb)"))
+            )
+        ).expect(FAIL);
+    }
+
     pub fn brief(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
         if let Some(object) = api::system::System::new(id) {
-            let url = format!("{}/api/system/{}", root(ctx), id);
-            let system = format!("{} ({:.1})", &object.name, object.security_status);
-            div(&mut output, "System", &href(&url, &system));
+            Self::write(&mut output, &object, &root(ctx));
         } else {
             div(&mut output, "System", &format!("{} not found", id));
         }
@@ -29,7 +42,7 @@ impl System {
     pub fn report(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
         if let Some(object) = api::system::System::new(id) {
-            div(&mut output, "System", &href(object.zkb(), object.name.clone()));
+            Self::write(&mut output, &object, &root(ctx));
             lazy(&mut output, format!("api/constellation/{}", object.constellation_id), &ctx);
             lazy(&mut output, format!("api/region/{}", object.get_region_id().unwrap_or_default()), &ctx);
             if let Some(ref gates) = &object.stargates {
