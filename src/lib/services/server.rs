@@ -58,7 +58,7 @@ fn api(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
         "stargate" => reports::Stargate::report(&info.1, &ctx),
         "killmail_brief" => reports::Killmail::brief(&info.1, &ctx),
         "killmail" => reports::Killmail::brief(&info.1, &ctx),
-        _=> String::from("Unknown Type")
+        _=> format!("Unknown Type {} ", info.0)
     };
 
     HttpResponse::Ok()
