@@ -50,9 +50,9 @@ impl KillmailNamed {
         use diesel::prelude::*;
 
         let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
-        let end = DateTime::from(Utc::now().naive_utc());
+        info!("Load killmails after {}", &start);
         named_killmails::table
-            .filter(named_killmails::killmail_time.between(start, end))
+            .filter(named_killmails::killmail_time.gt(start))
             .filter(named_killmails::system_id.eq(system_id))
             .select(named_killmails::killmail_id)
             .order(named_killmails::killmail_time.desc())
