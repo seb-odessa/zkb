@@ -1,10 +1,13 @@
-use crate::services::{Context, Command, Message, Category, Report};
+use crate::services::{Context, Command, Message};
 use crate::reports;
-use uuid::Uuid;
 
 use actix_rt;
 use actix_web::{web, App, HttpServer, HttpResponse};
 
+
+pub fn root(context: &Context) -> String {
+    format!("http://{}/navigator", &context.server)
+}
 
 fn quit(context: Context) -> String {
     info!("/quit");
@@ -31,76 +34,10 @@ fn response<S: Into<String>>(body: S) -> HttpResponse {
         .body(body.into())
 }
 
-pub fn root(context: &Context) -> String {
-    format!("http://{}/navigator", &context.server)
-}
-
-fn load<S: Into<String>>(url: S, context: &Context) -> String {
-    let id = Uuid::new_v4();
-    format!(r##"
-        <div id ="{id}"/>
-        <script>
-            document.getElementById("{id}").innerHTML='<object type="text/html" data="{root}/{api}"/>';
-        </script>"##,
-        id=id,
-        root=root(&context),
-        api=url.into())
-}
-
-fn inner_page(info: web::Path<String>, _context: Context) -> HttpResponse {
-    info!("/inner_page/{:?}", info);
-    let content = format!("<div>Inner Page {}</div>", info);
-    response(content)
-}
-
-fn page(info: web::Path<String>, ctx: Context) -> HttpResponse {
-    info!("/page/{:?}", info);
-
-    let template = load("inner_page/a",&ctx);
-
-    response(template)
-}
-
 fn find(info: web::Path<String>, ctx: Context) -> HttpResponse {
     use crate::reports::Names;
     info!("/find/{}", info);
     response(Names::report(info.as_ref(), &ctx))
-}
-
-fn system(info: web::Path<i32>, _context: Context) -> HttpResponse {
-    use crate::reports::System;
-    info!("/system/{}", info);
-    response(
-        if let Some(system) = System::new(info.as_ref()) {
-            format!("{}", system)
-        } else {
-            format!("System {} not found", info.as_ref())
-        }
-    )
-}
-
-fn killmail(info: web::Path<i32>, context: Context) -> HttpResponse {
-    info!("/killmail/{}", info);
-    let id = *info.as_ref();
-    context.database.push(Message::Load(Category::Killmail(id)));
-    let mut body = String::new();
-    while let Some(msg) = context.responses.pop() {
-        if let Message::Report(Report::Killmail(report)) = msg {
-            if report.killmail_id == id {
-                body = format!("{}", report);
-                break;
-            } else {
-                context.responses.push(Message::Report(Report::Killmail(report)));
-            }
-        } else if let Message::NotFound(id) = msg {
-                body = format!("Killmail {} was not found in database", id);
-                break;
-        } else {
-            warn!("Unexpected {:?}", &msg);
-            context.responses.push(msg);
-        }
-    }
-    response(body)
 }
 
 fn history(info: web::Path<(i32, i32)>, ctx: Context) -> HttpResponse {
@@ -120,6 +57,7 @@ fn api(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
         "system_brief" => reports::System::brief(&info.1, &ctx),
         "stargate" => reports::Stargate::report(&info.1, &ctx),
         "killmail_brief" => reports::Killmail::brief(&info.1, &ctx),
+        "killmail" => reports::Killmail::brief(&info.1, &ctx),
         _=> String::from("Unknown Type")
     };
 
@@ -136,18 +74,12 @@ pub fn run(context: Context) {
     HttpServer::new(move || {
         App::new()
             .register_data(context.clone())
-            .route("/navigator/quit", web::get().to(quit))
             .route("/navigator/ping", web::get().to(ping))
-            .route("/navigator/killmail/{id}", web::get().to(killmail))
-            .route("/navigator/system/{id}", web::get().to(system))
+            .route("/navigator/quit", web::get().to(quit))
             .route("/navigator/find/{name}", web::get().to(find))
-            .route("/navigator/history/{system}/{minutes}", web::get().to(history))
-
-            .route("/navigator/page/{a}", web::get().to(page))
-            .route("/navigator/inner_page/{a}", web::get().to(inner_page))
-
             .route("/navigator/api/{type}/{id}", web::get().to(api))
 
+            .route("/navigator/history/{system}/{minutes}", web::get().to(history))
     })
     .bind(address)
     .unwrap()

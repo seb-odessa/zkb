@@ -30,7 +30,7 @@ impl Names {
                         format_args!(
                             r##"
                             <div>&nbsp;{id}&nbsp;=&gt;&nbsp;[{api}]&nbsp;
-                            <a href="{root}/{api}/{id}">{name}</a>&nbsp;
+                            <a href="{root}/api/{api}/{id}">{name}</a>&nbsp;
                             <a href="https://zkillboard.com/{api}/{id}/">zkb</a></div>"##,
                             root=root,
                             api=api,

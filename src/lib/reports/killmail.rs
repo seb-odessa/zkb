@@ -49,20 +49,22 @@ impl Killmail {
             format_args!(
                 r##"
                     <div>
-                    <a href="https://zkillboard.com/kill/{id}/">{id}</a>
-                    {time}
+                    <a href="{root}/api/killmail/{id}">{id}</a>
+                    <a href="https://zkillboard.com/kill/{id}/">zkb</a>
+                    {timestamp}
                     <a href="https://zkillboard.com/region/{region_id}/">{region_name}</a>/
                     {constellation}/
-                    <a href="{root}/api/system/{id}">{system}</a>
+                    <a href="{root}/api/system/{system_id}">{system}</a>
                     </div>
                 "##,
-                id=self.killmail_id,
-                time=self.killmail_time.to_string(),
-                region_id=self.region_id.unwrap_or_default(),
-                region_name=self.region_name.as_ref().unwrap_or(&empty),
-                constellation=self.constellation_name.as_ref().unwrap_or(&empty),
-                root=root,
-                system=self.system_name.as_ref().unwrap_or(&empty),
+                id = self.killmail_id,
+                timestamp = self.killmail_time.to_string(),
+                region_id = self.region_id.unwrap_or_default(),
+                region_name = self.region_name.as_ref().unwrap_or(&empty),
+                constellation = self.constellation_name.as_ref().unwrap_or(&empty),
+                root = root,
+                system_id = self.system_id,
+                system = self.system_name.as_ref().unwrap_or(&empty),
             )
         ).expect(FAIL);
 

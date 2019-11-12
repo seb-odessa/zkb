@@ -18,7 +18,8 @@ impl System {
         let mut output = String::new();
         if let Some(object) = api::system::System::new(id) {
             let url = format!("{}/api/system/{}", root(ctx), id);
-            div(&mut output, "System", &href(&url, &object.name));
+            let system = format!("{} ({:.1})", &object.name, object.security_status);
+            div(&mut output, "System", &href(&url, &system));
         } else {
             div(&mut output, "System", &format!("{} not found", id));
         }
@@ -38,6 +39,8 @@ impl System {
                     }
                 }
             }
+            div(&mut output, "Kill History 60 minutes", "");
+            lazy(&mut output, format!("history/{}/{}", id, 60), &ctx);
         } else {
             div(&mut output, "System", &format!("{} not found", id));
         }

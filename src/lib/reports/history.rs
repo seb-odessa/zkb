@@ -36,6 +36,7 @@ impl History {
                 for killmail in &history.kills{
                     killmail.write(&mut output, &root);
                 }
+                break;
             }
         }
         return output;
