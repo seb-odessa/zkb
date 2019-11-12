@@ -3,7 +3,7 @@ use super::{zkb_href, link_system, FAIL};
 use crate::services::Context;
 use crate::reports::lazy;
 use crate::reports::{div, href, root};
-use chrono::{NaiveDateTime, Duration, Utc};
+use chrono::Utc;
 
 use std::fmt;
 use std::fmt::Write;
@@ -53,8 +53,8 @@ impl System {
                     }
                 }
             }
-            div(&mut output, "Current ET", &NaiveDateTime::from(Utc::now().naive_utc()).time().to_string());
-            div(&mut output, "Kill history 60 minutes", "");
+            let now = Utc::now().naive_utc().time().format("%H:%M:%S").to_string();
+            div(&mut output, format!("Kill history 60 minutes since {} ", &now), String::new());
             lazy(&mut output, format!("history/{}/{}", id, 60), &ctx);
         } else {
             div(&mut output, "System", &format!("{} not found", id));

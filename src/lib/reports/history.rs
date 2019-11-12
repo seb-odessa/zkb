@@ -2,7 +2,6 @@ use crate::models::*;
 use super::{zkb_href, link_killmail, Killmail};
 use crate::services::Context;
 use crate::services::server::root;
-use crate::reports::FAIL;
 
 use std::fmt;
 
