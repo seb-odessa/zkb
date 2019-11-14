@@ -27,7 +27,7 @@ pub fn load<S: Into<String>>(url: S, context: &Context) -> String {
     use uuid::Uuid;
     let id = Uuid::new_v4();
     format!(r##"
-        <div id ="{id}">
+        <div id="{id}">
         <script>
             document.getElementById("{id}").innerHTML='<object type="text/html" data="{root}/{api}"/>';
         </script>
@@ -45,6 +45,30 @@ pub fn div<S: Into<String>>(output: &mut dyn Write, name: S, value: S) {
     std::fmt::write(
         output,
         format_args!("<div>{name}: {value}</div>", name = name.into(), value = value.into())
+    ).expect(FAIL);
+}
+
+pub fn jovian_buttons(output: &mut dyn Write, id: &i32, name: &String) {
+    std::fmt::write(
+        output,
+        format_args!(r###"
+                <span id="JovianButtons" data-id="{id}" data-name="{name}">
+                <span> Jovian Observatory </span>
+                <button onclick="registerJovianObservatory()">Register</button>
+                <button onclick="unregisterJovianObservatory()">Unregister</button>
+                </span>
+                <script>
+                    function registerJovianObservatory() {{
+                        document.getElementById("{id}").style.color = "red";
+                    }}
+
+                    function unregisterJovianObservatory() {{
+                        document.getElementById("{id}").style.color = "green";
+                    }}
+                </script>
+            "###,
+            id=id,
+            name=name)
     ).expect(FAIL);
 }
 

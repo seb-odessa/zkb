@@ -48,6 +48,9 @@ pub enum Category{
 pub enum Report{
     Killmail(reports::Killmail),
     History(reports::History),
+    Id(i32),
+    NameFound(String),
+    NotUniqName(String),
 }
 
 
@@ -59,7 +62,8 @@ pub enum Message{
     Save(Model),
     Load(Category),
     Check(Category),
-    Report(Report)
+    Report(Report),
+    Find((String, String)),
 }
 
 

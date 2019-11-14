@@ -1,5 +1,5 @@
 use crate::schema::objects;
-use super::Integer;
+use super::{Integer, Connection, QueryResult};
 
 #[derive(Queryable, Insertable, Associations, Debug)]
 #[table_name = "objects"]
@@ -15,6 +15,14 @@ impl Object {
             category_id: category_id,
             object_name: object_name
         }
+    }
 
+    pub fn find(conn: &Connection, category_id: &Integer, name: &String) -> QueryResult<Vec<Integer>> {
+        use diesel::prelude::*;
+        use crate::schema::objects::dsl as table;
+        table::objects
+            .filter(table::category_id.eq(category_id).and(table::object_name.like(name)))
+            .select(table::object_id)
+            .load(conn)
     }
 }

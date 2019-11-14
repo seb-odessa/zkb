@@ -122,6 +122,28 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         }
                     }
                 },
+                Message::Find((category, name)) => {
+                    if let Ok(categories) = models::category::Category::find(&conn, &category) {
+                        if categories.is_empty() {
+                            context.responses.push(Message::Report(Report::NameFound(category)));
+                        } else if categories.len() > 1 {
+                            context.responses.push(Message::Report(Report::NotUniqName(category)));
+                        } else {
+                            if let Ok(objects) = models::object::Object::find(&conn, &categories[0], &name) {
+                                if objects.is_empty() {
+                                    context.responses.push(Message::Report(Report::NameFound(name)));
+                                } else if objects.len() > 1 {
+                                    context.responses.push(Message::Report(Report::NotUniqName(name)));
+                                } else {
+                                    context.responses.push(Message::Report(Report::Id(objects[0])));
+                                }
+                            }
+                        }
+
+                    } else {
+                        context.responses.push(Message::Report(Report::NameFound(category)));
+                    }
+                }
                 Message::Check(category) => {
                     match category {
                         Category::Object(id) =>{

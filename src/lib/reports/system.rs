@@ -1,20 +1,13 @@
 use crate::api;
-use super::{zkb_href, link_system, FAIL};
-use crate::services::Context;
-use crate::reports::lazy;
-use crate::reports::{div, href, root};
+use super::{FAIL};
+use crate::services::*;
+use crate::reports::*;
 use chrono::Utc;
 
-use std::fmt;
 use std::fmt::Write;
 
-
 #[derive(Debug, PartialEq)]
-pub struct System {
-    pub id: i32,
-    system: api::system::System,
-    neighbors: Vec<api::system::System>,
-}
+pub struct System;
 impl System {
 
     pub fn write(output: &mut dyn Write, system: &api::system::System, root: &String) {
@@ -23,9 +16,11 @@ impl System {
         std::fmt::write(
             output,
             format_args!(
-                "<div>System: {url} {zkb}</div>",
+                r#"<div id="{id}" data-name="{name}">System: {url} {zkb}</div>"#,
+                id = system.system_id,
                 url = href(&url, &name),
-                zkb = href(system.zkb(), String::from("(zkb)"))
+                zkb = href(system.zkb(), String::from("(zkb)")),
+                name = system.name
             )
         ).expect(FAIL);
     }
@@ -38,6 +33,20 @@ impl System {
             div(&mut output, "System", &format!("{} not found", id));
         }
         return output;
+    }
+
+    pub fn find(name: &String, ctx: &Context) -> Option<i32> {
+        let mut result = None;
+        ctx.database.push(Message::Find((String::from("solar_system"), name.clone())));
+        while let Some(msg) = ctx.responses.pop() {
+            if let Message::Report(Report::Id(id)) = msg {
+                result = Some(id);
+                break;
+            } else {
+                ctx.responses.push(msg);
+            }
+        }
+        return result;
     }
 
     pub fn report(id: &i32, ctx: &Context) -> String {
@@ -53,6 +62,7 @@ impl System {
                     }
                 }
             }
+            jovian_buttons(&mut output, &object.system_id, &object.name);
             let now = Utc::now().naive_utc().time().format("%H:%M:%S").to_string();
             div(&mut output, format!("Kill history 60 minutes since {} ", &now), String::new());
             lazy(&mut output, format!("history/{}/{}", id, 60), &ctx);
@@ -62,37 +72,37 @@ impl System {
         return output;
     }
 
-    pub fn new(id: &i32) -> Option<Self> {
-        if let Some(system) = api::system::System::new(id) {
-            let mut neighbors = Vec::new();
-            if let Some(ref gates) = &system.stargates {
-                for gate_id in gates {
-                    if let Some(gate) = api::stargate::Stargate::new(gate_id) {
-                        if let Some(neighbor) = api::system::System::new(&gate.destination.system_id) {
-                            neighbors.push(neighbor);
-                        }
-                    }
-                }
-            }
+    // pub fn new(id: &i32) -> Option<Self> {
+    //     if let Some(system) = api::system::System::new(id) {
+    //         let mut neighbors = Vec::new();
+    //         if let Some(ref gates) = &system.stargates {
+    //             for gate_id in gates {
+    //                 if let Some(gate) = api::stargate::Stargate::new(gate_id) {
+    //                     if let Some(neighbor) = api::system::System::new(&gate.destination.system_id) {
+    //                         neighbors.push(neighbor);
+    //                     }
+    //                 }
+    //             }
+    //         }
 
-            Some( Self {
-                id: *id,
-                system: system,
-                neighbors: neighbors
-            })
-        } else {
-            None
-        }
-    }
+    //         Some( Self {
+    //             id: *id,
+    //             system: system,
+    //             neighbors: neighbors
+    //         })
+    //     } else {
+    //         None
+    //     }
+    // }
 }
 
-impl fmt::Display for System {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "<div>System: {}</div>", zkb_href("system", &Some(self.id), &Some(self.system.get_name())))?;
-        write!(f, "<div>Region: {}</div>", zkb_href("region", &self.system.get_region_id(), &self.system.get_region_name()))?;
-        for system in &self.neighbors {
-            write!(f, "<div>=&gt {}</div>", link_system(&system.system_id, &system.get_name()))?;
-        }
-        write!(f, "")
-    }
-}
+// impl fmt::Display for System {
+//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+//         write!(f, "<div>System: {}</div>", zkb_href("system", &Some(self.id), &Some(self.system.get_name())))?;
+//         write!(f, "<div>Region: {}</div>", zkb_href("region", &self.system.get_region_id(), &self.system.get_region_name()))?;
+//         for system in &self.neighbors {
+//             write!(f, "<div>=&gt {}</div>", link_system(&system.system_id, &system.get_name()))?;
+//         }
+//         write!(f, "")
+//     }
+// }
