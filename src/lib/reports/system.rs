@@ -7,6 +7,12 @@ use chrono::Utc;
 use std::fmt::Write;
 
 #[derive(Debug, PartialEq)]
+enum ReportType{
+    Full,
+    Brief,
+}
+
+#[derive(Debug, PartialEq)]
 pub struct System;
 impl System {
 
@@ -25,89 +31,47 @@ impl System {
         ).expect(FAIL);
     }
 
-    pub fn brief(id: &i32, ctx: &Context) -> String {
+    pub fn brief(arg: &String, ctx: &Context) -> String {
+        Self::perform_report(arg, ctx, ReportType::Brief)
+    }
+
+    pub fn report(arg: &String, ctx: &Context) -> String {
+        Self::perform_report(arg, ctx, ReportType::Full)
+    }
+
+    fn perform_report(arg: &String, ctx: &Context, report_type: ReportType) -> String {
+        if let Ok(ref id) = arg.parse::<i32>() {
+            Self::report_by_id(id, ctx, report_type)
+        } else if let Some(ref id) = find_id("solar_system", arg, ctx) {
+            Self::report_by_id(id, ctx, report_type)
+        } else {
+            format!("<div>System {} was not found</div>", arg)
+        }
+    }
+
+    fn report_by_id(id: &i32, ctx: &Context, full_report: ReportType) -> String {
         let mut output = String::new();
         if let Some(object) = api::system::System::new(id) {
             Self::write(&mut output, &object, &root(ctx));
+            if full_report == ReportType::Full {
+                lazy(&mut output, format!("api/constellation/{}", object.constellation_id), &ctx);
+                lazy(&mut output, format!("api/region/{}", object.get_region_id().unwrap_or_default()), &ctx);
+                if let Some(ref gates) = &object.stargates {
+                    for gate_id in gates {
+                        if let Some(object) = api::stargate::Stargate::new(gate_id) {
+                            lazy(&mut output, format!("api/system_brief/{}", object.destination.system_id), &ctx);
+                        }
+                    }
+                }
+                jovian_buttons(&mut output, &object.system_id, &object.name);
+                let now = Utc::now().naive_utc().time().format("%H:%M:%S").to_string();
+                div(&mut output, format!("Kill history 60 minutes since {} ", &now), String::new());
+                lazy(&mut output, format!("history/{}/{}", id, 60), &ctx);
+            }
         } else {
             div(&mut output, "System", &format!("{} not found", id));
         }
         return output;
     }
-
-    pub fn find(name: &String, ctx: &Context) -> Option<i32> {
-        let mut result = None;
-        let id = crate::create_id().to_simple();
-        let description = (String::from("solar_system"), name.clone());
-        ctx.database.push(Message::Find((id, Category::ObjectDesc(description))));
-        while let Some(msg) = ctx.responses.pop() {
-            if let Message::Report((msg_id, ref report)) = msg {
-                if msg_id == id {
-                    if let Report::Id(obj_id) = report {
-                        result = Some(*obj_id);
-                        break;
-                    }
-                }
-            }
-            ctx.responses.push(msg);
-        }
-        return result;
-    }
-
-    pub fn report(id: &i32, ctx: &Context) -> String {
-        let mut output = String::new();
-        if let Some(object) = api::system::System::new(id) {
-            Self::write(&mut output, &object, &root(ctx));
-            lazy(&mut output, format!("api/constellation/{}", object.constellation_id), &ctx);
-            lazy(&mut output, format!("api/region/{}", object.get_region_id().unwrap_or_default()), &ctx);
-            if let Some(ref gates) = &object.stargates {
-                for gate_id in gates {
-                    if let Some(object) = api::stargate::Stargate::new(gate_id) {
-                        lazy(&mut output, format!("api/system_brief/{}", object.destination.system_id), &ctx);
-                    }
-                }
-            }
-            jovian_buttons(&mut output, &object.system_id, &object.name);
-            let now = Utc::now().naive_utc().time().format("%H:%M:%S").to_string();
-            div(&mut output, format!("Kill history 60 minutes since {} ", &now), String::new());
-            lazy(&mut output, format!("history/{}/{}", id, 60), &ctx);
-        } else {
-            div(&mut output, "System", &format!("{} not found", id));
-        }
-        return output;
-    }
-
-    // pub fn new(id: &i32) -> Option<Self> {
-    //     if let Some(system) = api::system::System::new(id) {
-    //         let mut neighbors = Vec::new();
-    //         if let Some(ref gates) = &system.stargates {
-    //             for gate_id in gates {
-    //                 if let Some(gate) = api::stargate::Stargate::new(gate_id) {
-    //                     if let Some(neighbor) = api::system::System::new(&gate.destination.system_id) {
-    //                         neighbors.push(neighbor);
-    //                     }
-    //                 }
-    //             }
-    //         }
-
-    //         Some( Self {
-    //             id: *id,
-    //             system: system,
-    //             neighbors: neighbors
-    //         })
-    //     } else {
-    //         None
-    //     }
-    // }
 }
 
-// impl fmt::Display for System {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-//         write!(f, "<div>System: {}</div>", zkb_href("system", &Some(self.id), &Some(self.system.get_name())))?;
-//         write!(f, "<div>Region: {}</div>", zkb_href("region", &self.system.get_region_id(), &self.system.get_region_name()))?;
-//         for system in &self.neighbors {
-//             write!(f, "<div>=&gt {}</div>", link_system(&system.system_id, &system.get_name()))?;
-//         }
-//         write!(f, "")
-//     }
-// }

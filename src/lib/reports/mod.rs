@@ -108,3 +108,21 @@ pub fn link_system(id: &i32, name: &String) -> String {
 pub fn link_killmail(id: &i32) -> String {
     format!("<a href=\"../killmail/{}\">{}</a>", id, id)
 }
+
+pub fn find_id<S: Into<String>>(category: S, name: S, ctx: &Context) -> Option<i32> {
+    use crate::services::*;
+    let id = crate::create_id().to_simple();
+    let description = (category.into(), name.into());
+    ctx.database.push(Message::Find((id, Category::ObjectDesc(description))));
+    while let Some(msg) = ctx.responses.pop() {
+        if let Message::Report((msg_id, ref report)) = msg {
+            if msg_id == id {
+                if let Report::Id(obj_id) = report {
+                    return Some(*obj_id);
+                }
+            }
+        }
+        ctx.responses.push(msg);
+    }
+    None
+}

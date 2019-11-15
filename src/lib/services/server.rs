@@ -47,7 +47,7 @@ fn history(info: web::Path<(i32, i32)>, ctx: Context) -> HttpResponse {
     response(reports::History::report(&system, &minutes, &ctx))
 }
 
-fn api(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
+fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
     info!("/api/{}/{}", info.0, info.1);
     let body = match info.0.as_ref() {
         "constellation" => reports::Constellation::report(&info.1, &ctx),
@@ -66,16 +66,6 @@ fn api(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
         .body(body)
 }
 
-fn demo(info: web::Path<Vec<String>>, ctx: Context) -> String {
-    let path = info.into_inner();
-
-    let mut res =  String::new();
-    for s in &path {
-        res = res + s + ":";
-    }
-    res
-}
-
 pub fn run(context: Context) {
     let address = context.server.clone();
     let timeout = context.timeout;
@@ -87,8 +77,8 @@ pub fn run(context: Context) {
             .route("/navigator/quit", web::get().to(quit))
             .route("/navigator/find/{name}", web::get().to(find))
             .route("/navigator/api/{type}/{id}", web::get().to(api))
-
             .route("/navigator/history/{system}/{minutes}", web::get().to(history))
+
     })
     .bind(address)
     .unwrap()

@@ -70,7 +70,15 @@ impl Killmail {
 
     }
 
-    pub fn brief(id: &Integer, ctx: &Context) -> String {
+    pub fn brief(arg: &String, ctx: &Context) -> String {
+        if let Ok(ref id) = arg.parse::<i32>() {
+            Self::brief_impl(id, ctx)
+        } else {
+            format!("<div>Killmail {} was not found</div>", arg)
+        }
+    }
+
+    pub fn brief_impl(id: &Integer, ctx: &Context) -> String {
         use crate::services::*;
 
         let mut output = String::new();
