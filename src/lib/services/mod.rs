@@ -16,7 +16,6 @@ pub type Context = web::Data<AppContext>;
 #[derive(Debug, PartialEq)]
 pub enum Command{
     Quit,
-    Wait(u64),
 }
 
 #[derive(Debug, PartialEq)]
@@ -58,19 +57,15 @@ pub enum Report{
     QueryFailed(String),
 }
 
-
 #[derive(Debug, PartialEq)]
 pub enum Message{
     Ping,
-    NotFound(i32),
     Receive(Api),
     Save(Model),
-    Load(Category),
     Check(Category),
     Report((Uid, Report)),
     Find((Uid, Category)),
 }
-
 
 type Commands = Channel<Command>;
 type Queue = Channel<Message>;

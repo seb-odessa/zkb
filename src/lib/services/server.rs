@@ -9,21 +9,22 @@ pub fn root(context: &Context) -> String {
     format!("http://{}/navigator", &context.server)
 }
 
-fn quit(context: Context) -> String {
-    info!("/quit");
-    context.commands.push(Command::Quit);
-    context.database.push(Message::Ping);
-    context.resolver.push(Message::Ping);
-    context.responses.push(Message::Ping);
+fn quit(ctx: &Context) -> String {
+    ctx.commands.push(Command::Quit);
+    ctx.commands.push(Command::Quit);
+    ctx.commands.push(Command::Quit);
+    ctx.commands.push(Command::Quit);
+    ctx.database.push(Message::Ping);
+    ctx.resolver.push(Message::Ping);
+    ctx.responses.push(Message::Ping);
     actix_rt::System::current().stop();
     format!("Quit\n")
 }
 
-fn ping(context: Context) -> String {
-    info!("/ping");
-    context.database.push(Message::Ping);
-    context.resolver.push(Message::Ping);
-    context.responses.push(Message::Ping);
+fn ping(ctx: &Context) -> String {
+    ctx.database.push(Message::Ping);
+    ctx.resolver.push(Message::Ping);
+    ctx.responses.push(Message::Ping);
     format!("Ping\n")
 }
 
@@ -66,6 +67,21 @@ fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
         .body(body)
 }
 
+fn cmd(info: web::Path<String>, ctx: Context) -> String {
+    info!("/cmd/{}", info);
+
+    match info.as_ref().as_ref() {
+        "ping" => ping(&ctx),
+        "quit" => quit(&ctx),
+        _ => format!("/cmd/{}", info)
+    }
+}
+
+fn services(info: web::Path<(String, String)>, _ctx: Context) -> String {
+    info!("/services/{}/{}", info.0, info.1);
+    format!("/services/{}/{}", info.0, info.1)
+}
+
 pub fn run(context: Context) {
     let address = context.server.clone();
     let timeout = context.timeout;
@@ -73,10 +89,10 @@ pub fn run(context: Context) {
     HttpServer::new(move || {
         App::new()
             .register_data(context.clone())
-            .route("/navigator/ping", web::get().to(ping))
-            .route("/navigator/quit", web::get().to(quit))
             .route("/navigator/find/{name}", web::get().to(find))
             .route("/navigator/api/{type}/{id}", web::get().to(api))
+            .route("/navigator/cmd/{cmd}", web::get().to(cmd))
+            .route("/navigator/services/{type}/{id}", web::get().to(services))
             .route("/navigator/history/{system}/{minutes}", web::get().to(history))
 
     })
