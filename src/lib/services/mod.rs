@@ -6,6 +6,8 @@ pub mod database;
 use crate::api;
 use crate::reports;
 use std::sync::{Arc, Mutex, Condvar};
+use uuid::adapter::Simple as Uid;
+
 use chrono::{DateTime, Utc};
 use actix_web::web;
 
@@ -42,6 +44,7 @@ pub enum Category{
     Stargate(i32),
     Constellation(i32),
     History((i32, i32)),
+    ObjectDesc((String, String)),
 }
 
 #[derive(Debug, PartialEq)]
@@ -49,8 +52,10 @@ pub enum Report{
     Killmail(reports::Killmail),
     History(reports::History),
     Id(i32),
-    NameFound(String),
+    NotFoundId(i32),
+    NotFoundName(String),
     NotUniqName(String),
+    QueryFailed(String),
 }
 
 
@@ -62,8 +67,8 @@ pub enum Message{
     Save(Model),
     Load(Category),
     Check(Category),
-    Report(Report),
-    Find((String, String)),
+    Report((Uid, Report)),
+    Find((Uid, Category)),
 }
 
 

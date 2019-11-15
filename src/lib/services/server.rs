@@ -49,7 +49,6 @@ fn history(info: web::Path<(i32, i32)>, ctx: Context) -> HttpResponse {
 
 fn api(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
     info!("/api/{}/{}", info.0, info.1);
-
     let body = match info.0.as_ref() {
         "constellation" => reports::Constellation::report(&info.1, &ctx),
         "region" => reports::Region::report(&info.1, &ctx),
@@ -65,6 +64,16 @@ fn api(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
         .content_type("text/html; charset=UTF-8")
         .header("X-Header", "zkb")
         .body(body)
+}
+
+fn demo(info: web::Path<Vec<String>>, ctx: Context) -> String {
+    let path = info.into_inner();
+
+    let mut res =  String::new();
+    for s in &path {
+        res = res + s + ":";
+    }
+    res
 }
 
 pub fn run(context: Context) {

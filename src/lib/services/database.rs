@@ -98,52 +98,60 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         },
                     };
                 },
-                Message::Load(category) => {
+                Message::Find((id, ref category)) => {
                     match category {
-                        Category::Killmail(id) =>{
-                            match reports::Killmail::load(&conn, &id) {
+                        Category::Killmail(killmail_id) => {
+                            match reports::Killmail::load(&conn, &killmail_id) {
                                 Ok(killmail) => {
                                     info!("loaded killmail {} queue length: {}", killmail.killmail_id, context.database.len());
-                                    context.responses.push(Message::Report(Report::Killmail(killmail)));
+                                    context.responses.push(Message::Report((id, Report::Killmail(killmail))));
                                 },
                                 Err(e) => {
                                     warn!("was not able to load killmail: {}", e);
-                                    context.responses.push(Message::NotFound(id));
+                                    context.responses.push(Message::Report((id, Report::NotFoundId(*killmail_id))));
                                 }
                             }
                         },
                         Category::History((system_id, minutes)) => {
                             let history = reports::history::History::load(&conn, &system_id, &minutes);
                             info!("loaded {} minutes history for {}, queue length: {}", minutes, system_id, context.database.len());
-                            context.responses.push(Message::Report(Report::History(history)));
+                            context.responses.push(Message::Report((id, Report::History(history))));
                         },
-                        model => {
-                            warn!("Save not implemented for {:?}", model)
+                        Category::ObjectDesc((category, name)) => {
+                            match models::category::Category::find(&conn, &category) {
+                                Ok(categories) => {
+                                    if categories.is_empty() {
+                                        warn!("Failed to find category {}", category);
+                                        context.responses.push(Message::Report((id, Report::NotFoundName(category.clone()))));
+                                    } else if categories.len() > 1 {
+                                        warn!("Category name pattern is not unique {}", category);
+                                        context.responses.push(Message::Report((id, Report::NotUniqName(category.clone()))));
+                                    } else {
+                                        if let Ok(objects) = models::object::Object::find(&conn, &categories[0], &name) {
+                                            if objects.is_empty() {
+                                                warn!("Failed to find object {}", name);
+                                                context.responses.push(Message::Report((id, Report::NotFoundName(name.clone()))));
+                                            } else if objects.len() > 1 {
+                                                warn!("Object name pattern is not unique {}", name);
+                                                context.responses.push(Message::Report((id, Report::NotUniqName(name.clone()))));
+                                            } else {
+                                                context.responses.push(Message::Report((id, Report::Id(objects[0]))));
+                                            }
+                                        }
+                                    }
+                                },
+                                Err(e) => {
+                                    let error = e.to_string();
+                                    warn!("Failed to query ({}, {}, {}): {}", id, category, name, &error);
+                                    context.responses.push(Message::Report((id, Report::QueryFailed(error))));
+                                }
+                            }
+                        },
+                        category => {
+                            warn!("Unexpected category for Find {:?}", category);
                         }
                     }
                 },
-                Message::Find((category, name)) => {
-                    if let Ok(categories) = models::category::Category::find(&conn, &category) {
-                        if categories.is_empty() {
-                            context.responses.push(Message::Report(Report::NameFound(category)));
-                        } else if categories.len() > 1 {
-                            context.responses.push(Message::Report(Report::NotUniqName(category)));
-                        } else {
-                            if let Ok(objects) = models::object::Object::find(&conn, &categories[0], &name) {
-                                if objects.is_empty() {
-                                    context.responses.push(Message::Report(Report::NameFound(name)));
-                                } else if objects.len() > 1 {
-                                    context.responses.push(Message::Report(Report::NotUniqName(name)));
-                                } else {
-                                    context.responses.push(Message::Report(Report::Id(objects[0])));
-                                }
-                            }
-                        }
-
-                    } else {
-                        context.responses.push(Message::Report(Report::NameFound(category)));
-                    }
-                }
                 Message::Check(category) => {
                     match category {
                         Category::Object(id) =>{

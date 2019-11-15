@@ -29,13 +29,25 @@ impl History {
 
         let mut output = String::new();
         let root = root(&ctx);
-        ctx.database.push(Message::Load(Category::History((*system, *minutes))));
+        let msg_id = crate::create_id().to_simple();
+        ctx.database.push(Message::Find((msg_id, Category::History((*system, *minutes)))));
         while let Some(msg) = ctx.responses.pop() {
-            if let Message::Report(Report::History(history)) = msg {
-                for killmail in &history.kills{
-                    killmail.write(&mut output, &root);
+            if let Message::Report((report_id, ref report)) = msg {
+                if report_id == msg_id {
+                    match report {
+                        Report::History(history) => {
+                            for killmail in &history.kills{
+                                killmail.write(&mut output, &root);
+                            }
+                        },
+                        report => {
+                            warn!("Unexpected report {:?}", report);
+                        }
+                    }
+                    break;
+                } else {
+                   ctx.responses.push(msg);
                 }
-                break;
             }
         }
         return output;

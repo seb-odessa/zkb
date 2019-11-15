@@ -75,21 +75,26 @@ impl Killmail {
 
         let mut output = String::new();
         let root = root(&ctx);
-        ctx.database.push(Message::Load(Category::Killmail(*id)));
+        let msg_id = crate::create_id().to_simple();
+        ctx.database.push(Message::Find((msg_id, Category::Killmail(*id))));
         while let Some(msg) = ctx.responses.pop() {
-            if let Message::Report(Report::Killmail(killmail)) = msg {
-                if killmail.killmail_id == *id {
-                    killmail.write(&mut output, &root);
+            if let Message::Report((report_id, ref report)) = msg {
+                if report_id == msg_id {
+                    match report {
+                        Report::Killmail(killmail) => {
+                            killmail.write(&mut output, &root);
+                        },
+                        Report::NotFoundId(killmail_id) => {
+                            write(&mut output, format_args!("<div>Killmail {} was not found</div>", killmail_id)).expect(FAIL);
+                        }
+                        report => {
+                            warn!("Unexpected report {:?}", report);
+                        }
+                    }
                     break;
                 } else {
-                    ctx.responses.push(Message::Report(Report::Killmail(killmail)));
+                   ctx.responses.push(msg);
                 }
-            } else if let Message::NotFound(id) = msg {
-                write(&mut output, format_args!("<div>Killmail {} was not found</div>", id)).expect(FAIL);
-                break;
-            } else {
-                warn!("Unexpected {:?}", &msg);
-                ctx.responses.push(msg);
             }
         }
         return output;

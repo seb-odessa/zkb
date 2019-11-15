@@ -37,14 +37,19 @@ impl System {
 
     pub fn find(name: &String, ctx: &Context) -> Option<i32> {
         let mut result = None;
-        ctx.database.push(Message::Find((String::from("solar_system"), name.clone())));
+        let id = crate::create_id().to_simple();
+        let description = (String::from("solar_system"), name.clone());
+        ctx.database.push(Message::Find((id, Category::ObjectDesc(description))));
         while let Some(msg) = ctx.responses.pop() {
-            if let Message::Report(Report::Id(id)) = msg {
-                result = Some(id);
-                break;
-            } else {
-                ctx.responses.push(msg);
+            if let Message::Report((msg_id, ref report)) = msg {
+                if msg_id == id {
+                    if let Report::Id(obj_id) = report {
+                        result = Some(*obj_id);
+                        break;
+                    }
+                }
             }
+            ctx.responses.push(msg);
         }
         return result;
     }

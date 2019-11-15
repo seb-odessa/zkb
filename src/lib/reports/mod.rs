@@ -9,6 +9,7 @@ pub mod constellation;
 use crate::services::Context;
 use std::fmt::Write;
 
+
 pub use names::Names;
 pub use killmail::Killmail;
 pub use history::History;
@@ -24,15 +25,13 @@ pub fn root(context: &Context) -> String {
 }
 
 pub fn load<S: Into<String>>(url: S, context: &Context) -> String {
-    use uuid::Uuid;
-    let id = Uuid::new_v4();
     format!(r##"
         <div id="{id}">
         <script>
             document.getElementById("{id}").innerHTML='<object type="text/html" data="{root}/{api}"/>';
         </script>
         </div>"##,
-        id=id,
+        id=crate::create_id(),
         root=root(&context),
         api=url.into())
 }
@@ -73,8 +72,6 @@ pub fn jovian_buttons(output: &mut dyn Write, id: &i32, name: &String) {
 }
 
 pub fn lazy<S: Into<String>>(output: &mut dyn Write, url: S, ctx: &Context) {
-    use uuid::Uuid;
-    let id = Uuid::new_v4();
     std::fmt::write(
         output,
         format_args!(r##"
@@ -85,7 +82,7 @@ pub fn lazy<S: Into<String>>(output: &mut dyn Write, url: S, ctx: &Context) {
                .then(html => document.getElementById("{id}").innerHTML = html)
                .catch((err) => console.log("Can’t access " + "{root}/{api}" + ": " + err));
         </script>"##,
-        id=id,
+        id=crate::create_id(),
         root=root(ctx),
         api=url.into())
     ).expect(FAIL);

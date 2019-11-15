@@ -8,6 +8,8 @@ extern crate log;
 extern crate lazy_static;
 extern crate uuid;
 
+use uuid::Uuid;
+
 pub mod api;
 pub mod models;
 pub mod schema;
@@ -16,3 +18,6 @@ pub mod services;
 pub mod reports;
 
 
+pub fn create_id() -> Uuid {
+    Uuid::new_v4()
+}
