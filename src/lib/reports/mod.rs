@@ -1,6 +1,7 @@
 pub mod names;
 pub mod killmail;
 pub mod victim;
+pub mod attacker;
 pub mod history;
 pub mod system;
 pub mod region;

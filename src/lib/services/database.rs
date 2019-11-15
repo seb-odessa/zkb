@@ -1,7 +1,6 @@
 use crate::api;
 use crate::services::*;
 use crate::models;
-use crate::reports;
 use crate::services::{AppContext, Command, Message, Category, Report};
 use models::Connection;
 
@@ -115,8 +114,20 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         Category::Victim(id) => {
                             match models::victim::VictimNamed::load(&conn, &id) {
                                 Ok(object) => {
-                                    info!("loaded victim {} queue length: {}", id, context.database.len());
+                                    info!("loaded victim for KM {} queue length: {}", id, context.database.len());
                                     context.responses.push(Message::Report((msg_id, Report::Victim(object))));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load killmail: {}", e);
+                                    context.responses.push(Message::Report((msg_id, Report::NotFoundId(*id))));
+                                }
+                            }
+                        },
+                        Category::Attakers(id) => {
+                            match models::attacker::AttackerNamed::load(&conn, &id) {
+                                Ok(object) => {
+                                    info!("loaded attakers for KM {} queue length: {}", id, context.database.len());
+                                    context.responses.push(Message::Report((msg_id, Report::Attakers(object))));
                                 },
                                 Err(e) => {
                                     warn!("was not able to load killmail: {}", e);

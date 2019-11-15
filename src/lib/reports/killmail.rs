@@ -4,7 +4,6 @@ use crate::services::server::root;
 use crate::reports::FAIL;
 
 use killmail::KillmailNamed;
-use attacker::AttackerNamed;
 
 use std::fmt::Write;
 use std::fmt::write;
