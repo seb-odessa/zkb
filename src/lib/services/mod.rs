@@ -4,7 +4,7 @@ pub mod resolver;
 pub mod database;
 
 use crate::api;
-use crate::reports;
+use crate::models;
 use std::sync::{Arc, Mutex, Condvar};
 use uuid::adapter::Simple as Uid;
 
@@ -39,6 +39,8 @@ pub enum Model{
 pub enum Category{
     Object(i32),
     Killmail(i32),
+    Victim(i32),
+    Attakers(i32),
     System(i32),
     Stargate(i32),
     Constellation(i32),
@@ -48,8 +50,10 @@ pub enum Category{
 
 #[derive(Debug, PartialEq)]
 pub enum Report{
-    Killmail(reports::Killmail),
-    History(reports::History),
+    Killmail(models::killmail::KillmailNamed),
+    Victim(models::victim::VictimNamed),
+    Attakers(Vec<models::attacker::AttackerNamed>),
+    History(Vec<models::killmail::KillmailNamed>),
     Id(i32),
     NotFoundId(i32),
     NotFoundName(String),

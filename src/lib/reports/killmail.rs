@@ -1,14 +1,11 @@
 use crate::models::*;
-use super::zkb_href;
 use crate::services::Context;
 use crate::services::server::root;
 use crate::reports::FAIL;
 
 use killmail::KillmailNamed;
 use attacker::AttackerNamed;
-use victim::VictimNamed;
 
-use std::fmt;
 use std::fmt::Write;
 use std::fmt::write;
 
@@ -22,7 +19,6 @@ pub struct Killmail {
     pub constellation_name: OptString,
     pub region_id: OptInteger,
     pub region_name: OptString,
-    // pub victim: VictimNamed,
     // pub attackers: Vec<AttackerNamed>,
 }
 impl Killmail {
@@ -42,7 +38,7 @@ impl Killmail {
         })
     }
 
-    pub fn write(&self, output: &mut dyn Write, root: &String) {
+    pub fn write(output: &mut dyn Write, killmail: &killmail::KillmailNamed, root: &String) {
         let empty = String::new();
         write(
             output,
@@ -57,14 +53,14 @@ impl Killmail {
                     <a href="{root}/api/system/{system_id}">{system}</a>
                     </div>
                 "##,
-                id = self.killmail_id,
-                timestamp = self.killmail_time.to_string(),
-                region_id = self.region_id.unwrap_or_default(),
-                region_name = self.region_name.as_ref().unwrap_or(&empty),
-                constellation = self.constellation_name.as_ref().unwrap_or(&empty),
+                id = killmail.killmail_id,
+                timestamp = killmail.killmail_time.to_string(),
+                region_id = killmail.region_id.unwrap_or_default(),
+                region_name = killmail.region_name.as_ref().unwrap_or(&empty),
+                constellation = killmail.constellation_name.as_ref().unwrap_or(&empty),
                 root = root,
-                system_id = self.system_id,
-                system = self.system_name.as_ref().unwrap_or(&empty),
+                system_id = killmail.system_id,
+                system = killmail.system_name.as_ref().unwrap_or(&empty),
             )
         ).expect(FAIL);
 
@@ -90,7 +86,7 @@ impl Killmail {
                 if report_id == msg_id {
                     match report {
                         Report::Killmail(killmail) => {
-                            killmail.write(&mut output, &root);
+                            Self::write(&mut output, &killmail, &root);
                         },
                         Report::NotFoundId(killmail_id) => {
                             write(&mut output, format_args!("<div>Killmail {} was not found</div>", killmail_id)).expect(FAIL);
@@ -106,47 +102,5 @@ impl Killmail {
             }
         }
         return output;
-    }
-
-}
-impl fmt::Display for Killmail {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "<div>\n")?;
-        write!(f, "{}\n", zkb_href("kill", &Some(self.killmail_id), &Some(self.killmail_time.to_string())))?;
-        write!(f, "&nbsp;&nbsp;&nbsp;\n")?;
-        write!(f, "&nbsp;{}&nbsp;", zkb_href("system", &Some(self.system_id), &self.system_name))?;
-        write!(f, "&nbsp;{}&nbsp;", zkb_href("constellation", &self.constellation_id, &self.constellation_name))?;
-        write!(f, "&nbsp;{}&nbsp;", zkb_href("region", &self.region_id, &self.region_name))?;
-        write!(f, "</div>\n")?;
-
-        write!(f, "<table>\n")?;
-        write!(f, "<tr><th>Damage</th><th>Ship</th><th>Weapon</th><th>Character</th><th>Corporation</th><th>Alliance</th></tr>\n")?;
-        // write!(f, "<tr><td align=\"right\">{}</td><td>{}</td><td></td><td>{}</td><td>{}</td><td>{}</td></tr>\n",
-        //     self.victim.damage_taken,
-        //     zkb_href("item", &Some(self.victim.ship_id), &self.victim.ship_name),
-        //     zkb_href("character", &self.victim.character_id, &self.victim.character_name),
-        //     zkb_href("corporation", &self.victim.corporation_id, &self.victim.corporation_name),
-        //     zkb_href("alliance", &self.victim.alliance_id, &self.victim.alliance_name),
-        // )?;
-        // for attacker in &self.attackers {
-        //     if attacker.faction_id.is_some() {
-        //         write!(f, "<tr><td  align=\"right\">{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>\n",
-        //             attacker.damage_done,
-        //             zkb_href("item", &attacker.ship_id, &attacker.ship_name),
-        //             zkb_href("item", &attacker.weapon_id, &attacker.weapon_name),
-        //             zkb_href("faction", &attacker.faction_id, &attacker.faction_name),
-        //             "",
-        //             "")?;
-        //     } else {
-        //             write!(f, "<tr><td  align=\"right\">{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>\n",
-        //                 attacker.damage_done,
-        //                 zkb_href("item", &attacker.ship_id, &attacker.ship_name),
-        //                 zkb_href("item", &attacker.weapon_id, &attacker.weapon_name),
-        //                 zkb_href("character", &attacker.character_id, &attacker.character_name),
-        //                 zkb_href("corporation", &attacker.corporation_id, &attacker.corporation_name),
-        //                 zkb_href("alliance", &attacker.alliance_id, &attacker.alliance_name))?;
-        //     }
-        // }
-        write!(f, "</table>\n")
     }
 }

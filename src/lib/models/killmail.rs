@@ -28,7 +28,7 @@ impl From<&api::Killmail> for Killmail {
     }
 }
 
-#[derive(Queryable, Associations, Debug)]
+#[derive(Queryable, Associations, Debug, PartialEq)]
 #[table_name = "named_killmails"]
 pub struct KillmailNamed {
     pub killmail_id: Integer,
@@ -44,6 +44,17 @@ impl KillmailNamed {
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
         use diesel::prelude::*;
         named_killmails::table.filter(named_killmails::killmail_id.eq(id)).first(conn)
+    }
+
+    pub fn load_history(conn: &Connection, system_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails after {}", &start);
+        named_killmails::table
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(named_killmails::system_id.eq(system_id))
+            .order(named_killmails::killmail_time.desc())
+            .load(conn)
     }
 
     pub fn load_ids_for_last_minutes(conn: &Connection, system_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Integer>> {

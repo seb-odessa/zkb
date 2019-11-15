@@ -1,5 +1,6 @@
 pub mod names;
 pub mod killmail;
+pub mod victim;
 pub mod history;
 pub mod system;
 pub mod region;
@@ -12,6 +13,7 @@ use std::fmt::Write;
 
 pub use names::Names;
 pub use killmail::Killmail;
+pub use victim::Victim;
 pub use history::History;
 pub use system::System;
 pub use region::Region;
@@ -124,3 +126,5 @@ pub fn find_id<S: Into<String>>(category: S, name: S, ctx: &Context) -> Option<i
     }
     None
 }
+
+

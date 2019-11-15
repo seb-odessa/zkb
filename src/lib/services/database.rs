@@ -98,52 +98,71 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         },
                     };
                 },
-                Message::Find((id, ref category)) => {
+                Message::Find((msg_id, ref category)) => {
                     match category {
-                        Category::Killmail(killmail_id) => {
-                            match reports::Killmail::load(&conn, &killmail_id) {
-                                Ok(killmail) => {
-                                    info!("loaded killmail {} queue length: {}", killmail.killmail_id, context.database.len());
-                                    context.responses.push(Message::Report((id, Report::Killmail(killmail))));
+                        Category::Killmail(id) => {
+                            match models::killmail::KillmailNamed::load(&conn, &id) {
+                                Ok(object) => {
+                                    info!("loaded killmail {} queue length: {}", id, context.database.len());
+                                    context.responses.push(Message::Report((msg_id, Report::Killmail(object))));
                                 },
                                 Err(e) => {
                                     warn!("was not able to load killmail: {}", e);
-                                    context.responses.push(Message::Report((id, Report::NotFoundId(*killmail_id))));
+                                    context.responses.push(Message::Report((msg_id, Report::NotFoundId(*id))));
+                                }
+                            }
+                        },
+                        Category::Victim(id) => {
+                            match models::victim::VictimNamed::load(&conn, &id) {
+                                Ok(object) => {
+                                    info!("loaded victim {} queue length: {}", id, context.database.len());
+                                    context.responses.push(Message::Report((msg_id, Report::Victim(object))));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load killmail: {}", e);
+                                    context.responses.push(Message::Report((msg_id, Report::NotFoundId(*id))));
                                 }
                             }
                         },
                         Category::History((system_id, minutes)) => {
-                            let history = reports::history::History::load(&conn, &system_id, &minutes);
-                            info!("loaded {} minutes history for {}, queue length: {}", minutes, system_id, context.database.len());
-                            context.responses.push(Message::Report((id, Report::History(history))));
+                            match models::killmail::KillmailNamed::load_history(&conn, &system_id, &minutes) {
+                                Ok(object) => {
+                                    info!("loaded {} minutes history for system {} queue length: {}", minutes, system_id, context.database.len());
+                                    context.responses.push(Message::Report((msg_id, Report::History(object))));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load history: {}", e);
+                                    context.responses.push(Message::Report((msg_id, Report::QueryFailed(e.to_string()))));
+                                }
+                            }
                         },
                         Category::ObjectDesc((category, name)) => {
                             match models::category::Category::find(&conn, &category) {
                                 Ok(categories) => {
                                     if categories.is_empty() {
                                         warn!("Failed to find category {}", category);
-                                        context.responses.push(Message::Report((id, Report::NotFoundName(category.clone()))));
+                                        context.responses.push(Message::Report((msg_id, Report::NotFoundName(category.clone()))));
                                     } else if categories.len() > 1 {
                                         warn!("Category name pattern is not unique {}", category);
-                                        context.responses.push(Message::Report((id, Report::NotUniqName(category.clone()))));
+                                        context.responses.push(Message::Report((msg_id, Report::NotUniqName(category.clone()))));
                                     } else {
                                         if let Ok(objects) = models::object::Object::find(&conn, &categories[0], &name) {
                                             if objects.is_empty() {
                                                 warn!("Failed to find object {}", name);
-                                                context.responses.push(Message::Report((id, Report::NotFoundName(name.clone()))));
+                                                context.responses.push(Message::Report((msg_id, Report::NotFoundName(name.clone()))));
                                             } else if objects.len() > 1 {
                                                 warn!("Object name pattern is not unique {}", name);
-                                                context.responses.push(Message::Report((id, Report::NotUniqName(name.clone()))));
+                                                context.responses.push(Message::Report((msg_id, Report::NotUniqName(name.clone()))));
                                             } else {
-                                                context.responses.push(Message::Report((id, Report::Id(objects[0]))));
+                                                context.responses.push(Message::Report((msg_id, Report::Id(objects[0]))));
                                             }
                                         }
                                     }
                                 },
                                 Err(e) => {
                                     let error = e.to_string();
-                                    warn!("Failed to query ({}, {}, {}): {}", id, category, name, &error);
-                                    context.responses.push(Message::Report((id, Report::QueryFailed(error))));
+                                    warn!("Failed to query ({}, {}, {}): {}", msg_id, category, name, &error);
+                                    context.responses.push(Message::Report((msg_id, Report::QueryFailed(error))));
                                 }
                             }
                         },

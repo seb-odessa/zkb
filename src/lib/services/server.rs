@@ -94,7 +94,6 @@ pub fn run(context: Context) {
             .route("/navigator/cmd/{cmd}", web::get().to(cmd))
             .route("/navigator/services/{type}/{id}", web::get().to(services))
             .route("/navigator/history/{system}/{minutes}", web::get().to(history))
-
     })
     .bind(address)
     .unwrap()
