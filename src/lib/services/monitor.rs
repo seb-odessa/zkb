@@ -14,12 +14,12 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
         if let Some(package) = api::gw::get_package(&context.client) {
             if let Some(content) = package.content {
                 let killmail = content.killmail;
-                info!("{} {} {} {}/{} {}",
+                info!("{} {} {} {}",
                     killmail.killmail_time.time().to_string(),
                     killmail.killmail_time.date().to_string(),
                     killmail.href(),
-                    killmail.get_dropped_sum(),
-                    killmail.get_total_sum(),
+                    // killmail.get_dropped_sum(),
+                    // killmail.get_total_sum(),
                     killmail.get_system_full_name()
                 );
                 if let Some(allowed) = &context.allowed {
@@ -34,6 +34,10 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                 info!("monitor will suspended {} sec", timeout);
                 Parker::new().park_timeout(std::time::Duration::from_secs(timeout))
             }
+        } else {
+            let timeout = context.timeout.into();
+            info!("CCP API down? Will suspended {} sec", timeout);
+            Parker::new().park_timeout(std::time::Duration::from_secs(timeout))
         }
     }
     info!("Ended");

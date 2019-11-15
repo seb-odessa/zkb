@@ -19,9 +19,9 @@ impl Constellation {
     pub fn report_by_id(id: &i32, _: &Context) -> String {
         let mut output = String::new();
         if let Some(object) = api::constellation::Constellation::new(id) {
-            div(&mut output, "Constellation", &object.name);
+            div(&mut output, format!("Constellation {}", object.name));
         } else {
-            div(&mut output, "Constellation", &format!("{} not found", id));
+            div(&mut output, format!("Can't query Constellation({}) from CCP API", id));
         }
         return output;
     }

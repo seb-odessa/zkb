@@ -18,9 +18,9 @@ impl Region {
     fn report_by_id(id: &i32, _ctx: &Context) -> String {
         let mut output = String::new();
         if let Some(object) = api::region::Region::new(id) {
-            div(&mut output, "Region", &href(object.zkb(), object.name.clone()));
+            div(&mut output, format!("Region {}", href(object.zkb(), object.name.clone())));
         } else {
-            div(&mut output, "Region", &format!("{} not found", id));
+            div(&mut output, format!("Can't query Region({}) from CCP API", id));
         }
         return output;
     }

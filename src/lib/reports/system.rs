@@ -45,7 +45,7 @@ impl System {
         } else if let Some(ref id) = find_id("solar_system", arg, ctx) {
             Self::report_by_id(id, ctx, report_type)
         } else {
-            format!("<div>System {} was not found</div>", arg)
+            format!("<div>System {} was not found in DB</div>", arg)
         }
     }
 
@@ -65,11 +65,11 @@ impl System {
                 }
                 jovian_buttons(&mut output, &object.system_id, &object.name);
                 let now = Utc::now().naive_utc().time().format("%H:%M:%S").to_string();
-                div(&mut output, format!("Kill history 60 minutes since {} ", &now), String::new());
+                div(&mut output, format!("Kill history 60 minutes since {} ", &now));
                 lazy(&mut output, format!("history/{}/{}", id, 60), &ctx);
             }
         } else {
-            div(&mut output, "System", &format!("{} not found", id));
+            div(&mut output, format!("Can't query System({}) from CCP API", id));
         }
         return output;
     }

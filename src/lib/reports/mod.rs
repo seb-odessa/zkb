@@ -40,11 +40,8 @@ pub fn href<S: Into<String>>(url: S, name: S) -> String{
     format!(r#"<a href="{url}">{name}</a>"#, url = url.into(), name = name.into())
 }
 
-pub fn div<S: Into<String>>(output: &mut dyn Write, name: S, value: S) {
-    std::fmt::write(
-        output,
-        format_args!("<div>{name}: {value}</div>", name = name.into(), value = value.into())
-    ).expect(FAIL);
+pub fn div<S: Into<String>>(output: &mut dyn Write, content: S) {
+    std::fmt::write(output, format_args!("<div>{}</div>", content.into())).expect(FAIL);
 }
 
 pub fn jovian_buttons(output: &mut dyn Write, id: &i32, name: &String) {
@@ -120,6 +117,7 @@ pub fn find_id<S: Into<String>>(category: S, name: S, ctx: &Context) -> Option<i
                 if let Report::Id(obj_id) = report {
                     return Some(*obj_id);
                 }
+                break;
             }
         }
         ctx.responses.push(msg);

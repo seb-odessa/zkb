@@ -24,7 +24,7 @@ impl Stargate {
         if let Some(object) = api::stargate::Stargate::new(id) {
             lazy(&mut output, format!("api/system_brief/{}", object.destination.system_id), &ctx);
         } else {
-            div(&mut output, "Stargate", &format!("{} not found", id));
+            div(&mut output, format!("Can't query Stargate({}) from CCP API", id));
         }
         return output;
     }
