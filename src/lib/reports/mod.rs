@@ -95,6 +95,23 @@ pub fn lazy<S: Into<String>>(output: &mut dyn Write, url: S, ctx: &Context) {
     ).expect(FAIL);
 }
 
+pub fn load_later<S: Into<String>>(output: &mut dyn Write, id: &String, api: S, root: &String) {
+    std::fmt::write(
+        output,
+        format_args!(r##"
+
+        <script>
+            fetch("{root}/{api}")
+               .then(response => response.text())
+               .then(text => document.getElementById("{id}").innerText = text)
+               .catch((err) => console.log("Can’t access " + "{root}/{api}" + ": " + err));
+        </script>"##,
+        id=id,
+        api=api.into(),
+        root=root)
+    ).expect(FAIL);
+}
+
 pub fn zkb_href(category: &'static str, id: &Option<i32>, name: &Option<String>) -> String {
     format!("<a href=\"https://zkillboard.com/{}/{}/\">{}</a>",
         category,

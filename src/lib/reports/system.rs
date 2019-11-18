@@ -43,6 +43,14 @@ impl System {
         }
     }
 
+    pub fn security_status(id: &i32) -> String {
+        if let Some(system) = api::system::System::new(id) {
+            format!("{:.1}", system.security_status)
+        } else {
+            format!("Can't query System({}) from CCP API", id)
+        }
+    }
+
     fn report_by_id(id: &i32, ctx: &Context, full_report: ReportType) -> String {
         let mut output = String::new();
         if let Some(object) = api::system::System::new(id) {

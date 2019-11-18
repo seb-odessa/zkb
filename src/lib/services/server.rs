@@ -88,9 +88,12 @@ fn cmd(info: web::Path<String>, ctx: Context) -> String {
     }
 }
 
-fn services(info: web::Path<(String, String)>, _ctx: Context) -> String {
+fn services(info: web::Path<(String, i32)>, _ctx: Context) -> String {
     info!("/services/{}/{}", info.0, info.1);
-    format!("/services/{}/{}", info.0, info.1)
+    match info.0.as_ref() {
+        "system_security_status" => reports::System::security_status(&info.1),
+        _ => format!("/services/{}/{}", info.0, info.1)
+    }
 }
 
 pub fn run(context: Context) {

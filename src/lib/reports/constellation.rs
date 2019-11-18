@@ -21,6 +21,7 @@ impl Constellation {
     }
 
     fn neighbors(output: &mut dyn Write, constellation: &api::constellation::Constellation, ctx: &Context) {
+        // todo implement query from DB
         for system_id in &constellation.systems {
             if let Some(system) = api::system::System::new(system_id)
             {

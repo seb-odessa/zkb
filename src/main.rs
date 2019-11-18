@@ -52,6 +52,14 @@ fn main() {
              .spawn(|_| resolver::run(context.clone()))
              .expect("Failed to create Name Resolver");
         scope.builder()
+             .name("Name Resolver".to_string())
+             .spawn(|_| resolver::run(context.clone()))
+             .expect("Failed to create Name Resolver");
+        scope.builder()
+             .name("Name Resolver".to_string())
+             .spawn(|_| resolver::run(context.clone()))
+             .expect("Failed to create Name Resolver");
+        scope.builder()
              .name("DB provider".to_string())
              .spawn(|_| database::run(conn, context.clone()))
              .expect("Failed to create database");

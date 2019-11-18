@@ -43,6 +43,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                         Api::Stargate(id) =>{
                             if let Some(object) = api::stargate::Stargate::new(&id) {
                                 info!("Received Stargate({}) queue length: {}", id, context.resolver.len());
+                                context.database.push(Message::Check(Category::Stargate(object.destination.stargate_id)));
                                 context.database.push(Message::Check(Category::System(object.destination.system_id)));
                                 context.database.push(Message::Save(Model::Stargate(object)));
                             } else {

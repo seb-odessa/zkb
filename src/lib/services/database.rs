@@ -197,9 +197,8 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                 Message::Check(category) => {
                     match category {
                         Category::Object(id) => {
-                            if !known.contains(&id) && !models::ObjectsApi::exist(&conn, &id) {
+                            if !models::ObjectsApi::exist(&conn, &id) {
                                 context.resolver.push(Message::Receive(Api::Object(id)));
-                                known.insert(id);
                             }
                         },
                         Category::System(id) => {
