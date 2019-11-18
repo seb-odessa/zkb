@@ -20,16 +20,17 @@ impl Constellation {
         ).expect(FAIL);
     }
 
-    fn neighbors(output: &mut dyn Write, region_id: &i32, ctx: &Context) {
-        // Todo rework to query real neighbors instead of all in region
-        if let Some(object) = api::region::Region::new(region_id) {
-            for constellation_id in &object.constellations{
-                lazy(output, format!("api/constellation_brief/{}", constellation_id), &ctx);
+    fn neighbors(output: &mut dyn Write, constellation: &api::constellation::Constellation, ctx: &Context) {
+        for system_id in &constellation.systems {
+            if let Some(system) = api::system::System::new(system_id)
+            {
+                if system.constellation_id != constellation.constellation_id {
+                    lazy(output, format!("api/constellation_brief/{}", system.constellation_id), &ctx);
+                }
+            } else {
+                div(output, format!("Can't query System({}) from CCP API", system_id));
             }
-        } else {
-            div(output, format!("Can't query Region({}) from CCP API", region_id));
         }
-
     }
 
     pub fn brief(arg: &String, ctx: &Context) -> String {
