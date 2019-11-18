@@ -41,17 +41,28 @@ fn find(info: web::Path<String>, ctx: Context) -> HttpResponse {
     response(Names::report(info.as_ref(), &ctx))
 }
 
-fn history(info: web::Path<(i32, i32)>, ctx: Context) -> HttpResponse {
+fn history(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
     info!("/history/{:?}", info);
-    let system = info.0;
-    let minutes = info.1;
-    response(reports::History::report(&system, &minutes, &ctx))
+    let id = info.1;
+    let minutes = info.2;
+    let body = match info.0.as_ref() {
+        "system" => reports::History::system(&id, &minutes, &ctx),
+        "region" => reports::History::region(&id, &minutes, &ctx),
+        "constellation" => reports::History::constellation(&id, &minutes, &ctx),
+        _=> format!("Unknown Area Type {} ", info.0)
+    };
+
+    HttpResponse::Ok()
+        .content_type("text/html; charset=UTF-8")
+        .header("X-Header", "zkb")
+        .body(body)
 }
 
 fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
     info!("/api/{}/{}", info.0, info.1);
     let body = match info.0.as_ref() {
         "constellation" => reports::Constellation::report(&info.1, &ctx),
+        "constellation_brief" => reports::Constellation::brief(&info.1, &ctx),
         "region" => reports::Region::report(&info.1, &ctx),
         "system" => reports::System::report(&info.1, &ctx),
         "system_brief" => reports::System::brief(&info.1, &ctx),
@@ -93,7 +104,7 @@ pub fn run(context: Context) {
             .route("/navigator/api/{type}/{id}", web::get().to(api))
             .route("/navigator/cmd/{cmd}", web::get().to(cmd))
             .route("/navigator/services/{type}/{id}", web::get().to(services))
-            .route("/navigator/history/{system}/{minutes}", web::get().to(history))
+            .route("/navigator/history/{area}/{id}/{minutes}", web::get().to(history))
     })
     .bind(address)
     .unwrap()

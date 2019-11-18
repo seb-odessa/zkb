@@ -18,7 +18,6 @@ pub struct Killmail {
     pub constellation_name: OptString,
     pub region_id: OptInteger,
     pub region_name: OptString,
-    // pub attackers: Vec<AttackerNamed>,
 }
 impl Killmail {
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
@@ -32,8 +31,6 @@ impl Killmail {
             constellation_name: killmail.constellation_name,
             region_id: killmail.region_id,
             region_name: killmail.region_name,
-            // victim: VictimNamed::load(conn, id)?,
-            // attackers: AttackerNamed::load(conn, id)?,
         })
     }
 
@@ -47,8 +44,8 @@ impl Killmail {
                     <a href="{root}/api/killmail/{id}">{id}</a>
                     <a href="https://zkillboard.com/kill/{id}/">zkb</a>
                     {timestamp}
-                    <a href="https://zkillboard.com/region/{region_id}/">{region_name}</a>/
-                    {constellation}/
+                    <a href="{root}/api/region/{region_id}">{region_name}</a>/
+                    <a href="{root}/api/constellation/{constellation_id}">{constellation_name}</a>/
                     <a href="{root}/api/system/{system_id}">{system}</a>
                     </div>
                 "##,
@@ -56,7 +53,8 @@ impl Killmail {
                 timestamp = killmail.killmail_time.to_string(),
                 region_id = killmail.region_id.unwrap_or_default(),
                 region_name = killmail.region_name.as_ref().unwrap_or(&empty),
-                constellation = killmail.constellation_name.as_ref().unwrap_or(&empty),
+                constellation_id = killmail.constellation_id.unwrap_or_default(),
+                constellation_name = killmail.constellation_name.as_ref().unwrap_or(&empty),
                 root = root,
                 system_id = killmail.system_id,
                 system = killmail.system_name.as_ref().unwrap_or(&empty),

@@ -36,6 +36,13 @@ pub enum Model{
 }
 
 #[derive(Debug, PartialEq)]
+pub enum Area{
+    System(i32),
+    Constellation(i32),
+    Region(i32),
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Category{
     Object(i32),
     Killmail(i32),
@@ -44,12 +51,13 @@ pub enum Category{
     System(i32),
     Stargate(i32),
     Constellation(i32),
-    History((i32, i32)),
+    History((Area, i32)),
     ObjectDesc((String, String)),
 }
 
 #[derive(Debug, PartialEq)]
 pub enum Report{
+    Fail,
     Killmail(models::killmail::KillmailNamed),
     Victim(models::victim::VictimNamed),
     Attakers(Vec<models::attacker::AttackerNamed>),

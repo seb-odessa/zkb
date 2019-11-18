@@ -135,11 +135,22 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                 }
                             }
                         },
-                        Category::History((system_id, minutes)) => {
-                            match models::killmail::KillmailNamed::load_history(&conn, &system_id, &minutes) {
-                                Ok(object) => {
-                                    info!("loaded {} minutes history for system {} queue length: {}", minutes, system_id, context.database.len());
-                                    context.responses.push(Message::Report((msg_id, Report::History(object))));
+                        Category::History((area, minutes)) => {
+                            let history = match area {
+                                Area::System(id) => {
+                                    models::killmail::KillmailNamed::load_system_history(&conn, &id, &minutes)
+                                },
+                                Area::Region(id) => {
+                                    models::killmail::KillmailNamed::load_region_history(&conn, &id, &minutes)
+                                },
+                                Area::Constellation(id) => {
+                                    models::killmail::KillmailNamed::load_constellation_history(&conn, &id, &minutes)
+                                },
+                            };
+                            match history {
+                                Ok(killmails) => {
+                                    info!("loaded {} history records for last {} minutes, queue length: {}", killmails.len(), minutes, context.database.len());
+                                    context.responses.push(Message::Report((msg_id, Report::History(killmails))));
                                 },
                                 Err(e) => {
                                     warn!("was not able to load history: {}", e);

@@ -8,7 +8,8 @@ pub mod region;
 pub mod stargate;
 pub mod constellation;
 
-use crate::services::Context;
+use crate::services::{Context, Message, Report};
+use crate::uuid::adapter::Simple;
 use std::fmt::Write;
 
 
@@ -22,6 +23,12 @@ pub use stargate::Stargate;
 pub use constellation::Constellation;
 
 pub const FAIL: &'static str = "Error occurred while trying to write in String";
+
+#[derive(Debug, PartialEq)]
+pub enum ReportType{
+    Full,
+    Brief,
+}
 
 pub fn root(context: &Context) -> String {
     format!("http://{}/navigator", &context.server)
@@ -128,4 +135,17 @@ pub fn find_id<S: Into<String>>(category: S, name: S, ctx: &Context) -> Option<i
     None
 }
 
+pub fn wait_for(msg_id: Simple, ctx: &Context) -> Report {
+    while let Some(msg) = ctx.responses.pop() {
+        if let Message::Report((id, content)) = msg {
+            if id == msg_id {
+                return content;
+            } else {
+                ctx.responses.push(Message::Report((id, content)));
+                // Need some sleep here?
+            }
+        }
+    }
+    return Report::Fail;
+}
 

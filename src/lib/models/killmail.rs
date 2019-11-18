@@ -46,13 +46,35 @@ impl KillmailNamed {
         named_killmails::table.filter(named_killmails::killmail_id.eq(id)).first(conn)
     }
 
-    pub fn load_history(conn: &Connection, system_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
+    pub fn load_system_history(conn: &Connection, system_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
         use diesel::prelude::*;
         let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
         info!("Load killmails after {}", &start);
         named_killmails::table
             .filter(named_killmails::killmail_time.gt(start))
             .filter(named_killmails::system_id.eq(system_id))
+            .order(named_killmails::killmail_time.desc())
+            .load(conn)
+    }
+
+    pub fn load_constellation_history(conn: &Connection, constellation_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails after {}", &start);
+        named_killmails::table
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(named_killmails::constellation_id.eq(constellation_id))
+            .order(named_killmails::killmail_time.desc())
+            .load(conn)
+    }
+
+    pub fn load_region_history(conn: &Connection, region_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails after {}", &start);
+        named_killmails::table
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(named_killmails::region_id.eq(region_id))
             .order(named_killmails::killmail_time.desc())
             .load(conn)
     }

@@ -7,12 +7,6 @@ use chrono::Utc;
 use std::fmt::Write;
 
 #[derive(Debug, PartialEq)]
-enum ReportType{
-    Full,
-    Brief,
-}
-
-#[derive(Debug, PartialEq)]
 pub struct System;
 impl System {
 
@@ -54,7 +48,7 @@ impl System {
         if let Some(object) = api::system::System::new(id) {
             Self::write(&mut output, &object, &root(ctx));
             if full_report == ReportType::Full {
-                lazy(&mut output, format!("api/constellation/{}", object.constellation_id), &ctx);
+                lazy(&mut output, format!("api/constellation_brief/{}", object.constellation_id), &ctx);
                 lazy(&mut output, format!("api/region/{}", object.get_region_id().unwrap_or_default()), &ctx);
                 if let Some(ref gates) = &object.stargates {
                     for gate_id in gates {
@@ -66,7 +60,7 @@ impl System {
                 jovian_buttons(&mut output, &object.system_id, &object.name);
                 let now = Utc::now().naive_utc().time().format("%H:%M:%S").to_string();
                 div(&mut output, format!("Kill history 60 minutes since {} ", &now));
-                lazy(&mut output, format!("history/{}/{}", id, 60), &ctx);
+                lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
             }
         } else {
             div(&mut output, format!("Can't query System({}) from CCP API", id));
