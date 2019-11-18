@@ -12,7 +12,7 @@ impl System {
 
     pub fn write(output: &mut dyn Write, system: &api::system::System, root: &String) {
         let url = format!("{}/api/system/{}", root, system.system_id);
-        let name = format!("{} ({:.1})", system.name, system.security_status);
+        let name = format!("{} ({:.2})", system.name, system.security_status);
         std::fmt::write(
             output,
             format_args!(

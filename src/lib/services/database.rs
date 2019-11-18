@@ -3,6 +3,7 @@ use crate::services::*;
 use crate::models;
 use crate::services::{AppContext, Command, Message, Category, Report};
 use models::Connection;
+use std::collections::HashSet;
 
 fn enqueue_check(queue: &Queue, id: &i32) {
     queue.push(Message::Check(Category::Object(*id)));
@@ -46,7 +47,7 @@ fn handle_killmail(queue: &Queue, killmail: &api::Killmail) {
 
 pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
     info!("Started");
-
+    let mut known = HashSet::new();
     loop {
         if let Some(Command::Quit) = context.commands.pop() {
             context.commands.push(Command::Quit);
@@ -71,28 +72,28 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                             if let Err(err) = models::ObjectsApi::save(&conn, &object) {
                                 warn!("was not able to save object: {}", err);
                             } else {
-                                info!("Object({}) - '{}' saved, queue length: {}", object.id, &object.name, context.database.len());
+                                info!("Object {} - '{}' saved, queue length: {}", object.id, &object.name, context.database.len());
                             }
                         },
                         Model::System(object) => {
                             if let Err(err) = models::system::System::save(&conn, &object) {
                                 warn!("was not able to save system: {}", err);
                             } else {
-                                info!("System({}) saved, queue length: {}", object.system_id, context.database.len());
+                                info!("System {} - '{}' saved, queue length: {}", object.system_id, &object.name, context.database.len());
                             }
                         },
                         Model::Constellation(object) => {
                             if let Err(err) = models::constellation::Constellation::save(&conn, &object) {
                                 warn!("was not able to save constellation: {}", err);
                             } else {
-                                info!("Constellation({}) saved, queue length: {}", object.constellation_id, context.database.len());
+                                info!("Constellation {} - '{}' saved, queue length: {}", object.constellation_id, &object.name, context.database.len());
                             }
                         },
                         Model::Stargate(object) => {
                             if let Err(err) = models::stargate::Stargate::save(&conn, &object) {
                                 warn!("was not able to save stargate: {}", err);
                             } else {
-                                info!("Stargate({}) saved, queue length: {}", object.stargate_id, context.database.len());
+                                info!("Stargate {} - '{}' saved, queue length: {}", object.stargate_id, &object.name, context.database.len());
                             }
                         },
                     };
@@ -195,24 +196,28 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                 },
                 Message::Check(category) => {
                     match category {
-                        Category::Object(id) =>{
-                            if !models::ObjectsApi::exist(&conn, &id) {
+                        Category::Object(id) => {
+                            if !known.contains(&id) && !models::ObjectsApi::exist(&conn, &id) {
                                 context.resolver.push(Message::Receive(Api::Object(id)));
+                                known.insert(id);
                             }
                         },
                         Category::System(id) => {
-                            if !models::system::System::exist(&conn, &id) {
+                            if !known.contains(&id) && !models::system::System::exist(&conn, &id) {
                                 context.resolver.push(Message::Receive(Api::System(id)));
+                                known.insert(id);
                             }
                         }
                         Category::Constellation(id) => {
-                            if !models::constellation::Constellation::exist(&conn, &id) {
+                            if !known.contains(&id) && !models::constellation::Constellation::exist(&conn, &id) {
                                 context.resolver.push(Message::Receive(Api::Constellation(id)));
+                                known.insert(id);
                             }
                         },
                         Category::Stargate(id) => {
-                            if !models::stargate::Stargate::exist(&conn, &id) {
+                            if !known.contains(&id) && !models::stargate::Stargate::exist(&conn, &id) {
                                 context.resolver.push(Message::Receive(Api::Stargate(id)));
+                                known.insert(id);
                             }
                         },
                         model => {
