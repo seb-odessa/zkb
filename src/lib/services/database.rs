@@ -71,7 +71,7 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                             if let Err(err) = models::ObjectsApi::save(&conn, &object) {
                                 warn!("was not able to save object: {}", err);
                             } else {
-                                info!("Object({}) saved, queue length: {}", object.id, context.database.len());
+                                info!("Object({}) - '{}' saved, queue length: {}", object.id, &object.name, context.database.len());
                             }
                         },
                         Model::System(object) => {

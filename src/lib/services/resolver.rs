@@ -32,6 +32,7 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                                         context.database.push(Message::Check(Category::Stargate(*id)));
                                     }
                                 }
+                                // Enqueue system name query
                                 context.database.push(Message::Check(Category::Object(object.system_id)));
                                 context.database.push(Message::Save(Model::System(object)));
                             } else {
