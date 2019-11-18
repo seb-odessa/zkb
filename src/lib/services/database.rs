@@ -48,6 +48,7 @@ fn handle_killmail(queue: &Queue, killmail: &api::Killmail) {
 pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
     info!("Started");
     let mut known = HashSet::new();
+    let mut objects = HashSet::new();
     loop {
         if let Some(Command::Quit) = context.commands.pop() {
             context.commands.push(Command::Quit);
@@ -197,8 +198,9 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                 Message::Check(category) => {
                     match category {
                         Category::Object(id) => {
-                            if !models::ObjectsApi::exist(&conn, &id) {
+                            if objects.contains(&id) && !models::ObjectsApi::exist(&conn, &id) {
                                 context.resolver.push(Message::Receive(Api::Object(id)));
+                                objects.insert(id);
                             }
                         },
                         Category::System(id) => {

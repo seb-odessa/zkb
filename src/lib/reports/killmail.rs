@@ -1,7 +1,7 @@
 use crate::models::*;
 use crate::services::Context;
 use crate::services::server::root;
-use crate::reports::{FAIL, load_later};
+use crate::reports::{FAIL, System};
 
 use killmail::KillmailNamed;
 
@@ -48,7 +48,7 @@ impl Killmail {
                     <a href="{root}/api/region/{region_id}">{region_name}</a> :
                     <a href="{root}/api/constellation/{constellation_id}">{constellation_name}</a> :
                     <a href="{root}/api/system/{system_id}">{system}</a>
-                    <span id={status_id}>*.*</span>
+                    <span>{status}</span>
                     </div>
                 "##,
                 id = killmail.killmail_id,
@@ -60,12 +60,9 @@ impl Killmail {
                 root = root,
                 system_id = killmail.system_id,
                 system = killmail.system_name.as_ref().unwrap_or(&empty),
-                status_id = status_id,
+                status = System::security_status(killmail.system_id),
             )
         ).expect(FAIL);
-        let status_api = format!("services/system_security_status/{}", killmail.system_id);
-        load_later(output, &status_id, status_api, root);
-
     }
 
     pub fn brief(arg: &String, ctx: &Context) -> String {
