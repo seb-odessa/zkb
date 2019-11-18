@@ -1,6 +1,7 @@
 use crate::api;
-use crate::services::Context;
+use crate::services::{Context, Area, Category, Report};
 use crate::reports::*;
+use crate::reports;
 use chrono::Utc;
 
 #[derive(Debug, PartialEq)]
@@ -20,18 +21,30 @@ impl Constellation {
         ).expect(FAIL);
     }
 
-    fn neighbors(output: &mut dyn Write, constellation: &api::constellation::Constellation, ctx: &Context) {
-        // todo implement query from DB
-        for system_id in &constellation.systems {
-            if let Some(system) = api::system::System::new(system_id)
-            {
-                if system.constellation_id != constellation.constellation_id {
-                    lazy(output, format!("api/constellation_brief/{}", system.constellation_id), &ctx);
-                }
-            } else {
-                div(output, format!("Can't query System({}) from CCP API", system_id));
+    fn neighbors(output: &mut dyn Write, id: &i32, ctx: &Context) {
+        let root = root(&ctx);
+        let msg_id = crate::create_id().to_simple();
+        let empty = String::new();
+        ctx.database.push(Message::Find((msg_id, Category::Neighbors(Area::Constellation(*id)))));
+        if let Report::ConstellationNeighbors(neighbors) = reports::wait_for(msg_id, &ctx) {
+            for constellation in &neighbors {
+                let url = format!("{}/api/constellation/{}", root, constellation.neighbor_id);
+                let name = constellation.neighbor_name.as_ref().unwrap_or(&empty);
+                div(output, format!("{}", href(&url, name)));
             }
         }
+
+        // // todo implement query from DB
+        // for system_id in &constellation.systems {
+        //     if let Some(system) = api::system::System::new(system_id)
+        //     {
+        //         if system.constellation_id != constellation.constellation_id {
+        //             lazy(output, format!("api/constellation_brief/{}", system.constellation_id), &ctx);
+        //         }
+        //     } else {
+        //         div(output, format!("Can't query System({}) from CCP API", system_id));
+        //     }
+        // }
     }
 
     pub fn brief(arg: &String, ctx: &Context) -> String {
@@ -58,7 +71,7 @@ impl Constellation {
             Self::write(&mut output, &object, &root(ctx));
             if report_type == ReportType::Full {
                 lazy(&mut output, format!("api/region/{}", object.region_id), &ctx);
-                Self::neighbors(&mut output, &object, &ctx);
+                Self::neighbors(&mut output, &object.constellation_id, &ctx);
                 let now = Utc::now().naive_utc().time().format("%H:%M:%S").to_string();
                 div(&mut output, format!("Kill history 60 minutes since {} ", &now));
                 lazy(&mut output, format!("history/constellation/{}/{}", id, 60), &ctx);
