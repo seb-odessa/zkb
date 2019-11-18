@@ -45,7 +45,7 @@ impl System {
 
     pub fn security_status(id: &i32) -> String {
         if let Some(system) = api::system::System::new(id) {
-            format!("{:.1}", system.security_status)
+            format!("{:.2}", system.security_status)
         } else {
             format!("Can't query System({}) from CCP API", id)
         }

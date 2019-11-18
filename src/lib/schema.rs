@@ -165,6 +165,15 @@ table! {
     }
 }
 
+table! {
+    neighbors_constellations (own_id, neighbor_id) {
+        own_id -> Integer,
+        own_name -> Nullable<Text>,
+		neighbor_id -> Integer,
+		neighbor_name -> Nullable<Text>,
+    }
+}
+
 joinable!(attackers -> killmails (killmail_id));
 joinable!(items -> killmails (killmail_id));
 joinable!(objects -> categories (category_id));

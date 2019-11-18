@@ -1,7 +1,8 @@
 use crate::models::*;
 use crate::services::Context;
 use crate::services::server::root;
-use crate::reports::{FAIL, System};
+use crate::reports::{div, System, FAIL};
+use crate::reports;
 
 use killmail::KillmailNamed;
 
@@ -36,7 +37,6 @@ impl Killmail {
 
     pub fn write(output: &mut dyn Write, killmail: &killmail::KillmailNamed, root: &String) {
         let empty = String::new();
-        let status_id: String = crate::create_id().to_string();
         write(
             output,
             format_args!(
@@ -60,7 +60,7 @@ impl Killmail {
                 root = root,
                 system_id = killmail.system_id,
                 system = killmail.system_name.as_ref().unwrap_or(&empty),
-                status = System::security_status(killmail.system_id),
+                status = format!("({})", System::security_status(&killmail.system_id)),
             )
         ).expect(FAIL);
     }
@@ -78,27 +78,13 @@ impl Killmail {
 
         let mut output = String::new();
         let root = root(&ctx);
+
         let msg_id = crate::create_id().to_simple();
         ctx.database.push(Message::Find((msg_id, Category::Killmail(*id))));
-        while let Some(msg) = ctx.responses.pop() {
-            if let Message::Report((report_id, ref report)) = msg {
-                if report_id == msg_id {
-                    match report {
-                        Report::Killmail(killmail) => {
-                            Self::write(&mut output, &killmail, &root);
-                        },
-                        Report::NotFoundId(killmail_id) => {
-                            write(&mut output, format_args!("<div>Killmail {} was not found</div>", killmail_id)).expect(FAIL);
-                        }
-                        report => {
-                            warn!("Unexpected report {:?}", report);
-                        }
-                    }
-                    break;
-                } else {
-                   ctx.responses.push(msg);
-                }
-            }
+        match reports::wait_for(msg_id, &ctx) {
+            Report::Killmail(killmail) => Self::write(&mut output, &killmail, &root),
+            Report::NotFoundId(id) => div(&mut output, format!("<div>Killmail {} was not found</div>", id)),
+            report => warn!("Unexpected report {:?}", report)
         }
         return output;
     }

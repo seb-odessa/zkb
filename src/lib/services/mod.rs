@@ -53,6 +53,7 @@ pub enum Category{
     Constellation(i32),
     History((Area, i32)),
     ObjectDesc((String, String)),
+    Neighbors(Area),
 }
 
 #[derive(Debug, PartialEq)]
@@ -62,6 +63,7 @@ pub enum Report{
     Victim(models::victim::VictimNamed),
     Attakers(Vec<models::attacker::AttackerNamed>),
     History(Vec<models::killmail::KillmailNamed>),
+    ConstellationNeighbors(Vec<models::constellation::ConstellationNeighbors>),
     Id(i32),
     NotFoundId(i32),
     NotFoundName(String),

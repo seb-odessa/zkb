@@ -1,10 +1,9 @@
 use crate::models::*;
 use crate::services::Context;
 use crate::services::server::root;
-use crate::reports::FAIL;
+use crate::reports;
 
 use std::fmt::Write;
-use std::fmt::write;
 
 #[derive(Debug, PartialEq)]
 pub struct Victim;
@@ -17,7 +16,7 @@ impl Victim {
                 r#"<div>{name}</div>"#,
                 name = attacker.character_name.as_ref().unwrap_or(&String::new())
             )
-        ).expect(FAIL);
+        ).expect(reports::FAIL);
     }
 
     pub fn brief(arg: &String, ctx: &Context) -> String {
@@ -33,30 +32,19 @@ impl Victim {
 
         let mut output = String::new();
         let root = root(&ctx);
+
         let msg_id = crate::create_id().to_simple();
         ctx.database.push(Message::Find((msg_id, Category::Attakers(*id))));
-        while let Some(msg) = ctx.responses.pop() {
-            if let Message::Report((report_id, ref report)) = msg {
-                if report_id == msg_id {
-                    match report {
-                        Report::Attakers(attackers) => {
-                            for attacker in attackers {
-                                Self::write(&mut output, &attacker, &root);
-                            }
-                        },
-                        Report::NotFoundId(id) => {
-                            write(&mut output, format_args!("<div>Killmail {} was not found</div>", id)).expect(FAIL);
-                        }
-                        report => {
-                            warn!("Unexpected report {:?}", report);
-                        }
+        match reports::wait_for(msg_id, &ctx) {
+            Report::Attakers(attackers) => {
+                for attacker in attackers {
+                    Self::write(&mut output, &attacker, &root);
                     }
-                    break;
-                } else {
-                   ctx.responses.push(msg);
-                }
-            }
+                },
+            Report::NotFoundId(id) => reports::div(&mut output, format!("Killmail {} was not found", id)),
+            report => warn!("Unexpected report {:?}", report)
         }
+
         return output;
     }
 }

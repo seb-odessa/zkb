@@ -1,7 +1,8 @@
 use std::convert::From;
 use crate::api;
 use crate::schema::constellations;
-use super::{Connection, QueryResult, Integer};
+use crate::schema::neighbors_constellations;
+use super::{Connection, QueryResult, Integer, OptString};
 
 #[derive(Insertable)]
 #[table_name = "constellations"]
@@ -32,5 +33,20 @@ impl Constellation {
         use diesel::prelude::*;
         use crate::schema::constellations::dsl as table;
         table::constellations.find(id).select(table::constellation_id).first(conn) == Ok(*id)
+    }
+}
+
+#[derive(Queryable, Associations, Debug, PartialEq)]
+#[table_name = "neighbors_constellations"]
+pub struct ConstellationNeighbors {
+    pub own_id: Integer,
+    pub own_name: OptString,
+	pub neighbor_id: Integer,
+	pub neighbor_name: OptString,
+}
+impl ConstellationNeighbors {
+    pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+        neighbors_constellations::table.filter(neighbors_constellations::own_id.eq(id)).load(conn)
     }
 }

@@ -135,21 +135,14 @@ pub fn link_killmail(id: &i32) -> String {
 
 pub fn find_id<S: Into<String>>(category: S, name: S, ctx: &Context) -> Option<i32> {
     use crate::services::*;
-    let id = crate::create_id().to_simple();
+    let msg_id = crate::create_id().to_simple();
     let description = (category.into(), name.into());
-    ctx.database.push(Message::Find((id, Category::ObjectDesc(description))));
-    while let Some(msg) = ctx.responses.pop() {
-        if let Message::Report((msg_id, ref report)) = msg {
-            if msg_id == id {
-                if let Report::Id(obj_id) = report {
-                    return Some(*obj_id);
-                }
-                break;
-            }
-        }
-        ctx.responses.push(msg);
+    ctx.database.push(Message::Find((msg_id, Category::ObjectDesc(description))));
+    if let Report::Id(id) = wait_for(msg_id, &ctx) {
+        Some(id)
+    } else {
+        None
     }
-    None
 }
 
 pub fn wait_for(msg_id: Simple, ctx: &Context) -> Report {

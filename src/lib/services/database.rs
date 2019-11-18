@@ -190,6 +190,32 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                 }
                             }
                         },
+                        Category::Neighbors(area) => {
+                            match area {
+                                Area::System(_id) => {
+                                    let response = String::from("was not implemented for system");
+                                    warn!("{}", response);
+                                    context.responses.push(Message::Report((msg_id, Report::QueryFailed(response))));
+                                },
+                                Area::Region(_id) => {
+                                    let response = String::from("was not implemented for region");
+                                    warn!("{}", response);
+                                    context.responses.push(Message::Report((msg_id, Report::QueryFailed(response))));
+                                },
+                                Area::Constellation(id) => {
+                                    match models::constellation::ConstellationNeighbors::load(&conn, &id) {
+                                        Ok(neighbors) => {
+                                            info!("loaded {} neighbors, queue length: {}", neighbors.len(), context.database.len());
+                                            context.responses.push(Message::Report((msg_id, Report::ConstellationNeighbors(neighbors))));
+                                        },
+                                        Err(e) => {
+                                            warn!("was not able to load history: {}", e);
+                                            context.responses.push(Message::Report((msg_id, Report::QueryFailed(e.to_string()))));
+                                        }
+                                    }
+                                },
+                            };
+                        },
                         category => {
                             warn!("Unexpected category for Find {:?}", category);
                         }
