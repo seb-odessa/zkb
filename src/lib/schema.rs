@@ -174,6 +174,15 @@ table! {
     }
 }
 
+table! {
+    named_constellations (constellation_id) {
+        constellation_id -> Integer,
+        constellation_name -> Nullable<Text>,
+		region_id -> Integer,
+		region_name -> Nullable<Text>,
+    }
+}
+
 joinable!(attackers -> killmails (killmail_id));
 joinable!(items -> killmails (killmail_id));
 joinable!(objects -> categories (category_id));
@@ -193,4 +202,6 @@ allow_tables_to_appear_in_same_query!(
     named_victims,
     named_attackers,
     named_killmails,
+    named_constellations,
+    neighbors_constellations,
 );

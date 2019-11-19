@@ -58,7 +58,7 @@ impl Constellation {
         if let Some(object) = api::constellation::Constellation::new(id) {
             Self::write(&mut output, &object, &root(ctx));
             if report_type == ReportType::Full {
-                lazy(&mut output, format!("api/region/{}", object.region_id), &ctx);
+                lazy(&mut output, format!("api/region_brief/{}", object.region_id), &ctx);
                 Self::neighbors(&mut output, &object.constellation_id, &ctx);
                 let now = Utc::now().naive_utc().time().format("%H:%M:%S").to_string();
                 div(&mut output, format!("Kill history 60 minutes since {} ", &now));

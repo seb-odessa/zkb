@@ -1,6 +1,7 @@
 use std::convert::From;
 use crate::api;
 use crate::schema::constellations;
+use crate::schema::named_constellations;
 use crate::schema::neighbors_constellations;
 use super::{Connection, QueryResult, Integer, OptString};
 
@@ -47,6 +48,31 @@ pub struct ConstellationNeighbors {
 impl ConstellationNeighbors {
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
         use diesel::prelude::*;
-        neighbors_constellations::table.filter(neighbors_constellations::own_id.eq(id)).load(conn)
+        neighbors_constellations::table
+            .filter(neighbors_constellations::own_id.eq(id))
+            .order_by(neighbors_constellations::neighbor_name)
+            .load(conn)
+    }
+}
+
+#[derive(Queryable, Associations, Debug, PartialEq)]
+#[table_name = "named_constellations"]
+pub struct ConstellationNamed {
+    pub constellation_id: Integer,
+    pub constellation_name: OptString,
+	pub region_id: Integer,
+	pub region_name: OptString,
+}
+impl ConstellationNamed {
+    pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
+        use diesel::prelude::*;
+        named_constellations::table.find(id).first(conn)
+    }
+    pub fn in_region(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+        named_constellations::table
+            .filter(named_constellations::region_id.eq(id))
+            .order_by(named_constellations::constellation_name)
+            .load(conn)
     }
 }

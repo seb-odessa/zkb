@@ -64,6 +64,7 @@ fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
         "constellation" => reports::Constellation::report(&info.1, &ctx),
         "constellation_brief" => reports::Constellation::brief(&info.1, &ctx),
         "region" => reports::Region::report(&info.1, &ctx),
+        "region_brief" => reports::Region::brief(&info.1, &ctx),
         "system" => reports::System::report(&info.1, &ctx),
         "system_brief" => reports::System::brief(&info.1, &ctx),
         "stargate" => reports::Stargate::report(&info.1, &ctx),

@@ -1,25 +1,68 @@
 use crate::api;
-use crate::services::Context;
+use crate::services::{Context, Area, Category, Report};
 use crate::reports::*;
+use crate::reports;
+use chrono::Utc;
 
 #[derive(Debug, PartialEq)]
 pub struct Region;
 impl Region {
 
-    pub fn report(arg: &String, ctx: &Context) -> String {
-        if let Ok(ref id) = arg.parse::<i32>() {
-            Self::report_by_id(id, ctx)
-        } else if let Some(ref id) = find_id("region", arg, ctx) {
-            Self::report_by_id(id, ctx)
-        } else {
-            format!("Region {} was not found", arg)
+    fn write(output: &mut dyn Write, region: &api::region::Region, root: &String) {
+        let url = format!("{}/api/region/{}", root, region.region_id);
+        std::fmt::write(
+            output,
+            format_args!(
+                r#"<div id="{id}" data-name="{name}">Region: {url}</div>"#,
+                id = region.region_id,
+                url = href(&url, &region.name),
+                name = region.name
+            )
+        ).expect(FAIL);
+    }
+
+    fn constellations(output: &mut dyn Write, id: &i32, ctx: &Context) {
+        let root = root(&ctx);
+        let msg_id = crate::create_id().to_simple();
+        let empty = String::new();
+        ctx.database.push(Message::Find((msg_id, Category::Neighbors(Area::Region(*id)))));
+        if let Report::Constellations(constellations) = reports::wait_for(msg_id, &ctx) {
+            for constellation in &constellations {
+                let url = format!("{}/api/constellation/{}", root, constellation.constellation_id);
+                let name = constellation.constellation_name.as_ref().unwrap_or(&empty);
+                div(output, format!("{}", href(&url, name)));
+            }
         }
     }
 
-    fn report_by_id(id: &i32, _ctx: &Context) -> String {
+    pub fn brief(arg: &String, ctx: &Context) -> String {
+        Self::perform_report(arg, ctx, ReportType::Brief)
+    }
+
+    pub fn report(arg: &String, ctx: &Context) -> String {
+        Self::perform_report(arg, ctx, ReportType::Full)
+    }
+
+    fn perform_report(arg: &String, ctx: &Context, report_type: ReportType) -> String {
+        if let Ok(ref id) = arg.parse::<i32>() {
+            Self::report_by_id(id, ctx, report_type)
+        } else if let Some(ref id) = find_id("region", arg, ctx) {
+            Self::report_by_id(id, ctx, report_type)
+        } else {
+            format!("<div>Region {} was not found</div>", arg)
+        }
+    }
+
+    fn report_by_id(id: &i32, ctx: &Context, report_type: ReportType) -> String {
         let mut output = String::new();
         if let Some(object) = api::region::Region::new(id) {
-            div(&mut output, format!("Region: {}", href(object.zkb(), object.name.clone())));
+            Self::write(&mut output, &object, &root(ctx));
+            if report_type == ReportType::Full {
+                Self::constellations(&mut output, &object.region_id, ctx);
+                let now = Utc::now().naive_utc().time().format("%H:%M:%S").to_string();
+                div(&mut output, format!("Kill history 60 minutes since {} ", &now));
+                lazy(&mut output, format!("history/region/{}/{}", id, 60), &ctx);
+            }
         } else {
             div(&mut output, format!("Can't query Region({}) from CCP API", id));
         }

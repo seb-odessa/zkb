@@ -186,8 +186,19 @@ JOIN systems own ON own.system_id = stargates.system_id
 JOIN objects own_object ON own.constellation_id = own_object.object_id
 JOIN systems neighbors ON neighbors.system_id = stargates.dst_system_id
 JOIN objects neighbors_object ON neighbors.constellation_id = neighbors_object.object_id
-WHERE neighbors.constellation_id != own.constellation_id
-ORDER BY neighbor_name;
+WHERE neighbors.constellation_id != own.constellation_id;
+
+DROP VIEW IF EXISTS named_constellations;
+CREATE VIEW IF NOT EXISTS named_constellations AS
+SELECT
+	constellation_id,
+	constellations_names.object_name AS constellation_name,
+	constellations.region_id AS region_id,
+	regions_names.object_name AS region_name
+FROM constellations
+JOIN objects constellations_names ON constellations.constellation_id = constellations_names.object_id
+JOIN objects regions_names ON constellations.region_id = regions_names.object_id;
+
 
 CREATE INDEX IF NOT EXISTS k_time_idx        ON killmails(killmail_time);
 CREATE INDEX IF NOT EXISTS k_system_idx      ON killmails(solar_system_id);

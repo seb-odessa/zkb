@@ -57,7 +57,7 @@ impl System {
             Self::write(&mut output, &object, &root(ctx));
             if full_report == ReportType::Full {
                 lazy(&mut output, format!("api/constellation_brief/{}", object.constellation_id), &ctx);
-                lazy(&mut output, format!("api/region/{}", object.get_region_id().unwrap_or_default()), &ctx);
+                lazy(&mut output, format!("api/region_brief/{}", object.get_region_id().unwrap_or_default()), &ctx);
                 if let Some(ref gates) = &object.stargates {
                     for gate_id in gates {
                         if let Some(object) = api::stargate::Stargate::new(gate_id) {
