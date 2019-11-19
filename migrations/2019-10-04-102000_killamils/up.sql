@@ -176,7 +176,7 @@ FROM items LEFT JOIN objects ON (item_type_id = object_id);
 
 DROP VIEW IF EXISTS neighbors_constellations;
 CREATE VIEW IF NOT EXISTS neighbors_constellations AS
-SELECT
+SELECT DISTINCT
 	own.constellation_id AS own_id,
 	own_object.object_name AS own_name,
 	neighbors.constellation_id AS neighbor_id,
@@ -186,7 +186,8 @@ JOIN systems own ON own.system_id = stargates.system_id
 JOIN objects own_object ON own.constellation_id = own_object.object_id
 JOIN systems neighbors ON neighbors.system_id = stargates.dst_system_id
 JOIN objects neighbors_object ON neighbors.constellation_id = neighbors_object.object_id
-WHERE neighbors.constellation_id != own.constellation_id;
+WHERE neighbors.constellation_id != own.constellation_id
+ORDER BY neighbor_name;
 
 CREATE INDEX IF NOT EXISTS k_time_idx        ON killmails(killmail_time);
 CREATE INDEX IF NOT EXISTS k_system_idx      ON killmails(solar_system_id);

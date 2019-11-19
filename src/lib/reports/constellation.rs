@@ -33,18 +33,6 @@ impl Constellation {
                 div(output, format!("{}", href(&url, name)));
             }
         }
-
-        // // todo implement query from DB
-        // for system_id in &constellation.systems {
-        //     if let Some(system) = api::system::System::new(system_id)
-        //     {
-        //         if system.constellation_id != constellation.constellation_id {
-        //             lazy(output, format!("api/constellation_brief/{}", system.constellation_id), &ctx);
-        //         }
-        //     } else {
-        //         div(output, format!("Can't query System({}) from CCP API", system_id));
-        //     }
-        // }
     }
 
     pub fn brief(arg: &String, ctx: &Context) -> String {
