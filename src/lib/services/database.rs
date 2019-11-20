@@ -258,8 +258,8 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                             }
                         },
                         Category::Stargate(id) => {
-                            // if !known.contains(&id)
-                            && !models::stargate::Stargate::exist(&conn, &id)
+                            if !known.contains(&id)
+                            // && !models::stargate::Stargate::exist(&conn, &id)
                             {
                                 context.resolver.push(Message::Receive(Api::Stargate(id)));
                                 known.insert(id);
