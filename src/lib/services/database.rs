@@ -244,7 +244,7 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         },
                         Category::System(id) => {
                             if !known.contains(&id)
-                             && !models::system::System::exist(&conn, &id)
+                            //  && !models::system::System::exist(&conn, &id)
                             {
                                 context.resolver.push(Message::Receive(Api::System(id)));
                                 known.insert(id);
@@ -258,7 +258,7 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                             }
                         },
                         Category::Stargate(id) => {
-                            if !known.contains(&id)
+                            // if !known.contains(&id)
                             && !models::stargate::Stargate::exist(&conn, &id)
                             {
                                 context.resolver.push(Message::Receive(Api::Stargate(id)));
