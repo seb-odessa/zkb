@@ -174,20 +174,6 @@ SELECT
 	flag
 FROM items LEFT JOIN objects ON (item_type_id = object_id);
 
-DROP VIEW IF EXISTS neighbors_constellations;
-CREATE VIEW IF NOT EXISTS neighbors_constellations AS
-SELECT DISTINCT
-	own.constellation_id AS own_id,
-	own_object.object_name AS own_name,
-	neighbors.constellation_id AS neighbor_id,
-	neighbors_object.object_name AS neighbor_name
-FROM stargates
-JOIN systems own ON own.system_id = stargates.system_id
-JOIN objects own_object ON own.constellation_id = own_object.object_id
-JOIN systems neighbors ON neighbors.system_id = stargates.dst_system_id
-JOIN objects neighbors_object ON neighbors.constellation_id = neighbors_object.object_id
-WHERE neighbors.constellation_id != own.constellation_id;
-
 DROP VIEW IF EXISTS named_constellations;
 CREATE VIEW IF NOT EXISTS named_constellations AS
 SELECT
@@ -199,13 +185,44 @@ FROM constellations
 JOIN objects constellations_names ON constellations.constellation_id = constellations_names.object_id
 JOIN objects regions_names ON constellations.region_id = regions_names.object_id;
 
+DROP VIEW IF EXISTS kills_10;
+CREATE VIEW IF NOT EXISTS kills_10 AS
+SELECT
+	solar_system_id AS system_id,
+	count(killmail_id) AS kills
+FROM killmails
+WHERE killmails.killmail_time >= Datetime('now',  "-10 minutes")
+GROUP BY solar_system_id;
+
+DROP VIEW IF EXISTS kills_60;
+CREATE VIEW IF NOT EXISTS kills_60 AS
+SELECT
+	solar_system_id AS system_id,
+	count(killmail_id) AS kills
+FROM killmails
+WHERE killmails.killmail_time >= Datetime('now', "-60 minutes")
+GROUP BY solar_system_id;
+
+DROP VIEW IF EXISTS kills_360;
+CREATE VIEW IF NOT EXISTS kills_360 AS
+SELECT
+	solar_system_id AS system_id,
+	count(killmail_id) AS kills
+FROM killmails
+WHERE killmails.killmail_time >= Datetime('now', "-360 minutes")
+GROUP BY solar_system_id;
+
+
 DROP VIEW IF EXISTS neighbors_regions;
 CREATE VIEW IF NOT EXISTS neighbors_regions AS
 SELECT DISTINCT
 	own_c.region_id AS own_id,
 	own_object.object_name AS own_name,
 	neighbors_c.region_id AS neighbor_id,
-	neighbors_object.object_name AS neighbor_name
+	neighbors_object.object_name AS neighbor_name,
+	sum(ifnull(kills_10.kills, 0)) AS ten_minutes,
+	sum(ifnull(kills_60.kills, 0)) AS one_hour,
+	sum(ifnull(kills_360.kills, 0)) AS six_hours
 FROM stargates
 JOIN systems own ON own.system_id = stargates.system_id
 JOIN constellations own_c ON own.constellation_id = own_c.constellation_id
@@ -213,7 +230,53 @@ JOIN objects own_object ON own_c.region_id = own_object.object_id
 JOIN systems neighbors ON neighbors.system_id = stargates.dst_system_id
 JOIN constellations neighbors_c ON neighbors.constellation_id = neighbors_c.constellation_id
 JOIN objects neighbors_object ON neighbors_c.region_id = neighbors_object.object_id
-WHERE neighbors_c.region_id != own_c.region_id;
+LEFT JOIN kills_10 ON neighbors.system_id = kills_10.system_id
+LEFT JOIN kills_60 ON neighbors.system_id = kills_60.system_id
+LEFT JOIN kills_360 ON neighbors.system_id = kills_360.system_id
+WHERE neighbors_c.region_id != own_c.region_id
+GROUP BY own_id, own_name, neighbor_id, neighbor_name;
+
+DROP VIEW IF EXISTS neighbors_constellations;
+CREATE VIEW IF NOT EXISTS neighbors_constellations AS
+SELECT DISTINCT
+	own.constellation_id AS own_id,
+	own_object.object_name AS own_name,
+	neighbors.constellation_id AS neighbor_id,
+	neighbors_object.object_name AS neighbor_name,
+	sum(ifnull(kills_10.kills, 0)) AS ten_minutes,
+	sum(ifnull(kills_60.kills, 0)) AS one_hour,
+	sum(ifnull(kills_360.kills, 0)) AS six_hours
+FROM stargates
+JOIN systems own ON own.system_id = stargates.system_id
+JOIN objects own_object ON own.constellation_id = own_object.object_id
+JOIN systems neighbors ON neighbors.system_id = stargates.dst_system_id
+JOIN objects neighbors_object ON neighbors.constellation_id = neighbors_object.object_id
+LEFT JOIN kills_10 ON neighbors.system_id = kills_10.system_id
+LEFT JOIN kills_60 ON neighbors.system_id = kills_60.system_id
+LEFT JOIN kills_360 ON neighbors.system_id = kills_360.system_id
+WHERE neighbors.constellation_id != own.constellation_id
+GROUP BY own_id, own_name, neighbor_id, neighbor_name;
+
+DROP VIEW IF EXISTS neighbors_systems;
+CREATE VIEW IF NOT EXISTS neighbors_systems AS
+SELECT DISTINCT
+	own.system_id AS own_id,
+	own_object.object_name AS own_name,
+	neighbors.system_id AS neighbor_id,
+	neighbors_object.object_name AS neighbor_name,
+	ifnull(kills_10.kills, 0) as ten_minutes,
+	ifnull(kills_60.kills, 0) as one_hour,
+	ifnull(kills_360.kills, 0) as six_hours
+FROM stargates
+JOIN systems own ON own.system_id = stargates.system_id
+JOIN objects own_object ON own.system_id = own_object.object_id
+JOIN systems neighbors ON neighbors.system_id = stargates.dst_system_id
+JOIN objects neighbors_object ON neighbors.system_id = neighbors_object.object_id
+LEFT JOIN kills_10 ON neighbors.system_id = kills_10.system_id
+LEFT JOIN kills_60 ON neighbors.system_id = kills_60.system_id
+LEFT JOIN kills_360 ON neighbors.system_id = kills_360.system_id
+WHERE neighbors.system_id != own.system_id;
+
 
 CREATE INDEX IF NOT EXISTS k_time_idx        ON killmails(killmail_time);
 CREATE INDEX IF NOT EXISTS k_system_idx      ON killmails(solar_system_id);

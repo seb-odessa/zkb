@@ -192,15 +192,21 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         },
                         Category::Neighbors(area) => {
                             match area {
-                                Area::System(_id) => {
-                                    let response = String::from("was not implemented for system");
-                                    warn!("{}", response);
-                                    context.responses.push(Message::Report((msg_id, Report::QueryFailed(response))));
-                                },
+                                Area::System(id) => {
+                                    match models::system::SystemNeighbors::load(&conn, &id) {
+                                        Ok(neighbors) => {
+                                            info!("loaded {} neighbors, queue length: {}", neighbors.len(), context.database.len());
+                                            context.responses.push(Message::Report((msg_id, Report::SystemNeighbors(neighbors))));
+                                        },
+                                        Err(e) => {
+                                            warn!("was not able to load neighbors: {}", e);
+                                            context.responses.push(Message::Report((msg_id, Report::QueryFailed(e.to_string()))));
+                                        }
+                                    }                                },
                                 Area::Region(id) => {
                                     match models::region::RegionNeighbors::load(&conn, &id) {
                                         Ok(neighbors) => {
-                                            info!("loaded {} constellations, queue length: {}", neighbors.len(), context.database.len());
+                                            info!("loaded {} neighbors, queue length: {}", neighbors.len(), context.database.len());
                                             context.responses.push(Message::Report((msg_id, Report::RegionNeighbors(neighbors))));
                                         },
                                         Err(e) => {
@@ -237,19 +243,24 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                             }
                         },
                         Category::System(id) => {
-                            if !known.contains(&id) && !models::system::System::exist(&conn, &id) {
+                            if !known.contains(&id)
+                             && !models::system::System::exist(&conn, &id)
+                            {
                                 context.resolver.push(Message::Receive(Api::System(id)));
                                 known.insert(id);
                             }
                         }
                         Category::Constellation(id) => {
-                            if !known.contains(&id) && !models::constellation::Constellation::exist(&conn, &id) {
+                            if !known.contains(&id) && !models::constellation::Constellation::exist(&conn, &id)
+                            {
                                 context.resolver.push(Message::Receive(Api::Constellation(id)));
                                 known.insert(id);
                             }
                         },
                         Category::Stargate(id) => {
-                            if !known.contains(&id) && !models::stargate::Stargate::exist(&conn, &id) {
+                            if !known.contains(&id)
+                            && !models::stargate::Stargate::exist(&conn, &id)
+                            {
                                 context.resolver.push(Message::Receive(Api::Stargate(id)));
                                 known.insert(id);
                             }

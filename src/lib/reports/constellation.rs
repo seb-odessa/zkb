@@ -26,10 +26,15 @@ impl Constellation {
         let empty = String::new();
         ctx.database.push(Message::Find((msg_id, Category::Neighbors(Area::Constellation(*id)))));
         if let Report::ConstellationNeighbors(neighbors) = reports::wait_for(msg_id, &ctx) {
-            for constellation in &neighbors {
-                let url = format!("{}/api/constellation/{}", root, constellation.neighbor_id);
-                let name = constellation.neighbor_name.as_ref().unwrap_or(&empty);
-                div(output, format!("neighbor constellation: {}", href(&url, name)));
+            for neighbor in &neighbors {
+                let url = format!("{}/api/constellation/{}", root, neighbor.neighbor_id);
+                let name = neighbor.neighbor_name.as_ref().unwrap_or(&empty);
+                div(output, format!("neighbor: [ {} : {} : {} ] {}",
+                    tip("Kills at last 10 minutes", format!("{:0>3}", neighbor.ten_minutes)),
+                    tip("Kills at last 60 minutes", format!("{:0>3}", neighbor.one_hour)),
+                    tip("Kills at last 6 hours", format!("{:0>3}", neighbor.six_hours)),
+                    href(&url, name),
+                ));
             }
         }
     }

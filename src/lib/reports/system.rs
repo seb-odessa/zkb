@@ -1,7 +1,8 @@
 use crate::api;
 use super::{FAIL};
-use crate::services::*;
+use crate::services::{Context, Area, Category, Report};
 use crate::reports::*;
+use crate::reports;
 
 use std::fmt::Write;
 
@@ -22,6 +23,25 @@ impl System {
                 name = system.name
             )
         ).expect(FAIL);
+    }
+
+    fn neighbors(output: &mut dyn Write, id: &i32, ctx: &Context) {
+        let root = root(&ctx);
+        let msg_id = crate::create_id().to_simple();
+        let empty = String::new();
+        ctx.database.push(Message::Find((msg_id, Category::Neighbors(Area::System(*id)))));
+        if let Report::SystemNeighbors(neighbors) = reports::wait_for(msg_id, &ctx) {
+            for neighbor in &neighbors {
+                let url = format!("{}/api/system/{}", root, neighbor.neighbor_id);
+                let name = neighbor.neighbor_name.as_ref().unwrap_or(&empty);
+                div(output, format!("neighbor: [ {} : {} : {} ] {}",
+                    tip("Kills at last 10 minutes", format!("{:0>3}", neighbor.ten_minutes)),
+                    tip("Kills at last 60 minutes", format!("{:0>3}", neighbor.one_hour)),
+                    tip("Kills at last 6 hours", format!("{:0>3}", neighbor.six_hours)),
+                    href(&url, name),
+                ));
+            }
+        }
     }
 
     pub fn brief(arg: &String, ctx: &Context) -> String {
@@ -57,13 +77,14 @@ impl System {
             if full_report == ReportType::Full {
                 lazy(&mut output, format!("api/constellation_brief/{}", object.constellation_id), &ctx);
                 lazy(&mut output, format!("api/region_brief/{}", object.get_region_id().unwrap_or_default()), &ctx);
-                if let Some(ref gates) = &object.stargates {
-                    for gate_id in gates {
-                        if let Some(object) = api::stargate::Stargate::new(gate_id) {
-                            lazy(&mut output, format!("api/system_brief/{}", object.destination.system_id), &ctx);
-                        }
-                    }
-                }
+                Self::neighbors(&mut output, &object.system_id, &ctx);
+                // if let Some(ref gates) = &object.stargates {
+                //     for gate_id in gates {
+                //         if let Some(object) = api::stargate::Stargate::new(gate_id) {
+                //             lazy(&mut output, format!("api/system_brief/{}", object.destination.system_id), &ctx);
+                //         }
+                //     }
+                // }
                 jovian_buttons(&mut output, &object.system_id, &object.name);
                 lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
             }

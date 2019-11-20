@@ -166,11 +166,26 @@ table! {
 }
 
 table! {
+    neighbors_systems (own_id, neighbor_id) {
+        own_id -> Integer,
+        own_name -> Nullable<Text>,
+		neighbor_id -> Integer,
+		neighbor_name -> Nullable<Text>,
+	    ten_minutes -> Integer,
+	    one_hour -> Integer,
+	    six_hours -> Integer,
+    }
+}
+
+table! {
     neighbors_constellations (own_id, neighbor_id) {
         own_id -> Integer,
         own_name -> Nullable<Text>,
 		neighbor_id -> Integer,
 		neighbor_name -> Nullable<Text>,
+	    ten_minutes -> Integer,
+	    one_hour -> Integer,
+	    six_hours -> Integer,
     }
 }
 
@@ -180,6 +195,9 @@ table! {
         own_name -> Nullable<Text>,
 		neighbor_id -> Integer,
 		neighbor_name -> Nullable<Text>,
+	    ten_minutes -> Integer,
+	    one_hour -> Integer,
+	    six_hours -> Integer,
     }
 }
 

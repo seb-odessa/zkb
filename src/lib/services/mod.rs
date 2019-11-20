@@ -63,6 +63,7 @@ pub enum Report{
     Victim(models::victim::VictimNamed),
     Attakers(Vec<models::attacker::AttackerNamed>),
     History(Vec<models::killmail::KillmailNamed>),
+    SystemNeighbors(Vec<models::system::SystemNeighbors>),
     ConstellationNeighbors(Vec<models::constellation::ConstellationNeighbors>),
     RegionNeighbors(Vec<models::region::RegionNeighbors>),
     Constellations(Vec<models::constellation::ConstellationNamed>),

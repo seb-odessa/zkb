@@ -54,6 +54,10 @@ pub fn div<S: Into<String>>(output: &mut dyn Write, content: S) {
     std::fmt::write(output, format_args!("<div>{}</div>", content.into())).expect(FAIL);
 }
 
+pub fn tip<S0: Into<String>, S1: Into<String>>(tip: S0, text: S1) -> String{
+    format!(r#"<span title="{}">{}</span>"#, tip.into(), text.into())
+}
+
 pub fn jovian_buttons(output: &mut dyn Write, id: &i32, name: &String) {
     std::fmt::write(
         output,
