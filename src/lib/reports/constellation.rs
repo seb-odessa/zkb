@@ -2,7 +2,6 @@ use crate::api;
 use crate::services::{Context, Area, Category, Report};
 use crate::reports::*;
 use crate::reports;
-use chrono::Utc;
 
 #[derive(Debug, PartialEq)]
 pub struct Constellation;
@@ -30,7 +29,7 @@ impl Constellation {
             for constellation in &neighbors {
                 let url = format!("{}/api/constellation/{}", root, constellation.neighbor_id);
                 let name = constellation.neighbor_name.as_ref().unwrap_or(&empty);
-                div(output, format!("{}", href(&url, name)));
+                div(output, format!("neighbor constellation: {}", href(&url, name)));
             }
         }
     }
@@ -60,8 +59,6 @@ impl Constellation {
             if report_type == ReportType::Full {
                 lazy(&mut output, format!("api/region_brief/{}", object.region_id), &ctx);
                 Self::neighbors(&mut output, &object.constellation_id, &ctx);
-                let now = Utc::now().naive_utc().time().format("%H:%M:%S").to_string();
-                div(&mut output, format!("Kill history 60 minutes since {} ", &now));
                 lazy(&mut output, format!("history/constellation/{}/{}", id, 60), &ctx);
             }
         } else {

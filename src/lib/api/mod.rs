@@ -31,6 +31,8 @@ pub type PositionOptional = Option<Position>;
 pub type IdsRequired = Vec<i32>;
 pub type IdsOptional = Option<Vec<i32>>;
 
+// https://esi.evetech.net/latest/swagger.json
+
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Clone)]
 #[serde(default)]
 pub struct Position {

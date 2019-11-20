@@ -198,13 +198,13 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                     context.responses.push(Message::Report((msg_id, Report::QueryFailed(response))));
                                 },
                                 Area::Region(id) => {
-                                    match models::constellation::ConstellationNamed::in_region(&conn, &id) {
-                                        Ok(constellation) => {
-                                            info!("loaded {} constellations, queue length: {}", constellation.len(), context.database.len());
-                                            context.responses.push(Message::Report((msg_id, Report::Constellations(constellation))));
+                                    match models::region::RegionNeighbors::load(&conn, &id) {
+                                        Ok(neighbors) => {
+                                            info!("loaded {} constellations, queue length: {}", neighbors.len(), context.database.len());
+                                            context.responses.push(Message::Report((msg_id, Report::RegionNeighbors(neighbors))));
                                         },
                                         Err(e) => {
-                                            warn!("was not able to load history: {}", e);
+                                            warn!("was not able to load neighbors: {}", e);
                                             context.responses.push(Message::Report((msg_id, Report::QueryFailed(e.to_string()))));
                                         }
                                     }
@@ -216,7 +216,7 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                             context.responses.push(Message::Report((msg_id, Report::ConstellationNeighbors(neighbors))));
                                         },
                                         Err(e) => {
-                                            warn!("was not able to load history: {}", e);
+                                            warn!("was not able to load neighbors: {}", e);
                                             context.responses.push(Message::Report((msg_id, Report::QueryFailed(e.to_string()))));
                                         }
                                     }

@@ -9,6 +9,7 @@ pub mod item;
 pub mod object;
 pub mod category;
 pub mod stargate;
+pub mod region;
 pub mod constellation;
 pub mod system;
 

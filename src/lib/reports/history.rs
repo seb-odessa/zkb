@@ -2,6 +2,7 @@ use crate::models::*;
 use crate::reports;
 use crate::services::{Context, Message, Report, Area, Category};
 use crate::services::server::root;
+use chrono::{Duration, Utc};
 
 #[derive(Debug, PartialEq)]
 pub struct History;
@@ -10,6 +11,9 @@ impl History {
         let mut output = String::new();
         let root = root(&ctx);
         let msg_id = crate::create_id().to_simple();
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        super::div(&mut output, format!("History since {} ", start.time().format("%H:%M:%S").to_string()));
+
         ctx.database.push(Message::Find((msg_id, Category::History((area, *minutes)))));
         if let Report::History(history) = reports::wait_for(msg_id, &ctx) {
             for killmail in history {

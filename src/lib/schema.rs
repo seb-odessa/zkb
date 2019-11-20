@@ -175,6 +175,15 @@ table! {
 }
 
 table! {
+    neighbors_regions (own_id, neighbor_id) {
+        own_id -> Integer,
+        own_name -> Nullable<Text>,
+		neighbor_id -> Integer,
+		neighbor_name -> Nullable<Text>,
+    }
+}
+
+table! {
     named_constellations (constellation_id) {
         constellation_id -> Integer,
         constellation_name -> Nullable<Text>,

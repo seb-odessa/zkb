@@ -2,7 +2,6 @@ use crate::api;
 use super::{FAIL};
 use crate::services::*;
 use crate::reports::*;
-use chrono::Utc;
 
 use std::fmt::Write;
 
@@ -66,8 +65,6 @@ impl System {
                     }
                 }
                 jovian_buttons(&mut output, &object.system_id, &object.name);
-                let now = Utc::now().naive_utc().time().format("%H:%M:%S").to_string();
-                div(&mut output, format!("Kill history 60 minutes since {} ", &now));
                 lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
             }
         } else {

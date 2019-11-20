@@ -2,7 +2,6 @@ use crate::api;
 use crate::services::{Context, Area, Category, Report};
 use crate::reports::*;
 use crate::reports;
-use chrono::Utc;
 
 #[derive(Debug, PartialEq)]
 pub struct Region;
@@ -21,16 +20,16 @@ impl Region {
         ).expect(FAIL);
     }
 
-    fn constellations(output: &mut dyn Write, id: &i32, ctx: &Context) {
+    fn neighbors(output: &mut dyn Write, id: &i32, ctx: &Context) {
         let root = root(&ctx);
         let msg_id = crate::create_id().to_simple();
         let empty = String::new();
         ctx.database.push(Message::Find((msg_id, Category::Neighbors(Area::Region(*id)))));
-        if let Report::Constellations(constellations) = reports::wait_for(msg_id, &ctx) {
-            for constellation in &constellations {
-                let url = format!("{}/api/constellation/{}", root, constellation.constellation_id);
-                let name = constellation.constellation_name.as_ref().unwrap_or(&empty);
-                div(output, format!("{}", href(&url, name)));
+        if let Report::RegionNeighbors(neighbors) = reports::wait_for(msg_id, &ctx) {
+            for region in &neighbors {
+                let url = format!("{}/api/region/{}", root, region.neighbor_id);
+                let name = region.neighbor_name.as_ref().unwrap_or(&empty);
+                div(output, format!("neighbor region: {}", href(&url, name)));
             }
         }
     }
@@ -58,9 +57,7 @@ impl Region {
         if let Some(object) = api::region::Region::new(id) {
             Self::write(&mut output, &object, &root(ctx));
             if report_type == ReportType::Full {
-                Self::constellations(&mut output, &object.region_id, ctx);
-                let now = Utc::now().naive_utc().time().format("%H:%M:%S").to_string();
-                div(&mut output, format!("Kill history 60 minutes since {} ", &now));
+                Self::neighbors(&mut output, &object.region_id, ctx);
                 lazy(&mut output, format!("history/region/{}/{}", id, 60), &ctx);
             }
         } else {
