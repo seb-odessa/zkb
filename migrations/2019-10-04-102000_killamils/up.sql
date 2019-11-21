@@ -185,10 +185,6 @@ FROM constellations
 JOIN objects constellations_names ON constellations.constellation_id = constellations_names.object_id
 JOIN objects regions_names ON constellations.region_id = regions_names.object_id;
 
-DROP VIEW IF EXISTS kills_10;
-DROP VIEW IF EXISTS kills_60;
-DROP VIEW IF EXISTS kills_360;
-
 DROP VIEW IF EXISTS neighbors_regions;
 CREATE VIEW IF NOT EXISTS neighbors_regions AS
 SELECT DISTINCT
