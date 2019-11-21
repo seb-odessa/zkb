@@ -8,9 +8,6 @@ pub struct RegionNeighbors {
     pub own_name: OptString,
 	pub neighbor_id: Integer,
 	pub neighbor_name: OptString,
-    pub ten_minutes: Integer,
-	pub one_hour: Integer,
-	pub six_hours: Integer,
 }
 impl RegionNeighbors {
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {

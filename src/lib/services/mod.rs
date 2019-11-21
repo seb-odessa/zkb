@@ -52,6 +52,7 @@ pub enum Category{
     Stargate(i32),
     Constellation(i32),
     History((Area, i32)),
+    HistoryCount((Area, i32)),
     ObjectDesc((String, String)),
     Neighbors(Area),
 }
@@ -63,6 +64,7 @@ pub enum Report{
     Victim(models::victim::VictimNamed),
     Attakers(Vec<models::attacker::AttackerNamed>),
     History(Vec<models::killmail::KillmailNamed>),
+    HistoryCount(i32),
     SystemNeighbors(Vec<models::system::SystemNeighbors>),
     ConstellationNeighbors(Vec<models::constellation::ConstellationNeighbors>),
     RegionNeighbors(Vec<models::region::RegionNeighbors>),

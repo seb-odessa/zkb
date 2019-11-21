@@ -8,8 +8,7 @@ pub mod region;
 pub mod stargate;
 pub mod constellation;
 
-use crate::services::{Context, Message, Report};
-use crate::uuid::adapter::Simple;
+use crate::services::{Context, Category, Message, Report};
 use std::fmt::Write;
 
 
@@ -32,18 +31,6 @@ pub enum ReportType{
 
 pub fn root(context: &Context) -> String {
     format!("http://{}/navigator", &context.server)
-}
-
-pub fn load<S: Into<String>>(url: S, context: &Context) -> String {
-    format!(r##"
-        <div id="{id}">
-        <script>
-            document.getElementById("{id}").innerHTML='<object type="text/html" data="{root}/{api}"/>';
-        </script>
-        </div>"##,
-        id=crate::create_id(),
-        root=root(&context),
-        api=url.into())
 }
 
 pub fn href<S: Into<String>>(url: S, name: S) -> String{
@@ -139,17 +126,18 @@ pub fn link_killmail(id: &i32) -> String {
 
 pub fn find_id<S: Into<String>>(category: S, name: S, ctx: &Context) -> Option<i32> {
     use crate::services::*;
-    let msg_id = crate::create_id().to_simple();
+
     let description = (category.into(), name.into());
-    ctx.database.push(Message::Find((msg_id, Category::ObjectDesc(description))));
-    if let Report::Id(id) = wait_for(msg_id, &ctx) {
+    if let Report::Id(id) = load(Category::ObjectDesc(description), &ctx) {
         Some(id)
     } else {
         None
     }
 }
 
-pub fn wait_for(msg_id: Simple, ctx: &Context) -> Report {
+pub fn load(category: Category, ctx: &Context) -> Report {
+    let msg_id = crate::create_id().to_simple();
+    ctx.database.push(Message::Find((msg_id, category)));
     while let Some(msg) = ctx.responses.pop() {
         if let Message::Report((id, content)) = msg {
             if id == msg_id {
@@ -162,4 +150,5 @@ pub fn wait_for(msg_id: Simple, ctx: &Context) -> Report {
     }
     return Report::Fail;
 }
+
 

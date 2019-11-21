@@ -171,9 +171,6 @@ table! {
         own_name -> Nullable<Text>,
 		neighbor_id -> Integer,
 		neighbor_name -> Nullable<Text>,
-	    ten_minutes -> Integer,
-	    one_hour -> Integer,
-	    six_hours -> Integer,
     }
 }
 
@@ -183,9 +180,6 @@ table! {
         own_name -> Nullable<Text>,
 		neighbor_id -> Integer,
 		neighbor_name -> Nullable<Text>,
-	    ten_minutes -> Integer,
-	    one_hour -> Integer,
-	    six_hours -> Integer,
     }
 }
 
@@ -195,9 +189,6 @@ table! {
         own_name -> Nullable<Text>,
 		neighbor_id -> Integer,
 		neighbor_name -> Nullable<Text>,
-	    ten_minutes -> Integer,
-	    one_hour -> Integer,
-	    six_hours -> Integer,
     }
 }
 

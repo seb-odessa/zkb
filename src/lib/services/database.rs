@@ -160,6 +160,29 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                 }
                             }
                         },
+                        Category::HistoryCount((area, minutes)) => {
+                            let count = match area {
+                                Area::System(id) => {
+                                    models::killmail::KillmailNamed::load_system_history_count(&conn, &id, &minutes)
+                                },
+                                Area::Region(id) => {
+                                    models::killmail::KillmailNamed::load_region_history_count(&conn, &id, &minutes)
+                                },
+                                Area::Constellation(id) => {
+                                    models::killmail::KillmailNamed::load_constellation_history_count(&conn, &id, &minutes)
+                                },
+                            };
+                            match count {
+                                Ok(count) => {
+                                    info!("loaded history count for last {} minutes, queue length: {}", minutes, context.database.len());
+                                    context.responses.push(Message::Report((msg_id, Report::HistoryCount(count as i32))));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load history count: {}", e);
+                                    context.responses.push(Message::Report((msg_id, Report::QueryFailed(e.to_string()))));
+                                }
+                            }
+                        }
                         Category::ObjectDesc((category, name)) => {
                             match models::category::Category::find(&conn, &category) {
                                 Ok(categories) => {

@@ -33,9 +33,7 @@ impl Victim {
         let mut output = String::new();
         let root = root(&ctx);
 
-        let msg_id = crate::create_id().to_simple();
-        ctx.database.push(Message::Find((msg_id, Category::Attakers(*id))));
-        match reports::wait_for(msg_id, &ctx) {
+        match reports::load(Category::Attakers(*id), &ctx) {
             Report::Attakers(attackers) => {
                 for attacker in attackers {
                     Self::write(&mut output, &attacker, &root);

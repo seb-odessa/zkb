@@ -22,17 +22,15 @@ impl Region {
 
     fn neighbors(output: &mut dyn Write, id: &i32, ctx: &Context) {
         let root = root(&ctx);
-        let msg_id = crate::create_id().to_simple();
         let empty = String::new();
-        ctx.database.push(Message::Find((msg_id, Category::Neighbors(Area::Region(*id)))));
-        if let Report::RegionNeighbors(neighbors) = reports::wait_for(msg_id, &ctx) {
+        if let Report::RegionNeighbors(neighbors) = reports::load(Category::Neighbors(Area::Region(*id)), &ctx) {
             for neighbor in &neighbors {
                 let url = format!("{}/api/region/{}", root, neighbor.neighbor_id);
                 let name = neighbor.neighbor_name.as_ref().unwrap_or(&empty);
                 div(output, format!("neighbor: [ {} : {} : {} ] {}",
-                    tip("Kills at last 10 minutes", format!("{:0>3}", neighbor.ten_minutes)),
-                    tip("Kills at last 60 minutes", format!("{:0>3}", neighbor.one_hour)),
-                    tip("Kills at last 6 hours", format!("{:0>3}", neighbor.six_hours)),
+                    tip("Kills at last 10 minutes", format!("{:0>3}", history::History::region_count(&neighbor.neighbor_id, &10, ctx))),
+                    tip("Kills at last 60 minutes", format!("{:0>3}", history::History::region_count(&neighbor.neighbor_id, &60, ctx))),
+                    tip("Kills at last 6 hours", format!("{:0>3}", history::History::region_count(&neighbor.neighbor_id, &360, ctx))),
                     href(&url, name),
                 ));
             }

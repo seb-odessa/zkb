@@ -79,9 +79,7 @@ impl Killmail {
         let mut output = String::new();
         let root = root(&ctx);
 
-        let msg_id = crate::create_id().to_simple();
-        ctx.database.push(Message::Find((msg_id, Category::Killmail(*id))));
-        match reports::wait_for(msg_id, &ctx) {
+        match reports::load(Category::Killmail(*id), &ctx) {
             Report::Killmail(killmail) => Self::write(&mut output, &killmail, &root),
             Report::NotFoundId(id) => div(&mut output, format!("<div>Killmail {} was not found</div>", id)),
             report => warn!("Unexpected report {:?}", report)

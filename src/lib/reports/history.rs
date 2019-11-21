@@ -1,40 +1,69 @@
 use crate::models::*;
 use crate::reports;
-use crate::services::{Context, Message, Report, Area, Category};
+use crate::services::{Context, Report, Area, Category};
 use crate::services::server::root;
 use chrono::{Duration, Utc};
 
 #[derive(Debug, PartialEq)]
 pub struct History;
 impl History {
-    fn report_impl(area: Area, minutes: &Integer, ctx: &Context) -> String {
+    fn count(category: Category, ctx: &Context) -> i32 {
+        match reports::load(category, &ctx) {
+            Report::HistoryCount(count) => {
+                return count;
+            },
+            report => {
+                warn!("Unexpected report {:?}", report);
+            }
+        }
+        return 0;
+    }
+
+    fn report(category: Category, minutes: &Integer, ctx: &Context) -> String {
         let mut output = String::new();
-        let root = root(&ctx);
-        let msg_id = crate::create_id().to_simple();
         let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
         super::div(&mut output, format!("History since {} ", start.time().format("%H:%M:%S").to_string()));
 
-        ctx.database.push(Message::Find((msg_id, Category::History((area, *minutes)))));
-        if let Report::History(history) = reports::wait_for(msg_id, &ctx) {
-            for killmail in history {
-                reports::Killmail::write(&mut output, &killmail, &root);
+        let root = root(&ctx);
+        match reports::load(category, &ctx) {
+            Report::History(history) => {
+                for killmail in history {
+                    reports::Killmail::write(&mut output, &killmail, &root);
+                }
+            },
+            Report::HistoryCount(count) => {
+                super::div(&mut output, format!("{:0>3}", count));
+            },
+            report => {
+                super::div(&mut output, format!("Unexpected report {:?}", report));
             }
         }
         return output;
     }
 
     pub fn system(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report_impl(Area::System(*id), minutes, ctx)
+        Self::report(Category::History((Area::System(*id), *minutes)), minutes, ctx)
     }
 
     pub fn region(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report_impl(Area::Region(*id), minutes, ctx)
+        Self::report(Category::History((Area::Region(*id), *minutes)), minutes, ctx)
     }
 
     pub fn constellation(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report_impl(Area::Constellation(*id), minutes, ctx)
+        Self::report(Category::History((Area::Constellation(*id), *minutes)), minutes, ctx)
     }
 
+    pub fn system_count(id: &Integer, minutes: &Integer, ctx: &Context) -> i32 {
+        Self::count(Category::HistoryCount((Area::System(*id), *minutes)), ctx)
+    }
+
+    pub fn region_count(id: &Integer, minutes: &Integer, ctx: &Context) -> i32 {
+        Self::count(Category::HistoryCount((Area::Region(*id), *minutes)), ctx)
+    }
+
+    pub fn constellation_count(id: &Integer, minutes: &Integer, ctx: &Context) -> i32 {
+        Self::count(Category::HistoryCount((Area::Constellation(*id), *minutes)), ctx)
+    }
 }
 
 

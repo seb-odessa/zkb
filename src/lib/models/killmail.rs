@@ -79,6 +79,43 @@ impl KillmailNamed {
             .load(conn)
     }
 
+    pub fn load_system_history_count(conn: &Connection, system_id: &Integer, minutes: &Integer) -> QueryResult<i64> {
+        use diesel::prelude::*;
+        use diesel::dsl::count;
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails count after {}", &start);
+        named_killmails::table
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(named_killmails::system_id.eq(system_id))
+            .select(count(named_killmails::killmail_id))
+            .first(conn)
+    }
+
+    pub fn load_constellation_history_count(conn: &Connection, constellation_id: &Integer, minutes: &Integer) -> QueryResult<i64> {
+        use diesel::prelude::*;
+        use diesel::dsl::count;
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails count after {}", &start);
+        named_killmails::table
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(named_killmails::constellation_id.eq(constellation_id))
+            .select(count(named_killmails::killmail_id))
+            .first(conn)
+    }
+
+    pub fn load_region_history_count(conn: &Connection, region_id: &Integer, minutes: &Integer) -> QueryResult<i64> {
+        use diesel::prelude::*;
+        use diesel::dsl::count;
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails count after {}", &start);
+        named_killmails::table
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(named_killmails::region_id.eq(region_id))
+            .select(count(named_killmails::killmail_id))
+            .first(conn)
+    }
+
+
     pub fn load_ids_for_last_minutes(conn: &Connection, system_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Integer>> {
         use diesel::prelude::*;
 
