@@ -12,6 +12,7 @@ pub mod stargate;
 pub mod region;
 pub mod constellation;
 pub mod system;
+pub mod observatory;
 
 
 pub use diesel::sqlite::SqliteConnection as Connection;

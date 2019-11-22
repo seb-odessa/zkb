@@ -33,6 +33,7 @@ pub enum Model{
     Stargate(api::stargate::Stargate),
     Constellation(api::constellation::Constellation),
     Killmail(api::killmail::Killmail),
+    Observatory(i32),
 }
 
 #[derive(Debug, PartialEq)]
@@ -90,6 +91,7 @@ pub enum Message{
     Ping,
     Receive(Api),
     Save(Model),
+    Delete(Model),
     Check(Category),
     Report((Uid, Report)),
     Find((Uid, Category)),

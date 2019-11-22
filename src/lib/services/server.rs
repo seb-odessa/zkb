@@ -89,10 +89,12 @@ fn cmd(info: web::Path<String>, ctx: Context) -> String {
     }
 }
 
-fn services(info: web::Path<(String, i32)>, _ctx: Context) -> String {
+fn services(info: web::Path<(String, i32)>, ctx: Context) -> String {
     info!("/services/{}/{}", info.0, info.1);
     match info.0.as_ref() {
         "system_security_status" => reports::System::security_status(&info.1),
+        "observatory_add" => reports::System::observatory_add(&info.1, &ctx),
+        "observatory_remove" => reports::System::observatory_remove(&info.1, &ctx),
         _ => format!("/services/{}/{}", info.0, info.1)
     }
 }

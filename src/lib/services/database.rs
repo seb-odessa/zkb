@@ -101,8 +101,27 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                 info!("Stargate {} - '{}' saved, queue length: {}", object.stargate_id, &object.name, context.database.len());
                             }
                         },
+                        Model::Observatory(id) => {
+                            if let Err(err) = models::observatory::Observatory::save(&conn, &id) {
+                                warn!("was not able to save observatory: {}", err);
+                            } else {
+                                info!("Observatory in system {} saved, queue length: {}", id, context.database.len());
+                            }
+                        },
                     };
                 },
+                Message::Delete(model) => {
+                    match model {
+                        Model::Observatory(id) => {
+                            if let Err(err) = models::observatory::Observatory::delete(&conn, &id) {
+                                warn!("was not able to delete observatory: {}", err);
+                            } else {
+                                info!("Observatory in system {} deleted, queue length: {}", id, context.database.len());
+                            }
+                        },
+                        model => warn!("Delete operation is not implemented for {:?}", model)
+                    }
+                }
                 Message::Find((msg_id, ref category)) => {
                     match category {
                         Category::System(id) => {

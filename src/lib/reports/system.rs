@@ -1,6 +1,6 @@
 use crate::api;
 use super::{FAIL};
-use crate::services::{Context, Area, Category, Report, Filter};
+use crate::services::{Context, Area, Category, Model, Report, Filter};
 use crate::reports::*;
 use crate::reports;
 use crate::models;
@@ -95,14 +95,25 @@ impl System {
                 if system.has_observatory() {
                     div(output, format!(r#"<span style="color: green;">Jovian Observatory</span>"#));
                 }
+                jovian_buttons(output, &system.system_id, &system.get_system_name());
+                div(output, format!("Nearest system with Jovian Observatory:"));
                 for neighbor in &Self::load_neighbor_observatories(&system, ctx) {
                     lazy(output, format!("services/route/{}/{}", system.system_id, neighbor.system_id), &ctx);
-//                    div(output, Self::route(system.system_id, neighbor.system_id, ctx));
                 }
             },
             Report::NotFoundId(id) => div(output, format!("System {} was not found", id)),
             report => warn!("Unexpected report {:?}", report)
         }
+    }
+
+    pub fn observatory_add(id: &i32, ctx: &Context) -> String {
+        ctx.database.push(Message::Save(Model::Observatory(*id)));
+        String::from("Done")
+    }
+
+    pub fn observatory_remove(id: &i32, ctx: &Context) -> String {
+        ctx.database.push(Message::Delete(Model::Observatory(*id)));
+        String::from("Done")
     }
 
     pub fn brief(arg: &String, ctx: &Context) -> String {
@@ -140,7 +151,6 @@ impl System {
                 lazy(&mut output, format!("api/region_brief/{}", object.get_region_id().unwrap_or_default()), &ctx);
                 Self::neighbors(&mut output, &object.system_id, &ctx);
                 Self::observatory_report(&mut output, &object.system_id, &ctx);
-                jovian_buttons(&mut output, &object.system_id, &object.name);
                 lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
             }
         } else {

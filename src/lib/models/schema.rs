@@ -148,6 +148,12 @@ table! {
 }
 
 table! {
+    observatories (system_id) {
+        system_id -> Integer,
+    }
+}
+
+table! {
     named_systems (system_id) {
     	system_id -> Integer,
     	system_name -> Nullable<Text>,

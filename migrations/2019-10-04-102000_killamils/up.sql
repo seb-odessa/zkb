@@ -109,8 +109,6 @@ DROP INDEX IF EXISTS i_killmail_idx;
 CREATE INDEX IF NOT EXISTS items_type_idx      ON items(item_type_id);
 CREATE INDEX IF NOT EXISTS items_killmail_idx  ON items(killmail_id);
 
-
-
 CREATE TABLE IF NOT EXISTS systems(
     system_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
     star_id INTEGER,
@@ -152,6 +150,9 @@ CREATE INDEX IF NOT EXISTS stargates_system_idx        ON stargates(system_id);
 CREATE INDEX IF NOT EXISTS stargates_dst_stargate_id   ON stargates(dst_stargate_id);
 CREATE INDEX IF NOT EXISTS stargates_dst_system_id     ON stargates(dst_system_id);
 
+CREATE TABLE observatories(
+    system_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE
+);
 
 DROP VIEW IF EXISTS named_victims;
 CREATE VIEW IF NOT EXISTS named_victims AS
