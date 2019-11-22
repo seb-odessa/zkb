@@ -1,9 +1,14 @@
 -- Your SQL goes here
 
+DROP TABLE IF EXISTS kills;
+DROP INDEX IF EXISTS dates_ids;
+
 CREATE TABLE IF NOT EXISTS categories(
     category_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
     category_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE
 );
+DROP INDEX IF EXISTS c_category_name_idx;
+CREATE INDEX IF NOT EXISTS categories_category_name_idx ON categories(category_name);
 
 CREATE TABLE IF NOT EXISTS objects(
     object_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
@@ -11,6 +16,9 @@ CREATE TABLE IF NOT EXISTS objects(
     object_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE,
     FOREIGN KEY(category_id) REFERENCES categories(category_id)
 );
+DROP INDEX IF EXISTS o_object_name_idx;
+CREATE INDEX IF NOT EXISTS objects_object_name_idx ON objects(object_name);
+CREATE INDEX IF NOT EXISTS objects_category_id_idx ON objects(category_id);
 
 CREATE TABLE IF NOT EXISTS killmails(
     killmail_id INTEGER NOT NULL PRIMARY KEY,
@@ -19,6 +27,15 @@ CREATE TABLE IF NOT EXISTS killmails(
     moon_id INTEGER,
     war_id INTEGER
 );
+DROP INDEX IF EXISTS k_time_idx;
+DROP INDEX IF EXISTS k_system_idx;
+DROP INDEX IF EXISTS k_moon_idx;
+DROP INDEX IF EXISTS k_war_idx;
+CREATE INDEX IF NOT EXISTS killmails_time_idx        ON killmails(killmail_time);
+CREATE INDEX IF NOT EXISTS killmails_system_idx      ON killmails(solar_system_id);
+CREATE INDEX IF NOT EXISTS killmails_moon_idx        ON killmails(moon_id);
+CREATE INDEX IF NOT EXISTS killmails_war_idx         ON killmails(war_id);
+
 
 CREATE TABLE IF NOT EXISTS attackers(
     attacker_id INTEGER NOT NULL PRIMARY KEY,
@@ -35,6 +52,22 @@ CREATE TABLE IF NOT EXISTS attackers(
     FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
 );
 
+DROP INDEX IF EXISTS a_ship_idx;
+DROP INDEX IF EXISTS a_alliance_idx;
+DROP INDEX IF EXISTS a_character_idx;
+DROP INDEX IF EXISTS a_corporation_idx;
+DROP INDEX IF EXISTS a_faction_idx;
+DROP INDEX IF EXISTS a_weapon_type_idx;
+DROP INDEX IF EXISTS a_killmail_idx;
+
+CREATE INDEX IF NOT EXISTS attackers_ship_idx        ON attackers(ship_type_id);
+CREATE INDEX IF NOT EXISTS attackers_alliance_idx    ON attackers(alliance_id);
+CREATE INDEX IF NOT EXISTS attackers_character_idx   ON attackers(character_id);
+CREATE INDEX IF NOT EXISTS attackers_corporation_idx ON attackers(corporation_id);
+CREATE INDEX IF NOT EXISTS attackers_faction_idx     ON attackers(faction_id);
+CREATE INDEX IF NOT EXISTS attackers_weapon_type_idx ON attackers(weapon_type_id);
+CREATE INDEX IF NOT EXISTS attackers_killmail_idx    ON attackers(killmail_id);
+
 CREATE TABLE IF NOT EXISTS victims(
     victim_id INTEGER NOT NULL PRIMARY KEY,
     killmail_id INTEGER NOT NULL,
@@ -46,6 +79,20 @@ CREATE TABLE IF NOT EXISTS victims(
     faction_id	INTEGER,
     FOREIGN KEY(killmail_id)    REFERENCES killmails(killmail_id)
 );
+DROP INDEX IF EXISTS v_ship_idx;
+DROP INDEX IF EXISTS v_alliance_idx;
+DROP INDEX IF EXISTS v_character_idx;
+DROP INDEX IF EXISTS v_corporation_idx;
+DROP INDEX IF EXISTS v_faction_idx;
+DROP INDEX IF EXISTS v_killmail_idx;
+
+CREATE INDEX IF NOT EXISTS victims_ship_idx        ON victims(ship_type_id);
+CREATE INDEX IF NOT EXISTS victims_alliance_idx    ON victims(alliance_id);
+CREATE INDEX IF NOT EXISTS victims_character_idx   ON victims(character_id);
+CREATE INDEX IF NOT EXISTS victims_corporation_idx ON victims(corporation_id);
+CREATE INDEX IF NOT EXISTS victims_faction_idx     ON victims(faction_id);
+CREATE INDEX IF NOT EXISTS victims_killmail_idx    ON victims(killmail_id);
+
 
 CREATE TABLE IF NOT EXISTS items(
     item_id INTEGER NOT NULL PRIMARY KEY,
@@ -57,6 +104,12 @@ CREATE TABLE IF NOT EXISTS items(
     quantity_dropped INTEGER,
     FOREIGN KEY(killmail_id) REFERENCES killmails(killmail_id)
 );
+DROP INDEX IF EXISTS i_type_idx;
+DROP INDEX IF EXISTS i_killmail_idx;
+CREATE INDEX IF NOT EXISTS items_type_idx      ON items(item_type_id);
+CREATE INDEX IF NOT EXISTS items_killmail_idx  ON items(killmail_id);
+
+
 
 CREATE TABLE IF NOT EXISTS systems(
     system_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
@@ -64,21 +117,25 @@ CREATE TABLE IF NOT EXISTS systems(
 	security_status REAL NOT NULL,
 	constellation_id INTEGER NOT NULL
 );
-CREATE INDEX IF NOT EXISTS s_constellations_idx        ON systems(constellation_id);
-CREATE INDEX IF NOT EXISTS s_security_status_idx       ON systems(security_status);
+DROP INDEX IF EXISTS s_constellations_idx;
+DROP INDEX IF EXISTS s_security_status_idx;
+CREATE INDEX IF NOT EXISTS systems_constellations_idx   ON systems(constellation_id);
+CREATE INDEX IF NOT EXISTS systems_security_status_idx  ON systems(security_status);
 
 CREATE TABLE IF NOT EXISTS planets(
     planet_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
 	type_id INTEGER NOT NULL,
 	system_id INTEGER NOT NULL
 );
-CREATE INDEX IF NOT EXISTS p_system_idx        ON planets(system_id);
+DROP INDEX IF EXISTS p_system_idx;
+CREATE INDEX IF NOT EXISTS planets_system_idx        ON planets(system_id);
 
 CREATE TABLE IF NOT EXISTS constellations(
     constellation_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
 	region_id INTEGER NOT NULL
 );
-CREATE INDEX IF NOT EXISTS c_region_idx        ON constellations(region_id);
+DROP INDEX IF EXISTS c_region_idx;
+CREATE INDEX IF NOT EXISTS constellations_region_idx  ON constellations(region_id);
 
 CREATE TABLE IF NOT EXISTS stargates(
     stargate_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
@@ -87,9 +144,13 @@ CREATE TABLE IF NOT EXISTS stargates(
 	dst_stargate_id INTEGER NOT NULL,
     dst_system_id INTEGER NOT NULL
 );
-CREATE INDEX IF NOT EXISTS s_system_idx        ON stargates(system_id);
-CREATE INDEX IF NOT EXISTS s_dst_stargate_id   ON stargates(dst_stargate_id);
-CREATE INDEX IF NOT EXISTS s_dst_system_id     ON stargates(dst_system_id);
+DROP INDEX IF EXISTS s_system_idx;
+DROP INDEX IF EXISTS s_dst_stargate_id;
+DROP INDEX IF EXISTS s_dst_system_id;
+
+CREATE INDEX IF NOT EXISTS stargates_system_idx        ON stargates(system_id);
+CREATE INDEX IF NOT EXISTS stargates_dst_stargate_id   ON stargates(dst_stargate_id);
+CREATE INDEX IF NOT EXISTS stargates_dst_system_id     ON stargates(dst_system_id);
 
 
 DROP VIEW IF EXISTS named_victims;
@@ -231,31 +292,25 @@ JOIN systems neighbors ON neighbors.system_id = stargates.dst_system_id
 JOIN objects neighbors_object ON neighbors.system_id = neighbors_object.object_id
 WHERE neighbors.system_id != own.system_id;
 
-CREATE INDEX IF NOT EXISTS k_time_idx        ON killmails(killmail_time);
-CREATE INDEX IF NOT EXISTS k_system_idx      ON killmails(solar_system_id);
-CREATE INDEX IF NOT EXISTS k_moon_idx        ON killmails(moon_id);
-CREATE INDEX IF NOT EXISTS k_war_idx         ON killmails(war_id);
+DROP VIEW IF EXISTS named_systems;
+CREATE VIEW IF NOT EXISTS named_systems AS
+SELECT
+	systems.system_id 				AS system_id,
+	sys.object_name   				AS system_name,
+	constellations.constellation_id AS constellation_id,
+	con.object_name   				AS constellation_name,
+	constellations.region_id 		AS region_id,
+	reg.object_name   				AS region_name,
+	systems.security_status			AS security_status,
+	CASE WHEN observatories.system_id IS NOT NULL THEN "Jovian Observatory" ELSE NULL END AS observatory
+FROM systems
+JOIN constellations ON constellations.constellation_id = systems.constellation_id
+LEFT JOIN objects sys ON sys.object_id = systems.system_id
+LEFT JOIN objects con ON con.object_id = systems.constellation_id
+LEFT JOIN objects reg ON reg.object_id = constellations.region_id
+LEFT JOIN observatories ON observatories.system_id = systems.system_id;
 
-CREATE INDEX IF NOT EXISTS a_ship_idx        ON attackers(ship_type_id);
-CREATE INDEX IF NOT EXISTS a_alliance_idx    ON attackers(alliance_id);
-CREATE INDEX IF NOT EXISTS a_character_idx   ON attackers(character_id);
-CREATE INDEX IF NOT EXISTS a_corporation_idx ON attackers(corporation_id);
-CREATE INDEX IF NOT EXISTS a_faction_idx     ON attackers(faction_id);
-CREATE INDEX IF NOT EXISTS a_weapon_type_idx ON attackers(weapon_type_id);
-CREATE INDEX IF NOT EXISTS a_killmail_idx    ON attackers(killmail_id);
 
-CREATE INDEX IF NOT EXISTS v_ship_idx        ON victims(ship_type_id);
-CREATE INDEX IF NOT EXISTS v_alliance_idx    ON victims(alliance_id);
-CREATE INDEX IF NOT EXISTS v_character_idx   ON victims(character_id);
-CREATE INDEX IF NOT EXISTS v_corporation_idx ON victims(corporation_id);
-CREATE INDEX IF NOT EXISTS v_faction_idx     ON victims(faction_id);
-CREATE INDEX IF NOT EXISTS v_killmail_idx    ON victims(killmail_id);
-
-CREATE INDEX IF NOT EXISTS i_type_idx        ON items(item_type_id);
-CREATE INDEX IF NOT EXISTS i_killmail_idx    ON items(killmail_id);
-
-CREATE INDEX IF NOT EXISTS c_category_name_idx    ON categories(category_name);
-CREATE INDEX IF NOT EXISTS o_object_name_idx      ON objects(object_name);
 
 
 

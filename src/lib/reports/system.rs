@@ -76,13 +76,6 @@ impl System {
                 lazy(&mut output, format!("api/constellation_brief/{}", object.constellation_id), &ctx);
                 lazy(&mut output, format!("api/region_brief/{}", object.get_region_id().unwrap_or_default()), &ctx);
                 Self::neighbors(&mut output, &object.system_id, &ctx);
-                // if let Some(ref gates) = &object.stargates {
-                //     for gate_id in gates {
-                //         if let Some(object) = api::stargate::Stargate::new(gate_id) {
-                //             lazy(&mut output, format!("api/system_brief/{}", object.destination.system_id), &ctx);
-                //         }
-                //     }
-                // }
                 jovian_buttons(&mut output, &object.system_id, &object.name);
                 lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
             }
