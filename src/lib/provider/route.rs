@@ -44,7 +44,7 @@ lazy_static! {
     static ref ROUTES: Mutex<Routes> = Mutex::new(Routes::new());
 }
 
-pub fn get_route(departure: i32, destination: i32) -> Ids {
+pub fn between(departure: i32, destination: i32) -> Ids {
     if let Ok(ref mut routes) = ROUTES.try_lock() {
         routes.get(departure, destination)
     } else {

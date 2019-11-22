@@ -1,6 +1,6 @@
 use crate::api;
 
-
+pub mod schema;
 pub mod kill;
 pub mod killmail;
 pub mod attacker;
@@ -12,6 +12,7 @@ pub mod stargate;
 pub mod region;
 pub mod constellation;
 pub mod system;
+
 
 pub use diesel::sqlite::SqliteConnection as Connection;
 
@@ -33,18 +34,6 @@ impl DB {
         let url = std::env::var("DATABASE_URL").expect("DB_URL environment variable required");
         Connection::establish(&url).expect(&format!("Error connection to {}", url))
     }
-
-    // pub fn load_kills(conn: &Connection, date: &Date) -> QueryResult<Vec<kill::Kill>> {
-    //     use diesel::prelude::*;
-    //     use super::schema::kills::dsl as table;
-    //     table::kills.filter(table::killmail_date.eq(&date)).load(conn)
-    // }
-
-    // pub fn save_kills(conn: &Connection, kills: &Vec<kill::Kill>) -> QueryResult<usize> {
-    //     use diesel::prelude::*;
-    //     use super::schema;
-    //     diesel::insert_into(schema::kills::table).values(kills).execute(conn)
-    // }
 
     // pub fn get_saved_killmails(conn: &Connection, date: &Date) -> HashSet<Integer> {
     //     let start =date.and_hms(0, 0, 0);
@@ -98,7 +87,6 @@ impl KillmailsApi {
     }
 
     fn do_save(conn: &Connection, killmail: &api::Killmail) -> QueryResult<()> {
-        use super::schema;
         use diesel::connection::Connection;
         use diesel::RunQueryDsl;
 
@@ -136,7 +124,6 @@ impl KillmailsApi {
 pub struct CategoriesApi;
 impl CategoriesApi {
     pub fn save(conn: &Connection, object: &api::object::Object) -> QueryResult<bool>  {
-        use super::schema;
         use crate::schema::categories::dsl::*;
         use crate::diesel::RunQueryDsl;
         use crate::diesel::ExpressionMethods;
@@ -155,7 +142,6 @@ impl CategoriesApi {
 pub struct ObjectsApi;
 impl ObjectsApi {
     pub fn save(conn: &Connection, object: &api::object::Object) -> QueryResult<bool>  {
-        use super::schema;
         use diesel::RunQueryDsl;
         let category = match CategoriesApi::find(conn, &object.category) {
             Ok(category) => {

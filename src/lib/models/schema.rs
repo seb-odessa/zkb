@@ -148,6 +148,19 @@ table! {
 }
 
 table! {
+    named_systems (system_id) {
+    	system_id -> Integer,
+    	system_name -> Nullable<Text>,
+    	constellation_id -> Integer,
+    	constellation_name -> Nullable<Text>,
+    	region_id -> Integer,
+    	region_name -> Nullable<Text>,
+    	security_status -> Float,
+    	observatory -> Nullable<Text>,
+    }
+}
+
+table! {
     constellations (constellation_id) {
         constellation_id -> Integer,
         type_id -> Integer,

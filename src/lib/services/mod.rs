@@ -43,12 +43,19 @@ pub enum Area{
 }
 
 #[derive(Debug, PartialEq)]
+pub enum Filter {
+    Any,
+    WithJovianObservatoryOnly,
+}
+
+#[derive(Debug, PartialEq)]
 pub enum Category{
     Object(i32),
     Killmail(i32),
     Victim(i32),
     Attakers(i32),
     System(i32),
+    Systems((Area, Filter)),
     Stargate(i32),
     Constellation(i32),
     History((Area, i32)),
@@ -65,6 +72,8 @@ pub enum Report{
     Attakers(Vec<models::attacker::AttackerNamed>),
     History(Vec<models::killmail::KillmailNamed>),
     HistoryCount(i32),
+    System(models::system::SystemNamed),
+    Systems(Vec<models::system::SystemNamed>),
     SystemNeighbors(Vec<models::system::SystemNeighbors>),
     ConstellationNeighbors(Vec<models::constellation::ConstellationNeighbors>),
     RegionNeighbors(Vec<models::region::RegionNeighbors>),
@@ -113,6 +122,14 @@ impl AppContext {
             resolver: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
             responses:Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
         }
+    }
+
+    pub fn get_api_href<S: Into<String>>(&self, class: S, id: i32, name: String) -> String {
+        format!(r#"<a href="http://{server}/navigator/api/{class}/{id}">{name}</a>"#,
+            server = self.server,
+            class = class.into(),
+            id = id,
+            name = name)
     }
 }
 

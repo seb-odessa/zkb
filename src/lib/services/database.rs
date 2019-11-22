@@ -15,6 +15,12 @@ fn try_enqueue_check(queue: &Queue, id: &Option<i32>) {
     }
 }
 
+fn get_name_if_none(queue: &Queue, name: &Option<String>, id: i32) {
+    if name.is_none() {
+        queue.push(Message::Receive(Api::Object(id)));
+    }
+}
+
 fn handle_killmail(queue: &Queue, killmail: &api::Killmail) {
     enqueue_check(queue, &killmail.solar_system_id);
     try_enqueue_check(queue, &killmail.moon_id);
@@ -41,8 +47,6 @@ fn handle_killmail(queue: &Queue, killmail: &api::Killmail) {
             }
         }
     }
-
-    //@todo handle items as well
 }
 
 pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
@@ -101,6 +105,43 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                 },
                 Message::Find((msg_id, ref category)) => {
                     match category {
+                        Category::System(id) => {
+                            match models::system::SystemNamed::load(&conn, &id) {
+                                Ok(object) => {
+                                    info!("loaded system {} queue length: {}", id, context.database.len());
+                                    get_name_if_none(&context.resolver, &object.system_name, object.system_id);
+                                    get_name_if_none(&context.resolver, &object.constellation_name, object.constellation_id);
+                                    get_name_if_none(&context.resolver, &object.region_name, object.region_id);
+                                    context.responses.push(Message::Report((msg_id, Report::System(object))));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load system: {}", e);
+                                    context.database.push(Message::Check(Category::System(*id)));
+                                    context.responses.push(Message::Report((msg_id, Report::NotFoundId(*id))));
+                                }
+                            }
+                        },
+                        Category::Systems((area, filter)) => {
+                            let query = match filter {
+                                Filter::WithJovianObservatoryOnly => models::system::QuerySystem::WithJovianObservatoryOnly,
+                                Filter::Any => models::system::QuerySystem::Any
+                            };
+                            let systems = match area {
+                                Area::System(id) => models::system::SystemNamed::load(&conn, &id).and_then(|system| Ok(vec![system])),
+                                Area::Region(id) => models::system::SystemNamed::load_from_region(&conn, &id, query),
+                                Area::Constellation(id) => models::system::SystemNamed::load_from_constellation(&conn, &id, query),
+                            };
+                            match systems {
+                                Ok(systems) => {
+                                    info!("loaded {} systems, queue length: {}", systems.len(), context.database.len());
+                                    context.responses.push(Message::Report((msg_id, Report::Systems(systems))));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load systems: {}", e);
+                                    context.responses.push(Message::Report((msg_id, Report::QueryFailed(e.to_string()))));
+                                }
+                            }
+                        },
                         Category::Killmail(id) => {
                             match models::killmail::KillmailNamed::load(&conn, &id) {
                                 Ok(object) => {
@@ -139,15 +180,9 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         },
                         Category::History((area, minutes)) => {
                             let history = match area {
-                                Area::System(id) => {
-                                    models::killmail::KillmailNamed::load_system_history(&conn, &id, &minutes)
-                                },
-                                Area::Region(id) => {
-                                    models::killmail::KillmailNamed::load_region_history(&conn, &id, &minutes)
-                                },
-                                Area::Constellation(id) => {
-                                    models::killmail::KillmailNamed::load_constellation_history(&conn, &id, &minutes)
-                                },
+                                Area::System(id) => models::killmail::KillmailNamed::load_system_history(&conn, &id, &minutes),
+                                Area::Region(id) => models::killmail::KillmailNamed::load_region_history(&conn, &id, &minutes),
+                                Area::Constellation(id) => models::killmail::KillmailNamed::load_constellation_history(&conn, &id, &minutes)
                             };
                             match history {
                                 Ok(killmails) => {

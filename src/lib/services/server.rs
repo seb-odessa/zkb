@@ -97,6 +97,20 @@ fn services(info: web::Path<(String, i32)>, _ctx: Context) -> String {
     }
 }
 
+fn services2(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
+    info!("/services/{}/{}/{}", info.0, info.1, info.2);
+    let body = match info.0.as_ref() {
+        "route" => reports::System::route(info.1, info.2, &ctx),
+        _ => format!("/services/{}/{}/{}", info.0, info.1, info.2)
+    };
+
+    HttpResponse::Ok()
+        .content_type("text/html; charset=UTF-8")
+        .header("X-Header", "zkb")
+        .body(body)
+}
+
+
 pub fn run(context: Context) {
     let address = context.server.clone();
     let timeout = context.timeout;
@@ -108,6 +122,7 @@ pub fn run(context: Context) {
             .route("/navigator/api/{type}/{id}", web::get().to(api))
             .route("/navigator/cmd/{cmd}", web::get().to(cmd))
             .route("/navigator/services/{type}/{id}", web::get().to(services))
+            .route("/navigator/services/{type}/{first}/{second}", web::get().to(services2))
             .route("/navigator/history/{area}/{id}/{minutes}", web::get().to(history))
     })
     .bind(address)

@@ -12,11 +12,11 @@ use uuid::Uuid;
 
 pub mod api;
 pub mod models;
-pub mod schema;
 pub mod provider;
 pub mod services;
 pub mod reports;
 
+pub use models::schema;
 
 pub fn create_id() -> Uuid {
     Uuid::new_v4()

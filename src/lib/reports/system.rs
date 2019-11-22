@@ -1,8 +1,10 @@
 use crate::api;
 use super::{FAIL};
-use crate::services::{Context, Area, Category, Report};
+use crate::services::{Context, Area, Category, Report, Filter};
 use crate::reports::*;
 use crate::reports;
+use crate::models;
+use crate::provider;
 
 use std::fmt::Write;
 
@@ -26,19 +28,80 @@ impl System {
     }
 
     fn neighbors(output: &mut dyn Write, id: &i32, ctx: &Context) {
-        let root = root(&ctx);
-        let empty = String::new();
         if let Report::SystemNeighbors(neighbors) = reports::load(Category::Neighbors(Area::System(*id)), &ctx) {
             for neighbor in &neighbors {
-                let url = format!("{}/api/system/{}", root, neighbor.neighbor_id);
-                let name = neighbor.neighbor_name.as_ref().unwrap_or(&empty);
                 div(output, format!("neighbor: [ {} : {} : {} ] {}",
                     tip("Kills at last 10 minutes", format!("{:0>3}", history::History::system_count(&neighbor.neighbor_id, &10, ctx))),
                     tip("Kills at last 60 minutes", format!("{:0>3}", history::History::system_count(&neighbor.neighbor_id, &60, ctx))),
                     tip("Kills at last 6 hours", format!("{:0>3}", history::History::system_count(&neighbor.neighbor_id, &360, ctx))),
-                    href(&url, name),
+                    ctx.get_api_href("system", neighbor.neighbor_id, neighbor.get_neighbor_name()),
                 ));
             }
+        }
+    }
+
+    fn load_constellation_observatory(id: &i32, ctx: &Context) -> Vec<models::system::SystemNamed> {
+        let area = Area::Constellation(*id);
+        let filter = Filter::WithJovianObservatoryOnly;
+        if let Report::Systems(systems) = reports::load(Category::Systems((area, filter)), &ctx) {
+            systems
+        } else {
+            Vec::new()
+        }
+    }
+
+    fn load_neighbor_observatories(system: &models::system::SystemNamed, ctx: &Context) -> Vec<models::system::SystemNamed> {
+        let mut systems = Self::load_constellation_observatory(&system.constellation_id, ctx);
+        if let Report::ConstellationNeighbors(neighbors) = reports::load(Category::Neighbors(Area::Constellation(system.constellation_id)), &ctx) {
+            for neighbor in &neighbors {
+                let mut other = Self::load_constellation_observatory(&neighbor.neighbor_id, ctx);
+                systems.append(&mut other);
+            }
+        }
+        return systems;
+    }
+
+    fn get_system_href(id: &i32, ctx: &Context) -> String {
+        match reports::load(Category::System(*id), ctx) {
+            Report::System(system) => ctx.get_api_href("system", system.system_id, system.get_system_name()),
+            _ => String::from("...Unknown...")
+        }
+    }
+
+    // todo create api type for route
+    fn get_route(departure: &i32, destination: &i32) -> Option<Vec<i32>> {
+        let uri = format!("route/{}/{}", departure, destination);
+        let response = api::gw::eve_api(&uri).unwrap_or_default();
+        serde_json::from_str(&response).ok()
+    }
+
+    pub fn route(departure: i32, destination: i32, ctx: &Context) -> String {
+        let mut path = String::new();
+        if let Some(route) = provider::get_route(&departure, &destination, &Self::get_route) {
+            for id in route.iter().skip(1) {
+                if path.is_empty() {
+                    path = Self::get_system_href(&id, ctx);
+                } else {
+                    path = path + " &gt; " + &Self::get_system_href(&id, ctx);
+                }
+            }
+        }
+        return path;
+    }
+
+    fn observatory_report(output: &mut dyn Write, id: &i32, ctx: &Context) {
+        match reports::load(Category::System(*id), &ctx) {
+            Report::System(system) => {
+                if system.has_observatory() {
+                    div(output, format!(r#"<span style="color: green;">Jovian Observatory</span>"#));
+                }
+                for neighbor in &Self::load_neighbor_observatories(&system, ctx) {
+                    lazy(output, format!("services/route/{}/{}", system.system_id, neighbor.system_id), &ctx);
+//                    div(output, Self::route(system.system_id, neighbor.system_id, ctx));
+                }
+            },
+            Report::NotFoundId(id) => div(output, format!("System {} was not found", id)),
+            report => warn!("Unexpected report {:?}", report)
         }
     }
 
@@ -76,6 +139,7 @@ impl System {
                 lazy(&mut output, format!("api/constellation_brief/{}", object.constellation_id), &ctx);
                 lazy(&mut output, format!("api/region_brief/{}", object.get_region_id().unwrap_or_default()), &ctx);
                 Self::neighbors(&mut output, &object.system_id, &ctx);
+                Self::observatory_report(&mut output, &object.system_id, &ctx);
                 jovian_buttons(&mut output, &object.system_id, &object.name);
                 lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
             }

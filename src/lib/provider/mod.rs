@@ -5,13 +5,23 @@ use crate::api::character::Character;
 use crate::api::region::Region;
 use crate::api::constellation::Constellation;
 use std::collections::HashMap;
-
 use std::sync::Mutex;
 
 mod prices;
-
 pub use prices::get_avg_price;
 pub use prices::get_adj_price;
+
+
+#[derive(Debug, Default, PartialEq, Eq, Hash, Clone)]
+struct Route {
+    departure: i32,
+    destination: i32
+}
+impl Route {
+    pub fn new(departure: i32, destination: i32) -> Self {
+        Self{departure, destination}
+    }
+}
 
 
 lazy_static! {
@@ -21,6 +31,7 @@ lazy_static! {
     static ref CHARACTER: Mutex<HashMap<i32, Character>> = Mutex::new(HashMap::new());
     static ref REGION: Mutex<HashMap<i32, Region>> = Mutex::new(HashMap::new());
     static ref CONSTELLATION: Mutex<HashMap<i32, Constellation>> = Mutex::new(HashMap::new());
+    static ref ROUTES: Mutex<HashMap<Route, Vec<i32>>> = Mutex::new(HashMap::new());
 }
 
 pub fn get_object<L>(key: &i32, loader: &L) -> Option<Object>
@@ -147,4 +158,25 @@ pub fn get_region<L>(key: &i32, loader: &L) -> Option<Region>
         }
     }
     return object;
+}
+
+pub fn get_route<L>(src: &i32, dst: &i32, loader: &L) -> Option<Vec<i32>>
+    where L: Fn(&i32, &i32)->Option<Vec<i32>>
+{
+    let key = Route::new(*src, *dst);
+    let mut route = if let Ok(map) = ROUTES.try_lock() {
+        map.get(&key).cloned()
+    } else {
+        None
+    };
+
+    if route.is_none() {
+        if let Some(received) = loader(&src, &dst) {
+            route = Some(received.clone());
+            if let Ok(ref mut map) = ROUTES.try_lock() {
+                map.entry(key).or_insert(received);
+            }
+        }
+    }
+    return route;
 }
