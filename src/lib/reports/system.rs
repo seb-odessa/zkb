@@ -34,7 +34,7 @@ impl System {
                     tip("Kills at last 10 minutes", format!("{:0>3}", history::History::system_count(&neighbor.neighbor_id, &10, ctx))),
                     tip("Kills at last 60 minutes", format!("{:0>3}", history::History::system_count(&neighbor.neighbor_id, &60, ctx))),
                     tip("Kills at last 6 hours", format!("{:0>3}", history::History::system_count(&neighbor.neighbor_id, &360, ctx))),
-                    ctx.get_api_href("system", neighbor.neighbor_id, neighbor.get_neighbor_name()),
+                    ctx.get_api_href("system", neighbor.neighbor_id, neighbor.get_name("neighbor")),
                 ));
             }
         }
@@ -63,7 +63,7 @@ impl System {
 
     fn get_system_href(id: &i32, ctx: &Context) -> String {
         match reports::load(Category::System(*id), ctx) {
-            Report::System(system) => ctx.get_api_href("system", system.system_id, system.get_system_name()),
+            Report::System(system) => ctx.get_api_href("system", system.system_id, system.get_name("system")),
             _ => String::from("...Unknown...")
         }
     }
@@ -95,7 +95,7 @@ impl System {
                 if system.has_observatory() {
                     div(output, format!(r#"<span style="color: green;">Jovian Observatory</span>"#));
                 }
-                jovian_buttons(output, &system.system_id, &system.get_system_name());
+                jovian_buttons(output, &system.system_id, &system.get_name("system"));
                 div(output, format!("Nearest system with Jovian Observatory:"));
                 for neighbor in &Self::load_neighbor_observatories(&system, ctx) {
                     lazy(output, format!("services/route/{}/{}", system.system_id, neighbor.system_id), &ctx);

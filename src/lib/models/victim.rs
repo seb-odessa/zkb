@@ -47,6 +47,30 @@ pub struct VictimNamed {
     pub faction_name: OptString,
 }
 impl VictimNamed {
+    pub fn get_id(&self, name: &str) -> Integer {
+        match name {
+            "victim" => Some(self.victim_id),
+            "killmail" => Some(self.killmail_id),
+            "ship" => Some(self.ship_id),
+            "character" => self.character_id,
+            "corporation" => self.corporation_id,
+            "alliance" => self.alliance_id,
+            "faction" => self.faction_id,
+            any => { warn!("Unknown pattern {}", any); Some(0)}
+        }.unwrap_or_default()
+    }
+
+    pub fn get_name(&self, name: &str) -> String {
+        match name {
+            "ship" => self.ship_name.clone(),
+            "character" => self.character_name.clone(),
+            "corporation" => self.corporation_name.clone(),
+            "alliance" => self.alliance_name.clone(),
+            "faction" => self.faction_name.clone(),
+            any => Some(format!("Unknown pattern {}", any))
+        }.unwrap_or_default()
+    }
+
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
         use diesel::prelude::*;
         named_victims::table.filter(named_victims::killmail_id.eq(id)).first(conn)

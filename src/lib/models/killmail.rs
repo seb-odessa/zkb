@@ -41,6 +41,25 @@ pub struct KillmailNamed {
     pub region_name: OptString,
 }
 impl KillmailNamed {
+
+    pub fn get_id(&self, name: &str) -> Integer {
+        match name {
+            "system" => Some(self.system_id),
+            "constellation" => self.constellation_id.clone(),
+            "region" => self.region_id.clone(),
+            any => { warn!("Unknown pattern {}", any); Some(0)}
+        }.unwrap_or_default()
+    }
+
+    pub fn get_name(&self, name: &str) -> String {
+        match name {
+            "system" => self.system_name.clone(),
+            "constellation" => self.constellation_name.clone(),
+            "region" => self.region_name.clone(),
+            any => Some(format!("Unknown pattern {}", any))
+        }.unwrap_or_default()
+    }
+
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
         use diesel::prelude::*;
         named_killmails::table.filter(named_killmails::killmail_id.eq(id)).first(conn)

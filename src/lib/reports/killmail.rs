@@ -36,7 +36,6 @@ impl Killmail {
     }
 
     pub fn write(output: &mut dyn Write, killmail: &killmail::KillmailNamed, root: &String) {
-        let empty = String::new();
         write(
             output,
             format_args!(
@@ -53,13 +52,13 @@ impl Killmail {
                 "##,
                 id = killmail.killmail_id,
                 timestamp = killmail.killmail_time.to_string(),
-                region_id = killmail.region_id.unwrap_or_default(),
-                region_name = killmail.region_name.as_ref().unwrap_or(&empty),
-                constellation_id = killmail.constellation_id.unwrap_or_default(),
-                constellation_name = killmail.constellation_name.as_ref().unwrap_or(&empty),
+                region_id = killmail.get_id("region"),
+                region_name = killmail.get_name("region"),
+                constellation_id = killmail.get_id("constellation"),
+                constellation_name = killmail.get_name("constellation"),
                 root = root,
-                system_id = killmail.system_id,
-                system = killmail.system_name.as_ref().unwrap_or(&empty),
+                system_id = killmail.get_id("system"),
+                system = killmail.get_name("system"),
                 status = format!("({})", System::security_status(&killmail.system_id)),
             )
         ).expect(FAIL);

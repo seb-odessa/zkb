@@ -14,7 +14,7 @@ impl Victim {
             output,
             format_args!(
                 r#"<div>{name}</div>"#,
-                name = attacker.character_name.as_ref().unwrap_or(&String::new())
+                name = attacker.get_name("character")
             )
         ).expect(reports::FAIL);
     }

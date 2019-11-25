@@ -46,6 +46,15 @@ pub struct ConstellationNeighbors {
 	pub neighbor_name: OptString,
 }
 impl ConstellationNeighbors {
+
+    pub fn get_name(&self, name: &str) -> String {
+        match name {
+            "own" => self.own_name.clone(),
+            "neighbor" => self.neighbor_name.clone(),
+            any => Some(format!("Unknown pattern {}", any))
+        }.unwrap_or_default()
+    }
+
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
         use diesel::prelude::*;
         neighbors_constellations::table
@@ -64,6 +73,15 @@ pub struct ConstellationNamed {
 	pub region_name: OptString,
 }
 impl ConstellationNamed {
+
+    pub fn get_name(&self, name: &str) -> String {
+        match name {
+            "constellation" => self.constellation_name.clone(),
+            "region" => self.region_name.clone(),
+            any => Some(format!("Unknown pattern {}", any))
+        }.unwrap_or_default()
+    }
+
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
         use diesel::prelude::*;
         named_constellations::table.find(id).first(conn)

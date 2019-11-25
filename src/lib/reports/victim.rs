@@ -13,9 +13,7 @@ impl Victim {
     pub fn write(output: &mut dyn Write, victim: &victim::VictimNamed, _root: &String) {
         std::fmt::write(
             output,
-            format_args!(
-                r#"<div>{name}</div>"#,
-                name = victim.character_name.as_ref().map(|x|x.clone()).unwrap_or_default()
+            format_args!("<div>{}</div>", victim.get_name("character")
             )
         ).expect(FAIL);
     }

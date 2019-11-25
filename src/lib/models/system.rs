@@ -56,6 +56,14 @@ pub struct SystemNeighbors {
 	pub neighbor_name: OptString,
 }
 impl SystemNeighbors {
+    pub fn get_name(&self, name: &str) -> String {
+        match name {
+            "own" => self.own_name.clone(),
+            "neighbor" => self.neighbor_name.clone(),
+            any => Some(format!("Unknown pattern {}", any))
+        }.unwrap_or_default()
+    }
+
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
         use diesel::prelude::*;
         neighbors_systems::table
@@ -63,15 +71,6 @@ impl SystemNeighbors {
             .order_by(neighbors_systems::neighbor_name)
             .load(conn)
     }
-
-    pub fn get_own_name(&self) -> String {
-        self.own_name.clone().unwrap_or_default()
-    }
-
-    pub fn get_neighbor_name(&self) -> String {
-        self.neighbor_name.clone().unwrap_or_default()
-    }
-
 }
 
 #[derive(Queryable, Associations, Debug, PartialEq)]
@@ -88,16 +87,13 @@ pub struct SystemNamed {
 }
 impl SystemNamed {
 
-    pub fn get_system_name(&self) -> String {
-        self.system_name.clone().unwrap_or_default()
-    }
-
-    pub fn get_constellation_name(&self) -> String {
-        self.constellation_name.clone().unwrap_or_default()
-    }
-
-    pub fn get_region_name(&self) -> String {
-        self.region_name.clone().unwrap_or_default()
+    pub fn get_name(&self, name: &str) -> String {
+        match name {
+            "system" => self.system_name.clone(),
+            "constellation" => self.constellation_name.clone(),
+            "region" => self.region_name.clone(),
+            any => Some(format!("Unknown pattern {}", any))
+        }.unwrap_or_default()
     }
 
     pub fn has_observatory(&self) -> bool {

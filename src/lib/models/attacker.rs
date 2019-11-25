@@ -57,6 +57,19 @@ pub struct AttackerNamed {
     pub weapon_name: OptString,
 }
 impl AttackerNamed {
+
+    pub fn get_name(&self, name: &str) -> String {
+        match name {
+            "ship" => self.ship_name.clone(),
+            "character" => self.character_name.clone(),
+            "corporation" => self.corporation_name.clone(),
+            "alliance" => self.alliance_name.clone(),
+            "faction" => self.faction_name.clone(),
+            "weapon" => self.weapon_name.clone(),
+            any => Some(format!("Unknown pattern {}", any))
+        }.unwrap_or_default()
+    }
+
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
         use diesel::prelude::*;
         named_attackers::table.filter(named_attackers::killmail_id.eq(id)).load(conn)

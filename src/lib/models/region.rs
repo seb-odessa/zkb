@@ -10,6 +10,15 @@ pub struct RegionNeighbors {
 	pub neighbor_name: OptString,
 }
 impl RegionNeighbors {
+
+    pub fn get_name(&self, name: &str) -> String {
+        match name {
+            "own" => self.own_name.clone(),
+            "neighbor" => self.neighbor_name.clone(),
+            any => Some(format!("Unknown pattern {}", any))
+        }.unwrap_or_default()
+    }
+
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
         use diesel::prelude::*;
         neighbors_regions::table
