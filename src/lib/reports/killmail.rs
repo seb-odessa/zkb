@@ -2,9 +2,9 @@ use crate::models::*;
 use crate::services::Context;
 use crate::reports::{div, System, FAIL};
 use crate::reports;
+use crate::provider;
 
 use killmail::KillmailNamed;
-use item::ItemNamed;
 
 use std::fmt::Write;
 use std::fmt::write;
@@ -41,11 +41,14 @@ impl Killmail {
         let mut dropped = 0;
         if let Report::Items(items) = reports::load(Category::Items(*id), &ctx) {
             for item in &items {
-                if let Some(ref quantity) = item.quantity_destroyed {
-                    destroyed = destroyed + (*quantity as f32 * 1.0) as i32;
-                }
-                if let Some(ref quantity) = item.quantity_dropped {
-                    dropped = dropped + (*quantity as f32  * 1.0) as i32;
+                if let Some(ref price) = provider::get_avg_price(&Some(item.item_type_id)){
+                    if let Some(ref quantity) = item.quantity_destroyed {
+                        destroyed = destroyed + (*quantity as f32 * *price) as i32;
+                        //destroyed = destroyed + ship price
+                    }
+                    if let Some(ref quantity) = item.quantity_dropped {
+                        dropped = dropped + (*quantity as f32  * *price) as i32;
+                    }
                 }
             }
         }
