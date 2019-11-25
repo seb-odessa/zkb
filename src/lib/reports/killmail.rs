@@ -1,10 +1,10 @@
 use crate::models::*;
 use crate::services::Context;
-use crate::services::server::root;
 use crate::reports::{div, System, FAIL};
 use crate::reports;
 
 use killmail::KillmailNamed;
+use item::ItemNamed;
 
 use std::fmt::Write;
 use std::fmt::write;
@@ -35,31 +35,40 @@ impl Killmail {
         })
     }
 
-    pub fn write(output: &mut dyn Write, killmail: &killmail::KillmailNamed, root: &String) {
+    fn get_cost(id: &Integer, ctx: &Context)-> (i32, i32) {
+        use crate::services::*;
+        let mut destroyed = 0;
+        let mut dropped = 0;
+        if let Report::Items(items) = reports::load(Category::Items(*id), &ctx) {
+            for item in &items {
+                if let Some(ref quantity) = item.quantity_destroyed {
+                    destroyed = destroyed + (*quantity as f32 * 1.0) as i32;
+                }
+                if let Some(ref quantity) = item.quantity_dropped {
+                    dropped = dropped + (*quantity as f32  * 1.0) as i32;
+                }
+            }
+        }
+        (dropped, dropped + destroyed)
+    }
+
+    pub fn write(output: &mut dyn Write, killmail: &killmail::KillmailNamed, ctx: &Context) {
+        let sums = Self::get_cost(&killmail.get_id("id"), ctx);
         write(
             output,
             format_args!(
                 r##"
-                    <div>
-                    <a href="{root}/api/killmail/{id}">{id}</a>
-                    <a href="https://zkillboard.com/kill/{id}/">zkb</a>
-                    {timestamp}
-                    <a href="{root}/api/region/{region_id}">{region_name}</a> :
-                    <a href="{root}/api/constellation/{constellation_id}">{constellation_name}</a> :
-                    <a href="{root}/api/system/{system_id}">{system}</a>
-                    <span>{status}</span>
-                    </div>
+                    <div>{timestamp} [{api}] [{zkb}] {region} : {constellation} : {system} <span>{status}</span> {dropped}/{total}</div>
                 "##,
-                id = killmail.killmail_id,
                 timestamp = killmail.killmail_time.to_string(),
-                region_id = killmail.get_id("region"),
-                region_name = killmail.get_name("region"),
-                constellation_id = killmail.get_id("constellation"),
-                constellation_name = killmail.get_name("constellation"),
-                root = root,
-                system_id = killmail.get_id("system"),
-                system = killmail.get_name("system"),
+                api = ctx.get_api_href("killmail", killmail.get_id("id"), format!("api")),
+                zkb = ctx.get_zkb_href("kill", killmail.get_id("id"), format!("zkb")),
+                region = ctx.get_api_href("region", killmail.get_id("region"), killmail.get_name("region")),
+                constellation = ctx.get_api_href("constellation", killmail.get_id("constellation"), killmail.get_name("constellation")),
+                system = ctx.get_api_href("system", killmail.get_id("system"), killmail.get_name("system")),
                 status = format!("({})", System::security_status(&killmail.system_id)),
+                dropped = sums.0,
+                total = sums.1
             )
         ).expect(FAIL);
     }
@@ -74,12 +83,9 @@ impl Killmail {
 
     pub fn brief_impl(id: &Integer, ctx: &Context) -> String {
         use crate::services::*;
-
         let mut output = String::new();
-        let root = root(&ctx);
-
         match reports::load(Category::Killmail(*id), &ctx) {
-            Report::Killmail(killmail) => Self::write(&mut output, &killmail, &root),
+            Report::Killmail(killmail) => Self::write(&mut output, &killmail, &ctx),
             Report::NotFoundId(id) => div(&mut output, format!("<div>Killmail {} was not found</div>", id)),
             report => warn!("Unexpected report {:?}", report)
         }

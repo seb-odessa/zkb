@@ -1,7 +1,6 @@
 use crate::models::*;
 use crate::reports;
 use crate::services::{Context, Report, Area, Category};
-use crate::services::server::root;
 use chrono::{Duration, Utc};
 
 #[derive(Debug, PartialEq)]
@@ -24,11 +23,10 @@ impl History {
         let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
         super::div(&mut output, format!("History since {} ", start.time().format("%H:%M:%S").to_string()));
 
-        let root = root(&ctx);
         match reports::load(category, &ctx) {
             Report::History(history) => {
                 for killmail in history {
-                    reports::Killmail::write(&mut output, &killmail, &root);
+                    reports::Killmail::write(&mut output, &killmail, &ctx);
                 }
             },
             Report::HistoryCount(count) => {

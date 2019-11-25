@@ -44,6 +44,7 @@ impl KillmailNamed {
 
     pub fn get_id(&self, name: &str) -> Integer {
         match name {
+            "id" => Some(self.killmail_id),
             "system" => Some(self.system_id),
             "constellation" => self.constellation_id.clone(),
             "region" => self.region_id.clone(),

@@ -55,6 +55,7 @@ pub enum Category{
     Killmail(i32),
     Victim(i32),
     Attakers(i32),
+    Items(i32),
     System(i32),
     Systems((Area, Filter)),
     Stargate(i32),
@@ -71,6 +72,7 @@ pub enum Report{
     Killmail(models::killmail::KillmailNamed),
     Victim(models::victim::VictimNamed),
     Attakers(Vec<models::attacker::AttackerNamed>),
+    Items(Vec<models::item::ItemNamed>),
     History(Vec<models::killmail::KillmailNamed>),
     HistoryCount(i32),
     System(models::system::SystemNamed),
@@ -129,6 +131,13 @@ impl AppContext {
     pub fn get_api_href<S: Into<String>>(&self, class: S, id: i32, name: String) -> String {
         format!(r#"<a href="http://{server}/navigator/api/{class}/{id}">{name}</a>"#,
             server = self.server,
+            class = class.into(),
+            id = id,
+            name = name)
+    }
+
+    pub fn get_zkb_href<S: Into<String>>(&self, class: S, id: i32, name: String) -> String {
+        format!(r#"<a href="https://zkillboard.com/{class}/{id}/">{name}</a>"#,
             class = class.into(),
             id = id,
             name = name)
