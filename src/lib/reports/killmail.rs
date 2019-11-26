@@ -1,13 +1,11 @@
 use crate::models::*;
-use crate::services::Context;
-use crate::reports::{div, System, FAIL};
+use crate::services::{Context, Report, Category};
 use crate::reports;
 use crate::provider;
-
+use separator::Separatable;
 use killmail::KillmailNamed;
 
 use std::fmt::Write;
-use std::fmt::write;
 
 #[derive(Debug, PartialEq)]
 pub struct Killmail {
@@ -36,7 +34,6 @@ impl Killmail {
     }
 
     fn get_cost(id: &Integer, ctx: &Context)-> (i32, i32) {
-        use crate::services::*;
         let mut destroyed = 0;
         let mut dropped = 0;
         if let Report::Items(items) = reports::load(Category::Items(*id), &ctx) {
@@ -44,7 +41,6 @@ impl Killmail {
                 if let Some(ref price) = provider::get_avg_price(&Some(item.item_type_id)){
                     if let Some(ref quantity) = item.quantity_destroyed {
                         destroyed = destroyed + (*quantity as f32 * *price) as i32;
-                        //destroyed = destroyed + ship price
                     }
                     if let Some(ref quantity) = item.quantity_dropped {
                         dropped = dropped + (*quantity as f32  * *price) as i32;
@@ -52,16 +48,46 @@ impl Killmail {
                 }
             }
         }
+        if let Report::Victim(victim) = reports::load(Category::Victim(*id), &ctx) {
+                if let Some(price) = provider::get_avg_price(&Some(victim.ship_id)){
+                    destroyed = destroyed + price as i32;
+                }
+        }
         (dropped, dropped + destroyed)
+    }
+
+    fn security_status_color(status: f32) -> String {
+        let color = if status <= 0.0 {"Crimson"}
+               else if status < 0.5 {"Red"}
+               else if status < 0.8 {"YellowGreen"}
+               else {"SkyBlue"};
+        color.to_string()
     }
 
     pub fn write(output: &mut dyn Write, killmail: &killmail::KillmailNamed, ctx: &Context) {
         let sums = Self::get_cost(&killmail.get_id("id"), ctx);
-        write(
-            output,
-            format_args!(
+        let mut security = 0.0;
+        if let Report::System(system) = reports::load(Category::System(killmail.system_id), &ctx) {
+            security = system.security_status;
+        }
+        let color = Self::security_status_color(security);
+        let dropped = format!(
                 r##"
-                    <div>{timestamp} [{api}] [{zkb}] {region} : {constellation} : {system} <span>{status}</span> {dropped}/{total}</div>
+                    <span title="Dropped Value" style = "display: inline-block; width: 100px; text-align: right">
+                    {}
+                    </span>"##, sums.0.separated_string()
+        );
+        let total = format!(
+                r##"
+                    <span title="Total Value" style = "display: inline-block; width: 100px; text-align: right">
+                    {}
+                    </span>"##, sums.1.separated_string()
+        );
+        let content = format!(
+                r##"
+                    {timestamp} [{api}] [{zkb}]
+                    {region} : {constellation} : {system}
+                    ({security_status})  {total} {dropped}
                 "##,
                 timestamp = killmail.killmail_time.to_string(),
                 api = ctx.get_api_href("killmail", killmail.get_id("id"), format!("api")),
@@ -69,11 +95,11 @@ impl Killmail {
                 region = ctx.get_api_href("region", killmail.get_id("region"), killmail.get_name("region")),
                 constellation = ctx.get_api_href("constellation", killmail.get_id("constellation"), killmail.get_name("constellation")),
                 system = ctx.get_api_href("system", killmail.get_id("system"), killmail.get_name("system")),
-                status = format!("({})", System::security_status(&killmail.system_id)),
-                dropped = sums.0,
-                total = sums.1
-            )
-        ).expect(FAIL);
+                security_status = format!(r##"<span title="System Security Status" style = "color: {};">{:.1}</span>"##, color, security),
+                dropped = dropped,
+                total = total,
+        );
+        reports::div(output, content);
     }
 
     pub fn brief(arg: &String, ctx: &Context) -> String {
@@ -85,11 +111,10 @@ impl Killmail {
     }
 
     pub fn brief_impl(id: &Integer, ctx: &Context) -> String {
-        use crate::services::*;
         let mut output = String::new();
         match reports::load(Category::Killmail(*id), &ctx) {
             Report::Killmail(killmail) => Self::write(&mut output, &killmail, &ctx),
-            Report::NotFoundId(id) => div(&mut output, format!("<div>Killmail {} was not found</div>", id)),
+            Report::NotFoundId(id) => reports::div(&mut output, format!("<div>Killmail {} was not found</div>", id)),
             report => warn!("Unexpected report {:?}", report)
         }
         return output;
