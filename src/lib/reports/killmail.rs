@@ -49,9 +49,9 @@ impl Killmail {
             }
         }
         if let Report::Victim(victim) = reports::load(Category::Victim(*id), &ctx) {
-                if let Some(price) = provider::get_avg_price(&Some(victim.ship_id)){
-                    destroyed = destroyed + price as i32;
-                }
+            if let Some(price) = provider::get_avg_price(&Some(victim.ship_id)){
+                destroyed = destroyed + price as i32;
+            }
         }
         (dropped, dropped + destroyed)
     }
@@ -73,23 +73,23 @@ impl Killmail {
         let color = Self::security_status_color(security);
         let dropped = format!(
                 r##"
-                    <span title="Dropped Value" style = "display: inline-block; width: 150px; text-align: right">
+                    <span title="Dropped Value" style = "display: inline-block; width: 115px; text-align: right">
                     {}
                     </span>"##, sums.0.separated_string()
         );
         let total = format!(
                 r##"
-                    <span title="Total Value" style = "display: inline-block; width: 150px; text-align: right">
+                    <span title="Total Value" style = "display: inline-block; width: 125px; text-align: right">
                     {}
                     </span>"##, sums.1.separated_string()
         );
         let content = format!(
                 r##"
                     {timestamp} [{api}] [{zkb}]
-                    {region} : {constellation} : {system}
-                    ({security_status})
                     {total}
                     {dropped}
+                    {region} : {constellation} : {system}
+                    ({security_status})
                 "##,
                 timestamp = killmail.killmail_time.to_string(),
                 api = ctx.get_api_href("killmail", killmail.get_id("id"), format!("api")),
