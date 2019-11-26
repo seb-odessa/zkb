@@ -73,13 +73,13 @@ impl Killmail {
         let color = Self::security_status_color(security);
         let dropped = format!(
                 r##"
-                    <span title="Dropped Value" style = "display: inline-block; width: 100px; text-align: right">
+                    <span title="Dropped Value" style = "display: inline-block; width: 150px; text-align: right">
                     {}
                     </span>"##, sums.0.separated_string()
         );
         let total = format!(
                 r##"
-                    <span title="Total Value" style = "display: inline-block; width: 100px; text-align: right">
+                    <span title="Total Value" style = "display: inline-block; width: 150px; text-align: right">
                     {}
                     </span>"##, sums.1.separated_string()
         );
@@ -87,7 +87,9 @@ impl Killmail {
                 r##"
                     {timestamp} [{api}] [{zkb}]
                     {region} : {constellation} : {system}
-                    ({security_status})  {total} {dropped}
+                    ({security_status})
+                    {total}
+                    {dropped}
                 "##,
                 timestamp = killmail.killmail_time.to_string(),
                 api = ctx.get_api_href("killmail", killmail.get_id("id"), format!("api")),
