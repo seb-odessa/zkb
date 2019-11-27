@@ -220,6 +220,28 @@ table! {
     }
 }
 
+table! {
+    observatory_path (S0_id, S2_id, S3_id, S4_id, S5_id) {
+        S0_id -> Integer,
+        S0_name -> Nullable<Text>,
+        S1_id -> Integer,
+        S1_name -> Nullable<Text>,
+        S1_JO -> Integer,
+        S2_id -> Integer,
+        S2_name -> Nullable<Text>,
+        S2_JO -> Integer,
+        S3_id -> Integer,
+        S3_name -> Nullable<Text>,
+        S3_JO -> Integer,
+        S4_id -> Integer,
+        S4_name -> Nullable<Text>,
+        S4_JO -> Integer,
+        S5_id -> Integer,
+        S5_name -> Nullable<Text>,
+        S5_JO -> Integer,
+    }
+}
+
 joinable!(attackers -> killmails (killmail_id));
 joinable!(items -> killmails (killmail_id));
 joinable!(objects -> categories (category_id));
