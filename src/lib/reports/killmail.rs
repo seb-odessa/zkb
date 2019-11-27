@@ -57,11 +57,19 @@ impl Killmail {
     }
 
     fn security_status_color(status: f32) -> String {
-        let color = if status <= 0.0 {"Crimson"}
-               else if status < 0.5 {"Red"}
-               else if status < 0.8 {"YellowGreen"}
-               else {"SkyBlue"};
-        color.to_string()
+        if status <= 0.0 {"Crimson"}
+        else if status < 0.5 {"Red"}
+        else if status < 0.8 {"YellowGreen"}
+        else {"SkyBlue"}
+        .to_string()
+    }
+
+    fn volume_color(value: &u64) -> String {
+        if *value > 1_000_000_000 {"Red"}
+        else if *value > 100_000_000 {"Tomato"}
+        else if *value > 1_000_000 {"LightPink"}
+        else {"WhiteSmoke"}
+        .to_string()
     }
 
     pub fn write(output: &mut dyn Write, killmail: &killmail::KillmailNamed, ctx: &Context) {
@@ -70,18 +78,28 @@ impl Killmail {
         if let Report::System(system) = reports::load(Category::System(killmail.system_id), &ctx) {
             security = system.security_status;
         }
-        let color = Self::security_status_color(security);
+        let security_status = format!(
+            r##"
+                <span title="System Security Status" style = "color: {};">{:.1}</span>
+            "##,
+            Self::security_status_color(security),
+            security
+        );
         let dropped = format!(
                 r##"
-                    <span title="Dropped Value" style = "display: inline-block; width: 115px; text-align: right">
+                    <span title="Dropped Value" style = "display: inline-block; width: 115px; text-align: right; background-color: {};">
                     {}
-                    </span>"##, sums.0.separated_string()
+                    </span>"##,
+                    Self::volume_color(&sums.0),
+                    sums.0.separated_string()
         );
         let total = format!(
                 r##"
-                    <span title="Total Value" style = "display: inline-block; width: 125px; text-align: right">
+                    <span title="Total Value" style = "display: inline-block; width: 125px; text-align: right; background-color: {};">
                     {}
-                    </span>"##, sums.1.separated_string()
+                    </span>"##,
+                    Self::volume_color(&sums.1),
+                    sums.1.separated_string()
         );
         let content = format!(
                 r##"
@@ -97,7 +115,7 @@ impl Killmail {
                 region = ctx.get_api_href("region", killmail.get_id("region"), killmail.get_name("region")),
                 constellation = ctx.get_api_href("constellation", killmail.get_id("constellation"), killmail.get_name("constellation")),
                 system = ctx.get_api_href("system", killmail.get_id("system"), killmail.get_name("system")),
-                security_status = format!(r##"<span title="System Security Status" style = "color: {};">{:.1}</span>"##, color, security),
+                security_status = security_status,
                 dropped = dropped,
                 total = total,
         );
