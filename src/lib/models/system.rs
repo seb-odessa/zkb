@@ -3,6 +3,7 @@ use crate::api;
 use crate::schema::systems;
 use crate::schema::named_systems;
 use crate::schema::neighbors_systems;
+use crate::schema::observatory_path;
 use super::{Connection, QueryResult, Integer, OptInteger, OptString, Float};
 
 #[derive(Insertable)]
@@ -137,5 +138,36 @@ impl SystemNamed {
                     .filter(named_systems::observatory.is_not_null())
                     .load(conn),
         }
+    }
+}
+
+#[derive(Queryable, Associations, Debug, PartialEq)]
+#[table_name = "observatory_path"]
+pub struct ObservatoryPath {
+    pub s0_id: Integer,
+    pub s0_name: OptString,
+    pub s1_id: Integer,
+    pub s1_name: OptString,
+    pub s1_jo: bool,
+    pub s2_id: Integer,
+    pub s2_name: OptString,
+    pub s2_jo: bool,
+    pub s3_id: Integer,
+    pub s3_name: OptString,
+    pub s3_jo: bool,
+    pub s4_id: Integer,
+    pub s4_name: OptString,
+    pub s4_jo: bool,
+    pub s5_id: Integer,
+    pub s5_name: OptString,
+    pub s5_jo: bool,
+}
+impl ObservatoryPath {
+        pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+        info!("Load system {}", &id);
+        observatory_path::table
+            .filter(observatory_path::s0_id.eq(id))
+            .load(conn)
     }
 }

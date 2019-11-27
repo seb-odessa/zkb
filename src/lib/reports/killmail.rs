@@ -66,7 +66,10 @@ impl Killmail {
 
     fn volume_color(value: &u64) -> String {
         if *value > 1_000_000_000 {"Red"}
+        else if *value > 500_000_000 {"OrangeRed"}
         else if *value > 100_000_000 {"Tomato"}
+        else if *value > 50_000_000 {"IndianRed"}
+        else if *value > 10_000_000 {"LightCoral"}
         else if *value > 1_000_000 {"LightPink"}
         else {"WhiteSmoke"}
         .to_string()

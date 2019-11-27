@@ -1,9 +1,8 @@
 use crate::api;
 use super::{FAIL};
-use crate::services::{Context, Area, Category, Model, Report, Filter};
+use crate::services::{Context, Area, Category, Model, Report};
 use crate::reports::*;
 use crate::reports;
-use crate::models;
 use crate::provider;
 
 use std::fmt::Write;
@@ -40,27 +39,6 @@ impl System {
         }
     }
 
-    fn load_constellation_observatory(id: &i32, ctx: &Context) -> Vec<models::system::SystemNamed> {
-        let area = Area::Constellation(*id);
-        let filter = Filter::WithJovianObservatoryOnly;
-        if let Report::Systems(systems) = reports::load(Category::Systems((area, filter)), &ctx) {
-            systems
-        } else {
-            Vec::new()
-        }
-    }
-
-    fn load_neighbor_observatories(system: &models::system::SystemNamed, ctx: &Context) -> Vec<models::system::SystemNamed> {
-        let mut systems = Self::load_constellation_observatory(&system.constellation_id, ctx);
-        if let Report::ConstellationNeighbors(neighbors) = reports::load(Category::Neighbors(Area::Constellation(system.constellation_id)), &ctx) {
-            for neighbor in &neighbors {
-                let mut other = Self::load_constellation_observatory(&neighbor.neighbor_id, ctx);
-                systems.append(&mut other);
-            }
-        }
-        return systems;
-    }
-
     fn get_system_href(id: &i32, ctx: &Context) -> String {
         match reports::load(Category::System(*id), ctx) {
             Report::System(system) => ctx.get_api_href("system", system.system_id, system.get_name("system")),
@@ -89,6 +67,62 @@ impl System {
         return path;
     }
 
+    fn report_observatory_path(output: &mut dyn Write, id: &i32, ctx: &Context) {
+        use std::collections::HashSet;
+        let arrow = format!("&nbsp;&gt;&nbsp;");
+        let mut covered = HashSet::new();
+        match reports::load(Category::ObservatoryPath(*id), &ctx) {
+            Report::ObservatoryPath(paths) => {
+                for path in &paths {
+                    if path.s1_jo {
+                        if covered.insert(&path.s1_id) {
+                            div(output, format!("{}{}",
+                                arrow, Self::get_system_href(&path.s1_id, ctx)
+                            ));
+                        }
+                    } else if path.s2_jo {
+                        if covered.insert(&path.s2_id) {
+                            div(output, format!("{}{}{}{}",
+                                arrow, Self::get_system_href(&path.s1_id, ctx),
+                                arrow, Self::get_system_href(&path.s2_id, ctx),
+                            ));
+                        }
+                    } else if path.s3_jo {
+                        if covered.insert(&path.s3_id) {
+                            div(output, format!("{}{}{}{}{}{}",
+                                arrow, Self::get_system_href(&path.s1_id, ctx),
+                                arrow, Self::get_system_href(&path.s2_id, ctx),
+                                arrow, Self::get_system_href(&path.s3_id, ctx),
+                            ));
+                        }
+                    } else if path.s4_jo {
+                        if covered.insert(&path.s4_id) {
+                            div(output, format!("{}{}{}{}{}{}{}{}",
+                                arrow, Self::get_system_href(&path.s1_id, ctx),
+                                arrow, Self::get_system_href(&path.s2_id, ctx),
+                                arrow, Self::get_system_href(&path.s3_id, ctx),
+                                arrow, Self::get_system_href(&path.s4_id, ctx),
+                            ));
+                        }
+                    } else if path.s5_jo {
+                        if covered.insert(&path.s5_id) {
+                            div(output, format!("{}{}{}{}{}{}{}{}{}{}",
+                                arrow, Self::get_system_href(&path.s1_id, ctx),
+                                arrow, Self::get_system_href(&path.s2_id, ctx),
+                                arrow, Self::get_system_href(&path.s3_id, ctx),
+                                arrow, Self::get_system_href(&path.s4_id, ctx),
+                                arrow, Self::get_system_href(&path.s5_id, ctx),
+                            ));
+                        }
+                    }
+                }
+            },
+            report => {
+                div(output, format!("Unexpected Report: {:?}", report));
+            }
+        }
+    }
+
     fn observatory_report(output: &mut dyn Write, id: &i32, ctx: &Context) {
         match reports::load(Category::System(*id), &ctx) {
             Report::System(system) => {
@@ -97,9 +131,7 @@ impl System {
                 }
                 jovian_buttons(output, &system.system_id, &system.get_name("system"));
                 div(output, format!("Nearest system with Jovian Observatory:"));
-                for neighbor in &Self::load_neighbor_observatories(&system, ctx) {
-                    lazy(output, format!("services/route/{}/{}", system.system_id, neighbor.system_id), &ctx);
-                }
+                Self::report_observatory_path(output, id, ctx);
             },
             Report::NotFoundId(id) => div(output, format!("System {} was not found", id)),
             report => warn!("Unexpected report {:?}", report)

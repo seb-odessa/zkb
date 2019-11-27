@@ -209,6 +209,18 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                 }
                             }
                         },
+                        Category::ObservatoryPath(id) => {
+                            match models::system::ObservatoryPath::load(&conn, &id) {
+                                Ok(objects) => {
+                                    info!("loaded paths for {} queue length: {}", id, context.database.len());
+                                    context.responses.push(Message::Report((msg_id, Report::ObservatoryPath(objects))));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load killmail: {}", e);
+                                    context.responses.push(Message::Report((msg_id, Report::NotFoundId(*id))));
+                                }
+                            }
+                        },
                         Category::History((area, minutes)) => {
                             let history = match area {
                                 Area::System(id) => models::killmail::KillmailNamed::load_system_history(&conn, &id, &minutes),

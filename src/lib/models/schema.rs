@@ -221,24 +221,24 @@ table! {
 }
 
 table! {
-    observatory_path (S0_id, S2_id, S3_id, S4_id, S5_id) {
-        S0_id -> Integer,
-        S0_name -> Nullable<Text>,
-        S1_id -> Integer,
-        S1_name -> Nullable<Text>,
-        S1_JO -> Integer,
-        S2_id -> Integer,
-        S2_name -> Nullable<Text>,
-        S2_JO -> Integer,
-        S3_id -> Integer,
-        S3_name -> Nullable<Text>,
-        S3_JO -> Integer,
-        S4_id -> Integer,
-        S4_name -> Nullable<Text>,
-        S4_JO -> Integer,
-        S5_id -> Integer,
-        S5_name -> Nullable<Text>,
-        S5_JO -> Integer,
+    observatory_path (s0_id, s2_id, s3_id, s4_id, s5_id) {
+        s0_id -> Integer,
+        s0_name -> Nullable<Text>,
+        s1_id -> Integer,
+        s1_name -> Nullable<Text>,
+        s1_jo -> Bool,
+        s2_id -> Integer,
+        s2_name -> Nullable<Text>,
+        s2_jo -> Bool,
+        s3_id -> Integer,
+        s3_name -> Nullable<Text>,
+        s3_jo -> Bool,
+        s4_id -> Integer,
+        s4_name -> Nullable<Text>,
+        s4_jo -> Bool,
+        s5_id -> Integer,
+        s5_name -> Nullable<Text>,
+        s5_jo -> Bool,
     }
 }
 

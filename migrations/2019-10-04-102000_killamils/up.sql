@@ -315,23 +315,23 @@ LEFT JOIN observatories ON observatories.system_id = systems.system_id;
 DROP VIEW IF EXISTS observatory_path;
 CREATE VIEW IF NOT EXISTS observatory_path AS
 SELECT
-	S0.system_id AS S0_id,
-	S0.system_name AS S0_name,
-	S1.system_id AS S1_id,
-	S1.system_name AS S1_name,
-	CASE WHEN S1.observatory IS NULL THEN 0 ELSE 1 END AS S1_JO,
-	S2.system_id AS S2_id,
-	S2.system_name AS S2_name,
-	CASE WHEN S2.observatory IS NULL THEN 0 ELSE 1 END AS S2_JO,
-	S3.system_id AS S3_id,
-	S3.system_name AS S3_name,
-	CASE WHEN S3.observatory IS NULL THEN 0 ELSE 1 END AS S3_JO,
-	S4.system_id AS S4_id,
-	S4.system_name AS S4_name,
-	CASE WHEN S4.observatory IS NULL THEN 0 ELSE 1 END AS S4_JO,
-	S5.system_id AS S5_id,
-	S5.system_name AS S5_name,
-	CASE WHEN S5.observatory IS NULL THEN 0 ELSE 1 END AS S5_JO
+	S0.system_id AS s0_id,
+	S0.system_name AS s0_name,
+	S1.system_id AS s1_id,
+	S1.system_name AS s1_name,
+	CASE WHEN S1.observatory IS NULL THEN 0 ELSE 1 END AS s1_JO,
+	S2.system_id AS s2_id,
+	S2.system_name AS s2_name,
+	CASE WHEN S2.observatory IS NULL THEN 0 ELSE 1 END AS s2_JO,
+	S3.system_id AS s3_id,
+	S3.system_name AS s3_name,
+	CASE WHEN S3.observatory IS NULL THEN 0 ELSE 1 END AS s3_JO,
+	S4.system_id AS s4_id,
+	S4.system_name AS s4_name,
+	CASE WHEN S4.observatory IS NULL THEN 0 ELSE 1 END AS s4_JO,
+	S5.system_id AS s5_id,
+	S5.system_name AS s5_name,
+	CASE WHEN S5.observatory IS NULL THEN 0 ELSE 1 END AS s5_JO
 FROM named_systems S0
 JOIN stargates SG0 ON SG0.system_id = S0.system_id
 JOIN named_systems S1 ON SG0.dst_system_id = S1.system_id
