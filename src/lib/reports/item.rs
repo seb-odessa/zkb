@@ -6,10 +6,10 @@ use crate::reports;
 use std::fmt::Write;
 
 #[derive(Debug, PartialEq)]
-pub struct Attacker;
-impl Attacker {
-    pub fn write(output: &mut dyn Write, attacker: &models::attacker::AttackerNamed, _ctx: &Context) {
-        reports::div(output, format!("{}", attacker.get_name("character")));
+pub struct Item;
+impl Item {
+    pub fn write(output: &mut dyn Write, item: &models::item::ItemNamed, _ctx: &Context) {
+        reports::div(output, format!("{} : {} : {}", item.get_name(), item.get_dropped(), item.get_destroyed()));
     }
 
     pub fn brief(arg: &String, ctx: &Context) -> String {
@@ -20,10 +20,10 @@ impl Attacker {
         }
     }
 
-    pub fn load(id: &i32, ctx: &Context) -> Option<Vec<models::attacker::AttackerNamed>> {
+    pub fn load(id: &i32, ctx: &Context) -> Option<Vec<models::item::ItemNamed>> {
         use services::{Category, Report};
-        match reports::load(Category::Attackers(*id), &ctx) {
-            Report::Attackers(attackers) => return Some(attackers),
+        match reports::load(Category::Items(*id), &ctx) {
+            Report::Items(items) => return Some(items),
             Report::NotFoundId(id) => warn!("{} was not found", id),
             report => warn!("Unexpected report {:?}", report)
         }
@@ -32,9 +32,9 @@ impl Attacker {
 
     pub fn brief_impl(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
-        if let Some(attackers) = Self::load(id, ctx) {
-            for attacker in attackers {
-                Self::write(&mut output, &attacker, ctx);
+        if let Some(items) = Self::load(id, ctx) {
+            for item in items {
+                Self::write(&mut output, &item, ctx);
             }
         }
         return output;

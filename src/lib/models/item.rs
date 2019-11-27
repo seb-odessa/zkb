@@ -42,6 +42,19 @@ pub struct ItemNamed {
     pub quantity_dropped: OptInteger,
 }
 impl ItemNamed {
+
+    pub fn get_name(&self) -> String {
+        self.item_type_name.clone().unwrap_or_default()
+    }
+
+    pub fn get_destroyed(&self) -> u64 {
+        self.quantity_destroyed.clone().unwrap_or_default() as u64
+    }
+
+    pub fn get_dropped(&self) -> u64 {
+        self.quantity_dropped.clone().unwrap_or_default() as u64
+    }
+
     pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
         use diesel::prelude::*;
         named_items::table.filter(named_items::killmail_id.eq(id)).load(conn)

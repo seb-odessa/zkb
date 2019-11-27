@@ -7,6 +7,7 @@ pub mod system;
 pub mod region;
 pub mod stargate;
 pub mod constellation;
+mod item;
 
 use crate::services::{Context, Category, Message, Report};
 use std::fmt::Write;
@@ -15,11 +16,13 @@ use std::fmt::Write;
 pub use names::Names;
 pub use killmail::Killmail;
 pub use victim::Victim;
+pub use attacker::Attacker;
 pub use history::History;
 pub use system::System;
 pub use region::Region;
 pub use stargate::Stargate;
 pub use constellation::Constellation;
+pub use item::Item;
 
 pub const FAIL: &'static str = "Error occurred while trying to write in String";
 

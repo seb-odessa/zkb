@@ -1,9 +1,11 @@
 use crate::models::*;
-use crate::services::{Context, Report, Category};
+use crate::services;
+use crate::services::Context;
 use crate::reports;
+use crate::models;
 use crate::provider;
 use separator::Separatable;
-use killmail::KillmailNamed;
+
 
 use std::fmt::Write;
 
@@ -19,21 +21,9 @@ pub struct Killmail {
     pub region_name: OptString,
 }
 impl Killmail {
-    pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
-        let killmail = KillmailNamed::load(conn, id)?;
-        Ok(Self {
-            killmail_id: killmail.killmail_id,
-            killmail_time: killmail.killmail_time,
-            system_id: killmail.system_id,
-            system_name: killmail.system_name,
-            constellation_id: killmail.constellation_id,
-            constellation_name: killmail.constellation_name,
-            region_id: killmail.region_id,
-            region_name: killmail.region_name,
-        })
-    }
 
     fn get_cost(id: &Integer, ctx: &Context)-> (u64, u64) {
+        use services::{Category, Report};
         let mut destroyed = 0;
         let mut dropped = 0;
         if let Report::Items(items) = reports::load(Category::Items(*id), &ctx) {
@@ -76,6 +66,7 @@ impl Killmail {
     }
 
     pub fn write(output: &mut dyn Write, killmail: &killmail::KillmailNamed, ctx: &Context) {
+        use services::{Category, Report};
         let sums = Self::get_cost(&killmail.get_id("id"), ctx);
         let mut security = 0.0;
         if let Report::System(system) = reports::load(Category::System(killmail.system_id), &ctx) {
@@ -129,16 +120,24 @@ impl Killmail {
         if let Ok(ref id) = arg.parse::<i32>() {
             Self::brief_impl(id, ctx)
         } else {
-            format!("<div>Killmail {} was not found</div>", arg)
+            format!("Can't parse {}", arg)
         }
     }
 
-    pub fn brief_impl(id: &Integer, ctx: &Context) -> String {
-        let mut output = String::new();
+    pub fn load(id: &i32, ctx: &Context) -> Option<models::killmail::KillmailNamed> {
+        use services::{Category, Report};
         match reports::load(Category::Killmail(*id), &ctx) {
-            Report::Killmail(killmail) => Self::write(&mut output, &killmail, &ctx),
-            Report::NotFoundId(id) => reports::div(&mut output, format!("<div>Killmail {} was not found</div>", id)),
+            Report::Killmail(killmail) => return Some(killmail),
+            Report::NotFoundId(id) => warn!("{} was not found", id),
             report => warn!("Unexpected report {:?}", report)
+        }
+        return None;
+    }
+
+    pub fn brief_impl(id: &i32, ctx: &Context) -> String {
+        let mut output = String::new();
+        if let Some(object) = Self::load(id, ctx) {
+            Self::write(&mut output, &object, ctx);
         }
         return output;
     }

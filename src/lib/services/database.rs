@@ -185,11 +185,11 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                 }
                             }
                         },
-                        Category::Attakers(id) => {
+                        Category::Attackers(id) => {
                             match models::attacker::AttackerNamed::load(&conn, &id) {
                                 Ok(object) => {
                                     info!("loaded attakers for KM {} queue length: {}", id, context.database.len());
-                                    context.responses.push(Message::Report((msg_id, Report::Attakers(object))));
+                                    context.responses.push(Message::Report((msg_id, Report::Attackers(object))));
                                 },
                                 Err(e) => {
                                     warn!("was not able to load killmail: {}", e);
