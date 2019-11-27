@@ -33,24 +33,24 @@ impl Killmail {
         })
     }
 
-    fn get_cost(id: &Integer, ctx: &Context)-> (i32, i32) {
+    fn get_cost(id: &Integer, ctx: &Context)-> (u64, u64) {
         let mut destroyed = 0;
         let mut dropped = 0;
         if let Report::Items(items) = reports::load(Category::Items(*id), &ctx) {
             for item in &items {
                 if let Some(ref price) = provider::get_avg_price(&Some(item.item_type_id)){
                     if let Some(ref quantity) = item.quantity_destroyed {
-                        destroyed = destroyed + (*quantity as f32 * *price) as i32;
+                        destroyed = destroyed + (*quantity as f32 * *price) as u64;
                     }
                     if let Some(ref quantity) = item.quantity_dropped {
-                        dropped = dropped + (*quantity as f32  * *price) as i32;
+                        dropped = dropped + (*quantity as f32  * *price) as u64;
                     }
                 }
             }
         }
         if let Report::Victim(victim) = reports::load(Category::Victim(*id), &ctx) {
             if let Some(price) = provider::get_avg_price(&Some(victim.ship_id)){
-                destroyed = destroyed + price as i32;
+                destroyed = destroyed + price as u64;
             }
         }
         (dropped, dropped + destroyed)
