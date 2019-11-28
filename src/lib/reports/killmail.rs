@@ -66,8 +66,9 @@ impl Killmail {
     }
 
     pub fn write(output: &mut dyn Write, killmail: &killmail::KillmailNamed, ctx: &Context) {
+        let id = killmail.killmail_id;
         use services::{Category, Report};
-        let sums = Self::get_cost(&killmail.get_id("id"), ctx);
+        let sums = Self::get_cost(&id, ctx);
         let mut security = 0.0;
         if let Report::System(system) = reports::load(Category::System(killmail.system_id), &ctx) {
             security = system.security_status;
@@ -79,6 +80,12 @@ impl Killmail {
             Self::security_status_color(security),
             security
         );
+        let victim = if let Some(victim) = reports::Victim::load(&id, ctx) {
+            format!("{} ({})", victim.get_name("character"), victim.get_name("alliance"))
+        } else {
+            format!("Unknown")
+        };
+
         let dropped = format!(
                 r##"
                     <span title="Dropped Value" style = "display: inline-block; width: 115px; text-align: right; background-color: {};">
@@ -95,16 +102,18 @@ impl Killmail {
                     Self::volume_color(&sums.1),
                     sums.1.separated_string()
         );
+        let time = killmail.killmail_time.time().to_string();
         let content = format!(
                 r##"
-                    {timestamp} [{api}] [{zkb}]
+                    {api} [{zkb}]
                     {total}
                     {dropped}
                     {region} : {constellation} : {system}
                     ({security_status})
+                    {victim}
                 "##,
-                timestamp = killmail.killmail_time.to_string(),
-                api = ctx.get_api_href("killmail", killmail.get_id("id"), format!("api")),
+
+                api = ctx.get_api_href("killmail", killmail.get_id("id"), time),
                 zkb = ctx.get_zkb_href("kill", killmail.get_id("id"), format!("zkb")),
                 region = ctx.get_api_href("region", killmail.get_id("region"), killmail.get_name("region")),
                 constellation = ctx.get_api_href("constellation", killmail.get_id("constellation"), killmail.get_name("constellation")),
@@ -112,6 +121,7 @@ impl Killmail {
                 security_status = security_status,
                 dropped = dropped,
                 total = total,
+                victim = victim,
         );
         reports::div(output, content);
     }
