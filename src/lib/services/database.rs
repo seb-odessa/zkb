@@ -177,6 +177,19 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                             match models::victim::VictimNamed::load(&conn, &id) {
                                 Ok(object) => {
                                     info!("loaded victim for KM {} queue length: {}", id, context.database.len());
+                                    get_name_if_none(&context.resolver, &object.ship_name, object.ship_id);
+                                    if let Some(id) = object.faction_id {
+                                        get_name_if_none(&context.resolver, &object.faction_name, id);
+                                    }
+                                    if let Some(id) = object.character_id {
+                                        get_name_if_none(&context.resolver, &object.character_name, id);
+                                    }
+                                    if let Some(id) = object.corporation_id {
+                                        get_name_if_none(&context.resolver, &object.corporation_name, id);
+                                    }
+                                    if let Some(id) = object.alliance_id {
+                                        get_name_if_none(&context.resolver, &object.alliance_name, id);
+                                    }
                                     context.responses.push(Message::Report((msg_id, Report::Victim(object))));
                                 },
                                 Err(e) => {

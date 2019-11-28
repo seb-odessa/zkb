@@ -80,11 +80,6 @@ impl Killmail {
             Self::security_status_color(security),
             security
         );
-        let victim = if let Some(victim) = reports::Victim::load(&id, ctx) {
-            format!("{} ({})", victim.get_name("character"), victim.get_name("alliance"))
-        } else {
-            format!("Unknown")
-        };
 
         let dropped = format!(
                 r##"
@@ -121,7 +116,7 @@ impl Killmail {
                 security_status = security_status,
                 dropped = dropped,
                 total = total,
-                victim = victim,
+                victim = reports::Victim::report_name(&id, ctx),
         );
         reports::div(output, content);
     }
