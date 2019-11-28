@@ -178,9 +178,6 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                 Ok(object) => {
                                     info!("loaded victim for KM {} queue length: {}", id, context.database.len());
                                     get_name_if_none(&context.resolver, &object.ship_name, object.ship_id);
-                                    if let Some(id) = object.faction_id {
-                                        get_name_if_none(&context.resolver, &object.faction_name, id);
-                                    }
                                     if let Some(id) = object.character_id {
                                         get_name_if_none(&context.resolver, &object.character_name, id);
                                     }
@@ -189,6 +186,9 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                     }
                                     if let Some(id) = object.alliance_id {
                                         get_name_if_none(&context.resolver, &object.alliance_name, id);
+                                    }
+                                    if let Some(id) = object.faction_id {
+                                        get_name_if_none(&context.resolver, &object.faction_name, id);
                                     }
                                     context.responses.push(Message::Report((msg_id, Report::Victim(object))));
                                 },
@@ -200,9 +200,29 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         },
                         Category::Attackers(id) => {
                             match models::attacker::AttackerNamed::load(&conn, &id) {
-                                Ok(object) => {
+                                Ok(objects) => {
                                     info!("loaded attakers for KM {} queue length: {}", id, context.database.len());
-                                    context.responses.push(Message::Report((msg_id, Report::Attackers(object))));
+                                    for object in &objects {
+                                        if let Some(id) = object.ship_id {
+                                            get_name_if_none(&context.resolver, &object.ship_name, id);
+                                        }
+                                        if let Some(id) = object.character_id {
+                                            get_name_if_none(&context.resolver, &object.character_name, id);
+                                        }
+                                        if let Some(id) = object.corporation_id {
+                                            get_name_if_none(&context.resolver, &object.corporation_name, id);
+                                        }
+                                        if let Some(id) = object.alliance_id {
+                                            get_name_if_none(&context.resolver, &object.alliance_name, id);
+                                        }
+                                        if let Some(id) = object.faction_id {
+                                            get_name_if_none(&context.resolver, &object.faction_name, id);
+                                        }
+                                        if let Some(id) = object.weapon_id {
+                                            get_name_if_none(&context.resolver, &object.weapon_name, id);
+                                        }
+                                    }
+                                    context.responses.push(Message::Report((msg_id, Report::Attackers(objects))));
                                 },
                                 Err(e) => {
                                     warn!("was not able to load killmail: {}", e);
@@ -212,9 +232,12 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                         },
                         Category::Items(id) => {
                             match models::item::ItemNamed::load(&conn, &id) {
-                                Ok(object) => {
+                                Ok(objects) => {
                                     info!("loaded items for KM {} queue length: {}", id, context.database.len());
-                                    context.responses.push(Message::Report((msg_id, Report::Items(object))));
+                                    for object in &objects {
+                                        get_name_if_none(&context.resolver, &object.item_type_name, object.item_type_id);
+                                    }
+                                    context.responses.push(Message::Report((msg_id, Report::Items(objects))));
                                 },
                                 Err(e) => {
                                     warn!("was not able to load killmail: {}", e);
