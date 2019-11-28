@@ -43,6 +43,9 @@ pub struct ItemNamed {
 }
 impl ItemNamed {
 
+    pub fn get_id(&self) -> Integer {
+        self.item_type_id
+    }
     pub fn get_name(&self) -> String {
         self.item_type_name.clone().unwrap_or_default()
     }

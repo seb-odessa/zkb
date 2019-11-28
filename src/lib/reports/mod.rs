@@ -44,8 +44,38 @@ pub fn div<S: Into<String>>(output: &mut dyn Write, content: S) {
     std::fmt::write(output, format_args!("<div>{}</div>", content.into())).expect(FAIL);
 }
 
-pub fn tip<S0: Into<String>, S1: Into<String>>(tip: S0, text: S1) -> String{
-    format!(r#"<span title="{}">{}</span>"#, tip.into(), text.into())
+pub fn span<S0: Into<String>, S1: Into<String>, S2: Into<String>>(title: S0, style: S1, content: S2) -> String{
+    format!(r#"<span title="{}" style = "{}">{}</span>"#, title.into(), style.into(), content.into())
+}
+
+
+pub fn table_start<S0: Into<String>, S1: Into<String>>(output: &mut dyn Write, title: S0, style: S1) {
+    std::fmt::write(output,format_args!(r#"<table title="{}" style = "{}">"#, title.into(), style.into())).expect(FAIL);
+}
+
+pub fn table_cell<S0: Into<String>, S1: Into<String>, S2: Into<String>>(output: &mut dyn Write, title: S0, style: S1, content: S2){
+    std::fmt::write(output,format_args!(r#"<td title="{}" style = "{}">{}</td>"#, title.into(), style.into(), content.into())).expect(FAIL);
+}
+
+pub fn table_cell_head<S0: Into<String>, S1: Into<String>, S2: Into<String>>(output: &mut dyn Write, title: S0, style: S1, content: S2){
+    std::fmt::write(output,format_args!(r#"<th title="{}" style = "{}">{}</th>"#, title.into(), style.into(), content.into())).expect(FAIL);
+}
+
+pub fn table_row_start<S0: Into<String>>(output: &mut dyn Write, style: S0) {
+    std::fmt::write(output,format_args!(r#"<tr style = "{}">"#, style.into())).expect(FAIL);
+}
+
+pub fn table_row_end(output: &mut dyn Write) {
+    std::fmt::write(output,format_args!("</tr>")).expect(FAIL);
+}
+
+pub fn table_end(output: &mut dyn Write, ) {
+    std::fmt::write(output,format_args!("</table>")).expect(FAIL);
+}
+
+
+pub fn tip<S0: Into<String>, S1: Into<String>>(tip: S0, content: S1) -> String{
+    format!(r#"<span title="{}">{}</span>"#, tip.into(), content.into())
 }
 
 pub fn jovian_buttons(output: &mut dyn Write, id: &i32, name: &String) {

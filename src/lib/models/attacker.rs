@@ -58,6 +58,19 @@ pub struct AttackerNamed {
 }
 impl AttackerNamed {
 
+    pub fn get_id(&self, name: &str) -> i32 {
+        match name {
+            "ship" => self.ship_id.clone(),
+            "character" => self.character_id.clone(),
+            "corporation" => self.corporation_id.clone(),
+            "alliance" => self.alliance_id.clone(),
+            "faction" => self.faction_id.clone(),
+            "weapon" => self.weapon_id.clone(),
+            any => { warn!("Unknown pattern {}", any); Some(0) },
+        }.unwrap_or_default()
+    }
+
+
     pub fn get_name(&self, name: &str) -> String {
         match name {
             "ship" => self.ship_name.clone(),

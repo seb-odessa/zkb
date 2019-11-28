@@ -88,6 +88,15 @@ pub struct SystemNamed {
 }
 impl SystemNamed {
 
+    pub fn get_id(&self, name: &str) -> Integer {
+        match name {
+            "system" => self.system_id,
+            "constellation" => self.constellation_id,
+            "region" => self.region_id,
+            _ => 0
+        }
+    }
+
     pub fn get_name(&self, name: &str) -> String {
         match name {
             "system" => self.system_name.clone(),
