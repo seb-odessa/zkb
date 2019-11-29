@@ -44,6 +44,15 @@ pub enum Area{
 }
 
 #[derive(Debug, PartialEq)]
+pub enum Actor{
+    Character(i32),
+    Corporation(i32),
+    Alliance(i32),
+    Faction(i32),
+}
+
+
+#[derive(Debug, PartialEq)]
 pub enum Filter {
     Any,
     WithJovianObservatoryOnly,
@@ -62,6 +71,8 @@ pub enum Category{
     Stargate(i32),
     Constellation(i32),
     History((Area, i32)),
+    Wins((Actor, i32)),
+    Losses((Actor, i32)),
     HistoryCount((Area, i32)),
     ObjectDesc((String, String)),
     Neighbors(Area),
@@ -69,7 +80,6 @@ pub enum Category{
 
 #[derive(Debug, PartialEq)]
 pub enum Report{
-    Fail,
     Killmail(models::killmail::KillmailNamed),
     Victim(models::victim::VictimNamed),
     Attackers(Vec<models::attacker::AttackerNamed>),

@@ -8,6 +8,10 @@ pub mod region;
 pub mod stargate;
 pub mod constellation;
 mod item;
+mod character;
+mod corporation;
+mod alliance;
+mod faction;
 
 use crate::services::{Context, Category, Message, Report};
 use std::fmt::Write;
@@ -23,6 +27,11 @@ pub use region::Region;
 pub use stargate::Stargate;
 pub use constellation::Constellation;
 pub use item::Item;
+pub use character::Character;
+pub use corporation::Corporation;
+pub use alliance::Alliance;
+pub use faction::Faction;
+
 
 pub const FAIL: &'static str = "Error occurred while trying to write in String";
 
@@ -173,19 +182,21 @@ pub fn find_id<S: Into<String>>(category: S, name: S, ctx: &Context) -> Option<i
 }
 
 pub fn load(category: Category, ctx: &Context) -> Report {
+    use std::{thread, time};
     let msg_id = crate::create_id().to_simple();
     ctx.database.push(Message::Find((msg_id, category)));
-    while let Some(msg) = ctx.responses.pop() {
-        if let Message::Report((id, content)) = msg {
-            if id == msg_id {
-                return content;
-            } else {
-                ctx.responses.push(Message::Report((id, content)));
-                // Need some sleep here?
+    loop {
+        while let Some(msg) = ctx.responses.pop() {
+            if let Message::Report((id, content)) = msg {
+                if id == msg_id {
+                    return content;
+                } else {
+                    ctx.responses.push(Message::Report((id, content)));
+                    thread::sleep(time::Duration::from_millis(20));
+                }
             }
         }
     }
-    return Report::Fail;
 }
 
 

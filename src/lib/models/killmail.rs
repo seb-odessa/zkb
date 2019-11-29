@@ -2,6 +2,8 @@ use std::convert::From;
 use chrono::{Duration, Utc};
 
 use crate::api;
+use crate::schema::victims;
+use crate::schema::attackers;
 use crate::schema::killmails;
 use crate::schema::named_killmails;
 use super::{Integer, OptInteger, OptString, DateTime, Connection, QueryResult};
@@ -95,6 +97,184 @@ impl KillmailNamed {
         named_killmails::table
             .filter(named_killmails::killmail_time.gt(start))
             .filter(named_killmails::region_id.eq(region_id))
+            .order(named_killmails::killmail_time.desc())
+            .load(conn)
+    }
+
+    pub fn load_character_history_wins(conn: &Connection, character_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails after {}", &start);
+        attackers::table.inner_join(named_killmails::table.on(named_killmails::killmail_id.eq(attackers::killmail_id)))
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(attackers::character_id.eq(character_id))
+            .select((
+                named_killmails::killmail_id,
+                named_killmails::killmail_time,
+                named_killmails::system_id,
+                named_killmails::system_name,
+                named_killmails::constellation_id,
+                named_killmails::constellation_name,
+                named_killmails::region_id,
+                named_killmails::region_name,
+             ))
+            .order(named_killmails::killmail_time.desc())
+            .load(conn)
+    }
+
+    pub fn load_corporation_history_wins(conn: &Connection, corporation_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails after {}", &start);
+        attackers::table.inner_join(named_killmails::table.on(named_killmails::killmail_id.eq(attackers::killmail_id)))
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(attackers::corporation_id.eq(corporation_id))
+            .select((
+                named_killmails::killmail_id,
+                named_killmails::killmail_time,
+                named_killmails::system_id,
+                named_killmails::system_name,
+                named_killmails::constellation_id,
+                named_killmails::constellation_name,
+                named_killmails::region_id,
+                named_killmails::region_name,
+             ))
+            .order(named_killmails::killmail_time.desc())
+            .load(conn)
+    }
+
+    pub fn load_alliance_history_wins(conn: &Connection, alliance_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails after {}", &start);
+        attackers::table.inner_join(named_killmails::table.on(named_killmails::killmail_id.eq(attackers::killmail_id)))
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(attackers::alliance_id.eq(alliance_id))
+            .select((
+                named_killmails::killmail_id,
+                named_killmails::killmail_time,
+                named_killmails::system_id,
+                named_killmails::system_name,
+                named_killmails::constellation_id,
+                named_killmails::constellation_name,
+                named_killmails::region_id,
+                named_killmails::region_name,
+             ))
+            .order(named_killmails::killmail_time.desc())
+            .load(conn)
+    }
+
+    pub fn load_faction_history_wins(conn: &Connection, faction_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails after {}", &start);
+        attackers::table.inner_join(named_killmails::table.on(named_killmails::killmail_id.eq(attackers::killmail_id)))
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(attackers::faction_id.eq(faction_id))
+            .select((
+                named_killmails::killmail_id,
+                named_killmails::killmail_time,
+                named_killmails::system_id,
+                named_killmails::system_name,
+                named_killmails::constellation_id,
+                named_killmails::constellation_name,
+                named_killmails::region_id,
+                named_killmails::region_name,
+             ))
+            .order(named_killmails::killmail_time.desc())
+            .load(conn)
+    }
+
+    pub fn load_character_history_losses(conn: &Connection, character_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails after {}", &start);
+        victims::table.inner_join(named_killmails::table.on(named_killmails::killmail_id.eq(victims::killmail_id)))
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(victims::character_id.eq(character_id))
+            .select((
+                named_killmails::killmail_id,
+                named_killmails::killmail_time,
+                named_killmails::system_id,
+                named_killmails::system_name,
+                named_killmails::constellation_id,
+                named_killmails::constellation_name,
+                named_killmails::region_id,
+                named_killmails::region_name,
+             ))
+            .order(named_killmails::killmail_time.desc())
+            .load(conn)
+    }
+
+    pub fn load_corporation_history_losses(conn: &Connection, corporation_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails after {}", &start);
+        victims::table.inner_join(named_killmails::table.on(named_killmails::killmail_id.eq(victims::killmail_id)))
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(victims::corporation_id.eq(corporation_id))
+            .select((
+                named_killmails::killmail_id,
+                named_killmails::killmail_time,
+                named_killmails::system_id,
+                named_killmails::system_name,
+                named_killmails::constellation_id,
+                named_killmails::constellation_name,
+                named_killmails::region_id,
+                named_killmails::region_name,
+             ))
+            .order(named_killmails::killmail_time.desc())
+            .load(conn)
+    }
+
+    pub fn load_alliance_history_losses(conn: &Connection, alliance_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails after {}", &start);
+        victims::table.inner_join(named_killmails::table.on(named_killmails::killmail_id.eq(victims::killmail_id)))
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(victims::alliance_id.eq(alliance_id))
+            .select((
+                named_killmails::killmail_id,
+                named_killmails::killmail_time,
+                named_killmails::system_id,
+                named_killmails::system_name,
+                named_killmails::constellation_id,
+                named_killmails::constellation_name,
+                named_killmails::region_id,
+                named_killmails::region_name,
+             ))
+            .distinct()
+            .order(named_killmails::killmail_time.desc())
+            .load(conn)
+    }
+
+    pub fn load_faction_history_losses(conn: &Connection, faction_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
+        use diesel::prelude::*;
+
+        let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+        info!("Load killmails after {}", &start);
+        victims::table.inner_join(named_killmails::table.on(named_killmails::killmail_id.eq(victims::killmail_id)))
+            .filter(named_killmails::killmail_time.gt(start))
+            .filter(victims::faction_id.eq(faction_id))
+            .select((
+                named_killmails::killmail_id,
+                named_killmails::killmail_time,
+                named_killmails::system_id,
+                named_killmails::system_name,
+                named_killmails::constellation_id,
+                named_killmails::constellation_name,
+                named_killmails::region_id,
+                named_killmails::region_name,
+             ))
+            .distinct()
             .order(named_killmails::killmail_time.desc())
             .load(conn)
     }

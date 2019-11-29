@@ -257,11 +257,47 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                 }
                             }
                         },
+                        Category::Wins((actor, minutes)) => {
+                            let history = match actor {
+                                Actor::Character(id) => models::killmail::KillmailNamed::load_character_history_wins(&conn, &id, &minutes),
+                                Actor::Corporation(id) => models::killmail::KillmailNamed::load_corporation_history_wins(&conn, &id, &minutes),
+                                Actor::Alliance(id) => models::killmail::KillmailNamed::load_alliance_history_wins(&conn, &id, &minutes),
+                                Actor::Faction(id) => models::killmail::KillmailNamed::load_faction_history_wins(&conn, &id, &minutes),
+                            };
+                            match history {
+                                Ok(killmails) => {
+                                    info!("loaded {} history records for last {} minutes, queue length: {}", killmails.len(), minutes, context.database.len());
+                                    context.responses.push(Message::Report((msg_id, Report::History(killmails))));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load history: {}", e);
+                                    context.responses.push(Message::Report((msg_id, Report::QueryFailed(e.to_string()))));
+                                }
+                            }
+                        },
+                        Category::Losses((actor, minutes)) => {
+                            let history = match actor {
+                                Actor::Character(id) => models::killmail::KillmailNamed::load_character_history_losses(&conn, &id, &minutes),
+                                Actor::Corporation(id) => models::killmail::KillmailNamed::load_corporation_history_losses(&conn, &id, &minutes),
+                                Actor::Alliance(id) => models::killmail::KillmailNamed::load_alliance_history_losses(&conn, &id, &minutes),
+                                Actor::Faction(id) => models::killmail::KillmailNamed::load_faction_history_losses(&conn, &id, &minutes),
+                            };
+                            match history {
+                                Ok(killmails) => {
+                                    info!("loaded {} history records for last {} minutes, queue length: {}", killmails.len(), minutes, context.database.len());
+                                    context.responses.push(Message::Report((msg_id, Report::History(killmails))));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load history: {}", e);
+                                    context.responses.push(Message::Report((msg_id, Report::QueryFailed(e.to_string()))));
+                                }
+                            }
+                        },
                         Category::History((area, minutes)) => {
                             let history = match area {
                                 Area::System(id) => models::killmail::KillmailNamed::load_system_history(&conn, &id, &minutes),
+                                Area::Constellation(id) => models::killmail::KillmailNamed::load_constellation_history(&conn, &id, &minutes),
                                 Area::Region(id) => models::killmail::KillmailNamed::load_region_history(&conn, &id, &minutes),
-                                Area::Constellation(id) => models::killmail::KillmailNamed::load_constellation_history(&conn, &id, &minutes)
                             };
                             match history {
                                 Ok(killmails) => {

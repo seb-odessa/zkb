@@ -194,8 +194,9 @@ impl Killmail {
 
         if let Some(victim) = victim {
             let row_style = format!("background-color: {};", Self::npc_kill_color(&attackers));
+            let timestamp = killmail.killmail_time.time().format("%H:%M:%S").to_string();
             reports::table_row_start(output, row_style);
-            reports::table_cell(output, "Time", text_style, ctx.get_api_href("killmail", killmail_id, killmail.killmail_time.time().to_string()));
+            reports::table_cell(output, "Time", text_style, ctx.get_api_href("killmail", killmail_id, timestamp));
             reports::table_cell(output, "Reference to ZKB", text_style, ctx.get_zkb_href("kill", killmail_id, format!("zkb")));
             reports::table_cell(output, "Killmail Amount", text_style, total_span);
             reports::table_cell(output, "Dropped Amount", text_style, dropped_span);

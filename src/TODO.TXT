@@ -4,4 +4,7 @@ v) Сделать быстрый рассчет путей до ближайше
 Исправить reports::System для использования модели вместо API класса
 v)Добавить load метод в reports::System
 
+
+Добавить history отчёты по character/corp/alli/faction
+
 Introduce trait for get_name/get_id

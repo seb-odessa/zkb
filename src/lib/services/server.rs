@@ -49,6 +49,15 @@ fn history(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
         "system" => reports::History::system(&id, &minutes, &ctx),
         "region" => reports::History::region(&id, &minutes, &ctx),
         "constellation" => reports::History::constellation(&id, &minutes, &ctx),
+        "character_wins" => reports::History::character_wins(&id, &minutes, &ctx),
+        "character_losses" => reports::History::character_losses(&id, &minutes, &ctx),
+        "corporation_wins" => reports::History::corporation_wins(&id, &minutes, &ctx),
+        "corporation_losses" => reports::History::corporation_losses(&id, &minutes, &ctx),
+        "alliance_wins" => reports::History::alliance_wins(&id, &minutes, &ctx),
+        "alliance_losses" => reports::History::alliance_losses(&id, &minutes, &ctx),
+        "faction_wins" => reports::History::faction_wins(&id, &minutes, &ctx),
+        "faction_losses" => reports::History::faction_losses(&id, &minutes, &ctx),
+
         _=> format!("Unknown Area Type {} ", info.0)
     };
 
@@ -70,6 +79,10 @@ fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
         "stargate" => reports::Stargate::report(&info.1, &ctx),
         "killmail_brief" => reports::Killmail::brief(&info.1, &ctx),
         "killmail" => reports::Killmail::report(&info.1, &ctx),
+        "character" => reports::Character::report(&info.1, &ctx),
+        "corporation" => reports::Corporation::report(&info.1, &ctx),
+        "alliance" => reports::Alliance::report(&info.1, &ctx),
+        "faction" => reports::Faction::report(&info.1, &ctx),
         _=> format!("Unknown Type {} ", info.0)
     };
 
