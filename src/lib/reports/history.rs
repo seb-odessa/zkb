@@ -25,9 +25,11 @@ impl History {
 
         match reports::load(category, &ctx) {
             Report::History(history) => {
+                reports::table_start(&mut output, "Attackers", "border-collapse: collapse;");
                 for killmail in history {
-                    reports::Killmail::write(&mut output, &killmail, &ctx);
+                    reports::Killmail::write_row(&mut output, &killmail, &ctx);
                 }
+                reports::table_end(&mut output);
             },
             Report::HistoryCount(count) => {
                 super::div(&mut output, format!("{:0>3}", count));

@@ -37,7 +37,7 @@ impl Killmail {
     }
 
     fn get_total_sum(items: &Option<Vec<models::item::ItemNamed>>, victim: &Option<models::victim::VictimNamed>) -> u64 {
-        let mut result = 0;
+        let mut result = Self::get_dropped_sum(items);
         if let Some(items) = items {
             for item in items {
                 if let Some(ref price) = provider::get_avg_price(&Some(item.item_type_id)){
@@ -75,6 +75,7 @@ impl Killmail {
     }
 
     pub fn write(output: &mut dyn Write, killmail: &killmail::KillmailNamed, ctx: &Context) {
+
         let killmail_id = killmail.killmail_id;
         let victim = reports::Victim::load(&killmail_id, ctx);
         let attackers = reports::Attacker::load(&killmail_id, ctx);
@@ -133,6 +134,68 @@ impl Killmail {
         );
         reports::div(output, content);
     }
+
+    pub fn write_row(output: &mut dyn Write, killmail: &killmail::KillmailNamed, ctx: &Context) {
+        let text_style    = "border: 0px solid black; padding: 2px;";
+        let numeric_style = "border: 0px solid black; padding: 2px; text-align: right;";
+
+        let killmail_id = killmail.killmail_id;
+        let victim = reports::Victim::load(&killmail_id, ctx);
+        let attackers = reports::Attacker::load(&killmail_id, ctx);
+        let system = reports::System::load(&killmail.system_id, ctx);
+        let items = reports::Item::load(&killmail_id, ctx);
+
+        let mut security = 0.0;
+        if let Some(system) = system {
+            security = system.security_status;
+        }
+        let mut attackers_count = 0;
+        if let Some(attackers) = attackers {
+            attackers_count = attackers.len();
+        }
+        let security_status_span = reports::span(
+            "System Security Status",
+            format!("color: {};", Self::security_status_color(security)),
+            format!("{:.1}", security),
+        );
+
+        let dropped_sum = Self::get_dropped_sum(&items);
+        let dropped_span = reports::span(
+            "Dropped Volume",
+            format!("text-align: right; background-color: {};", Self::volume_color(&dropped_sum)),
+            dropped_sum.separated_string()
+        );
+
+        let total_sum = Self::get_total_sum(&items, &victim);
+        let total_span = reports::span(
+            "Total Kill Mail Volume",
+            format!("text-align: right; background-color: {};", Self::volume_color(&total_sum)),
+            total_sum.separated_string()
+        );
+
+        let system_style = format!("background-color: {};", Self::security_status_color(security));
+
+
+        if let Some(victim) = victim {
+            reports::table_row_start(output, "");
+            reports::table_cell(output, "Time", text_style, ctx.get_api_href("killmail", killmail_id, killmail.killmail_time.time().to_string()));
+            reports::table_cell(output, "Reference to ZKB", text_style, ctx.get_zkb_href("kill", killmail_id, format!("zkb")));
+            reports::table_cell(output, "Killmail Amount", numeric_style, total_span);
+            reports::table_cell(output, "Dropped Amount", text_style, dropped_span);
+            reports::table_cell(output, "Attackers Count", text_style, attackers_count.separated_string());
+            reports::table_cell(output, "Region", text_style, ctx.get_api_href("region", killmail.get_id("region"), killmail.get_name("region")));
+            reports::table_cell(output, "Constellation", text_style, ctx.get_api_href("constellation", killmail.get_id("constellation"), killmail.get_name("constellation")));
+            reports::table_cell(output, "System", system_style, ctx.get_api_href("system", killmail.get_id("system"), killmail.get_name("system")));
+            reports::table_cell(output, "Security status", text_style, security_status_span);
+            reports::table_cell(output, "Character Name", text_style, ctx.get_api_href("character", victim.get_id("character"), victim.get_name("character")));
+            reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_href("corporation", victim.get_id("corporation"), victim.get_name("corporation")));
+            reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_href("alliance", victim.get_id("alliance"), victim.get_name("alliance")));
+            reports::table_cell(output, "Faction Name", text_style, ctx.get_api_href("faction", victim.get_id("faction"), victim.get_name("faction")));
+            reports::table_row_end(output);
+        }
+
+    }
+
 
     fn write_report(output: &mut dyn Write, killmail: &killmail::KillmailNamed, ctx: &Context) {
         let killmail_id = killmail.killmail_id;
