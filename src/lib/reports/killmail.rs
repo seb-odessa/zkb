@@ -74,6 +74,13 @@ impl Killmail {
         .to_string()
     }
 
+    fn npc_attacker_color(attacker: &models::attacker::AttackerNamed) -> String {
+        if 500024 == attacker.get_id("faction") {
+            return String::from("#ff00ff");
+        }
+        return String::from("WhiteSmoke");
+    }
+
     fn npc_kill_color(attackers: &Option<Vec<models::attacker::AttackerNamed>>) -> String {
         if let Some(attackers) = attackers {
             for attacker in attackers {
@@ -215,40 +222,39 @@ impl Killmail {
         reports::div(output, format!("{timestamp} [{zkb}]",
             timestamp = ctx.get_api_href("killmail", killmail_id, killmail.killmail_time.to_string()),
             zkb = ctx.get_zkb_href("kill", killmail.get_id("id"), format!("zkb"))));
-        reports::div(output, format!("Total killmail value: {}", Self::get_total_sum(&items, &victim).separated_string()));
-        reports::div(output, format!("Dropped value: {}", Self::get_dropped_sum(&items).separated_string()));
+
+        if let Some(system) = system {
+            reports::div(output,
+                format!("Location: {} : {} : {}",
+                    ctx.get_api_href("region", system.get_id("region"), system.get_name("region")),
+                    ctx.get_api_href("constellation", system.get_id("constellation"), system.get_name("constellation")),
+                    ctx.get_api_href("system", system.get_id("system"), system.get_name("system")),
+                )
+            );
+        }
+
+        reports::div(output, format!("Total killmail amount: {}", Self::get_total_sum(&items, &victim).separated_string()));
+        reports::div(output, format!("Dropped amount: {}", Self::get_dropped_sum(&items).separated_string()));
 
         if let Some(victim) = victim {
             reports::div(output, format!("Damage Taken: {}", victim.damage_taken.separated_string()));
             reports::div(output, format!("Ship: {}", ctx.get_api_href("ship", victim.get_id("ship"), victim.get_name("ship"))));
-            reports::div(output, format!("Character: {}", ctx.get_api_href("character", victim.get_id("character"), victim.get_name("character"))));
-            reports::div(output, format!("Corporation: {}", ctx.get_api_href("corporation", victim.get_id("corporation"), victim.get_name("corporation"))));
-            reports::div(output, format!("Alliance: {}", ctx.get_api_href("alliance", victim.get_id("alliance"), victim.get_name("alliance"))));
-            reports::div(output, format!("Faction: {}", ctx.get_api_href("faction", victim.get_id("faction"), victim.get_name("faction"))));
+            reports::div(output,
+                format!("Pilot: {} {} {} {}",
+                    ctx.get_api_href("faction", victim.get_id("faction"), victim.get_name("faction")),
+                    ctx.get_api_href("alliance", victim.get_id("alliance"), victim.get_name("alliance")),
+                    ctx.get_api_href("corporation", victim.get_id("corporation"), victim.get_name("corporation")),
+                    ctx.get_api_href("character", victim.get_id("character"), victim.get_name("character")),
+                )
+            );
         }
-        if let Some(system) = system {
-            {
-                let class = "system";
-                reports::div(output, format!("System: {}", ctx.get_api_href(class, system.get_id(class), system.get_name(class))));
-            }
-            {
-                let class = "Constellation";
-                reports::div(output, format!("constellation: {}", ctx.get_api_href(class, system.get_id(class), system.get_name(class))));
-            }
-            {
-                let class = "region";
-                reports::div(output, format!("Region: {}", ctx.get_api_href(class, system.get_id(class), system.get_name(class))));
-            }
-        }
-
         let table_style   = "border-collapse: collapse;";
-        let head_style    = "border: 1px solid black; padding: 5px; text-align: center; ";
-        let text_style    = "border: 1px solid black; padding: 5px;";
-        let numeric_style = "border: 1px solid black; padding: 5px; text-align: right;";
+        let head_style    = "border: 1px solid black; padding: 2px 5px; text-align: center; ";
+        let text_style    = "border: 1px solid black; padding: 2px 5px;";
+        let numeric_style = "border: 1px solid black; padding: 2px 5px;; text-align: right;";
 
         if let Some(attackers) = attackers {
-            reports::div(output, format!("Attackers:"));
-            reports::table_start(output, "Attackers", table_style);
+            reports::table_start(output, "Attackers", table_style, "Attackers");
             reports::table_row_start(output, "");
             reports::table_cell_head(output, "Security Status", head_style, "SS");
             reports::table_cell_head(output, "Final Blow", head_style, "Final");
@@ -261,7 +267,7 @@ impl Killmail {
             reports::table_cell_head(output, "Faction Name", head_style, "Faction");
             reports::table_row_end(output);
             for attacker in attackers {
-                reports::table_row_start(output, "");
+                reports::table_row_start(output, format!("background-color: {};", Self::npc_attacker_color(&attacker)));
                 reports::table_cell(output, "Security Status", text_style, attacker.security_status.separated_string());
                 reports::table_cell(output, "Final Blow", text_style, attacker.final_blow.to_string());
                 reports::table_cell(output, "Damage Done", numeric_style, attacker.damage_done.separated_string());
@@ -315,8 +321,7 @@ impl Killmail {
                 }
             }
 
-            reports::div(output, format!("Items:"));
-            reports::table_start(output, "Items", table_style);
+            reports::table_start(output, "Items", table_style, "Items");
             reports::table_row_start(output, "");
             reports::table_cell_head(output, "Item Name", head_style, "Item");
             reports::table_cell_head(output, "Dropped quantity", head_style, "Dropped");

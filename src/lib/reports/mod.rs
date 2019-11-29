@@ -49,8 +49,12 @@ pub fn span<S0: Into<String>, S1: Into<String>, S2: Into<String>>(title: S0, sty
 }
 
 
-pub fn table_start<S0: Into<String>, S1: Into<String>>(output: &mut dyn Write, title: S0, style: S1) {
+pub fn table_start<S0: Into<String>, S1: Into<String>, S2: Into<String>>(output: &mut dyn Write, title: S0, style: S1, caption: S2) {
     std::fmt::write(output,format_args!(r#"<table title="{}" style = "{}">"#, title.into(), style.into())).expect(FAIL);
+    let caption_content = caption.into();
+    if !caption_content.is_empty() {
+        std::fmt::write(output,format_args!("<caption>{}</caption>", caption_content)).expect(FAIL);
+    }
 }
 
 pub fn table_cell<S0: Into<String>, S1: Into<String>, S2: Into<String>>(output: &mut dyn Write, title: S0, style: S1, content: S2){

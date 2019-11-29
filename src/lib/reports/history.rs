@@ -21,21 +21,20 @@ impl History {
     fn report(category: Category, minutes: &Integer, ctx: &Context) -> String {
         let mut output = String::new();
         let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
-        super::div(&mut output, format!("History since {} ", start.time().format("%H:%M:%S").to_string()));
-
+        let timestamp = start.format("%Y-%m-%d %H:%M:%S").to_string();
         match reports::load(category, &ctx) {
             Report::History(history) => {
-                reports::table_start(&mut output, "Attackers", "border-collapse: collapse;");
+                reports::table_start(&mut output, "Attackers", "border-collapse: collapse;", format!("History since {} ", timestamp));
                 for killmail in history {
                     reports::Killmail::write_row(&mut output, &killmail, &ctx);
                 }
                 reports::table_end(&mut output);
             },
             Report::HistoryCount(count) => {
-                super::div(&mut output, format!("{:0>3}", count));
+                reports::div(&mut output, format!("{:0>3}", count));
             },
             report => {
-                super::div(&mut output, format!("Unexpected report {:?}", report));
+                reports::div(&mut output, format!("Unexpected report {:?}", report));
             }
         }
         return output;
