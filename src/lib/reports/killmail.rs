@@ -137,7 +137,6 @@ impl Killmail {
 
     pub fn write_row(output: &mut dyn Write, killmail: &killmail::KillmailNamed, ctx: &Context) {
         let text_style    = "border: 0px solid black; padding: 2px;";
-        let numeric_style = "border: 0px solid black; padding: 2px; text-align: right;";
 
         let killmail_id = killmail.killmail_id;
         let victim = reports::Victim::load(&killmail_id, ctx);
@@ -156,21 +155,21 @@ impl Killmail {
         let security_status_span = reports::span(
             "System Security Status",
             format!("color: {};", Self::security_status_color(security)),
-            format!("{:.1}", security),
+            format!("&nbsp;&nbsp;{:.2}&nbsp;&nbsp;", security),
         );
 
         let dropped_sum = Self::get_dropped_sum(&items);
         let dropped_span = reports::span(
             "Dropped Volume",
-            format!("text-align: right; background-color: {};", Self::volume_color(&dropped_sum)),
-            dropped_sum.separated_string()
+            format!("display: inline-block; width: 100%; text-align: right; background-color: {};", Self::volume_color(&dropped_sum)),
+            format!("&nbsp;{}&nbsp;", dropped_sum.separated_string())
         );
 
         let total_sum = Self::get_total_sum(&items, &victim);
         let total_span = reports::span(
             "Total Kill Mail Volume",
-            format!("text-align: right; background-color: {};", Self::volume_color(&total_sum)),
-            total_sum.separated_string()
+            format!("display: inline-block; width: 100%; text-align: right; background-color: {};", Self::volume_color(&total_sum)),
+            format!("&nbsp;{}&nbsp;", total_sum.separated_string())
         );
 
         let system_style = format!("background-color: {};", Self::security_status_color(security));
@@ -180,8 +179,8 @@ impl Killmail {
             reports::table_row_start(output, "");
             reports::table_cell(output, "Time", text_style, ctx.get_api_href("killmail", killmail_id, killmail.killmail_time.time().to_string()));
             reports::table_cell(output, "Reference to ZKB", text_style, ctx.get_zkb_href("kill", killmail_id, format!("zkb")));
-            reports::table_cell(output, "Killmail Amount", numeric_style, total_span);
-            reports::table_cell(output, "Dropped Amount", text_style, dropped_span);
+            reports::table_cell(output, "Killmail Amount", "", total_span);
+            reports::table_cell(output, "Dropped Amount", "", dropped_span);
             reports::table_cell(output, "Attackers Count", text_style, attackers_count.separated_string());
             reports::table_cell(output, "Region", text_style, ctx.get_api_href("region", killmail.get_id("region"), killmail.get_name("region")));
             reports::table_cell(output, "Constellation", text_style, ctx.get_api_href("constellation", killmail.get_id("constellation"), killmail.get_name("constellation")));
