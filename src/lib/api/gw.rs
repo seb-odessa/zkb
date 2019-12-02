@@ -53,8 +53,10 @@ pub fn eve_api(cmd: &str) -> Option<String> {
 pub fn eve_api_post(cmd: &str, request: &str) -> Option<String> {
     let url = format!("{}/{}/{}", EVE_API, cmd, EVE_SRV);
     if let Some(response) = post(&url, &request).ok() {
+        info!("Received response from {} with request {}", url, request);
         String::from_utf8(response).ok()
     } else {
+        info!("Failed response from {}", url);
         None
     }
 }
