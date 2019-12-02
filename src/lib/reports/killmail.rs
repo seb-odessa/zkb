@@ -206,10 +206,10 @@ impl Killmail {
             reports::table_cell(output, "Constellation", text_style, ctx.get_api_href("constellation", killmail.get_id("constellation"), killmail.get_name("constellation")));
             reports::table_cell(output, "System", system_style, ctx.get_api_href("system", killmail.get_id("system"), killmail.get_name("system")));
             reports::table_cell(output, "Security status", text_style, security_status_span);
-            reports::table_cell(output, "Character Name", text_style, ctx.get_api_href("character", victim.get_id("character"), victim.get_name("character")));
-            reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_href("corporation", victim.get_id("corporation"), victim.get_name("corporation")));
-            reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_href("alliance", victim.get_id("alliance"), victim.get_name("alliance")));
             reports::table_cell(output, "Faction Name", text_style, ctx.get_api_href("faction", victim.get_id("faction"), victim.get_name("faction")));
+            reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_href("alliance", victim.get_id("alliance"), victim.get_name("alliance")));
+            reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_href("corporation", victim.get_id("corporation"), victim.get_name("corporation")));
+            reports::table_cell(output, "Character Name", text_style, ctx.get_api_href("character", victim.get_id("character"), victim.get_name("character")));
             reports::table_row_end(output);
         }
     }
