@@ -17,6 +17,7 @@ fn try_enqueue_check(queue: &Queue, id: &Option<i32>) {
 
 fn get_name_if_none(queue: &Queue, name: &Option<String>, id: i32) {
     if name.is_none() {
+        info!("Queue Object with id {}", id);
         queue.push(Message::Receive(Api::Object(id)));
     }
 }
