@@ -91,6 +91,7 @@ impl System {
                             reports::div(output, format!("{}{}",
                                 arrow, Self::get_system_href(&path.s1_id, ctx)
                             ));
+                            rest = rest - 1;
                         }
                     } else if path.s2_jo {
                         if covered.insert(&path.s2_id) {
@@ -98,6 +99,7 @@ impl System {
                                 arrow, Self::get_system_href(&path.s1_id, ctx),
                                 arrow, Self::get_system_href(&path.s2_id, ctx),
                             ));
+                            rest = rest - 1;
                         }
                     } else if path.s3_jo {
                         if covered.insert(&path.s3_id) {
@@ -106,6 +108,7 @@ impl System {
                                 arrow, Self::get_system_href(&path.s2_id, ctx),
                                 arrow, Self::get_system_href(&path.s3_id, ctx),
                             ));
+                            rest = rest - 1;
                         }
                     } else if path.s4_jo {
                         if covered.insert(&path.s4_id) {
@@ -115,6 +118,7 @@ impl System {
                                 arrow, Self::get_system_href(&path.s3_id, ctx),
                                 arrow, Self::get_system_href(&path.s4_id, ctx),
                             ));
+                            rest = rest - 1;
                         }
                     } else if path.s5_jo {
                         if covered.insert(&path.s5_id) {
@@ -125,14 +129,12 @@ impl System {
                                 arrow, Self::get_system_href(&path.s4_id, ctx),
                                 arrow, Self::get_system_href(&path.s5_id, ctx),
                             ));
+                            rest = rest - 1;
                         }
-                    } else {
-                        rest = rest + 1;
                     }
+
                     if 0 == rest {
                         break;
-                    } else {
-                        rest = rest - 1;
                     }
                 }
             },
