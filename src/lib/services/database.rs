@@ -133,7 +133,6 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                     get_name_if_none(&context.resolver, &object.constellation_name, object.constellation_id);
                                     get_name_if_none(&context.resolver, &object.region_name, object.region_id);
                                     context.responses.push(Message::Report((msg_id, Report::System(object))));
-                                    context.resolver.push(Message::Receive(Api::System(*id)));
                                 },
                                 Err(e) => {
                                     warn!("was not able to load system: {}", e);
