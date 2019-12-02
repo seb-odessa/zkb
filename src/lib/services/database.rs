@@ -370,6 +370,9 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                     match models::system::SystemNeighbors::load(&conn, &id) {
                                         Ok(neighbors) => {
                                             info!("loaded {} neighbors, queue length: {}", neighbors.len(), context.database.len());
+                                            for object in &neighbors {
+                                                get_name_if_none(&context.resolver, &object.neighbor_name, object.neighbor_id);
+                                            }
                                             context.responses.push(Message::Report((msg_id, Report::SystemNeighbors(neighbors))));
                                         },
                                         Err(e) => {
@@ -381,6 +384,9 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                     match models::region::RegionNeighbors::load(&conn, &id) {
                                         Ok(neighbors) => {
                                             info!("loaded {} neighbors, queue length: {}", neighbors.len(), context.database.len());
+                                            for object in &neighbors {
+                                                get_name_if_none(&context.resolver, &object.neighbor_name, object.neighbor_id);
+                                            }
                                             context.responses.push(Message::Report((msg_id, Report::RegionNeighbors(neighbors))));
                                         },
                                         Err(e) => {
@@ -393,6 +399,9 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                     match models::constellation::ConstellationNeighbors::load(&conn, &id) {
                                         Ok(neighbors) => {
                                             info!("loaded {} neighbors, queue length: {}", neighbors.len(), context.database.len());
+                                            for object in &neighbors {
+                                                get_name_if_none(&context.resolver, &object.neighbor_name, object.neighbor_id);
+                                            }
                                             context.responses.push(Message::Report((msg_id, Report::ConstellationNeighbors(neighbors))));
                                         },
                                         Err(e) => {
