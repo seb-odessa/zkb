@@ -22,9 +22,9 @@ impl History {
         let mut output = String::new();
         let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
         let timestamp = start.format("%Y-%m-%d %H:%M:%S").to_string();
+        reports::div(&mut output, format!("History since {} ", timestamp));
         match reports::load(category, &ctx) {
             Report::History(history) => {
-                format!("History since {} ", timestamp);
                 reports::table_start(&mut output, "Attackers", "border-collapse: collapse;", "");
                 for killmail in history {
                     reports::Killmail::write_row(&mut output, &killmail, &ctx);

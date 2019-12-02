@@ -84,7 +84,10 @@ impl System {
         let mut covered = HashSet::new();
         match reports::load(Category::ObservatoryPath(*id), &ctx) {
             Report::ObservatoryPath(paths) => {
-                for path in &paths {
+                for (row, path) in paths.iter().enumerate() {
+                    if row > 5 {
+                        break;
+                    }
                     if path.s1_jo {
                         if covered.insert(&path.s1_id) {
                             reports::div(output, format!("{}{}",

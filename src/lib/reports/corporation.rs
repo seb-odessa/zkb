@@ -1,4 +1,4 @@
-use crate::api;
+// use crate::api;
 use crate::services::{Context};
 use crate::reports::*;
 use crate::reports;
@@ -54,7 +54,7 @@ impl Corporation {
         }
     }
 
-    fn report_by_id(id: &i32, ctx: &Context, report_type: ReportType) -> String {
+    fn report_by_id(id: &i32, ctx: &Context, _report_type: ReportType) -> String {
         let mut output = String::new();
         reports::div(&mut output, "Wins");
         lazy(&mut output, format!("history/corporation_wins/{}/{}", id, 60), &ctx);

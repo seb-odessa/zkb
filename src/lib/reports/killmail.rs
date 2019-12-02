@@ -238,7 +238,6 @@ impl Killmail {
         let head_style    = "border: 1px solid black; padding: 2px 5px; text-align: center; ";
         let text_style    = "border: 1px solid black; padding: 2px 5px;";
         let numeric_style = "border: 1px solid black; padding: 2px 5px;; text-align: right;";
-        let amount_style  = "border: 1px solid black; padding: 2px 5px;; text-align: right; background-color: {};";
 
         let total_amount = Self::get_total_sum(&items, &victim);
         let dropped_amount = Self::get_dropped_sum(&items);
