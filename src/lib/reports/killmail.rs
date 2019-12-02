@@ -234,26 +234,42 @@ impl Killmail {
                 )
             );
         }
-
-        reports::div(output, format!("Total killmail amount: {}", Self::get_total_sum(&items, &victim).separated_string()));
-        reports::div(output, format!("Dropped amount: {}", Self::get_dropped_sum(&items).separated_string()));
-
-        if let Some(victim) = victim {
-            reports::div(output, format!("Damage Taken: {}", victim.damage_taken.separated_string()));
-            reports::div(output, format!("Ship: {}", ctx.get_api_href("ship", victim.get_id("ship"), victim.get_name("ship"))));
-            reports::div(output,
-                format!("Pilot: {} {} {} {}",
-                    ctx.get_api_href("faction", victim.get_id("faction"), victim.get_name("faction")),
-                    ctx.get_api_href("alliance", victim.get_id("alliance"), victim.get_name("alliance")),
-                    ctx.get_api_href("corporation", victim.get_id("corporation"), victim.get_name("corporation")),
-                    ctx.get_api_href("character", victim.get_id("character"), victim.get_name("character")),
-                )
-            );
-        }
         let table_style   = "border-collapse: collapse;";
         let head_style    = "border: 1px solid black; padding: 2px 5px; text-align: center; ";
         let text_style    = "border: 1px solid black; padding: 2px 5px;";
         let numeric_style = "border: 1px solid black; padding: 2px 5px;; text-align: right;";
+        let amount_style  = "border: 1px solid black; padding: 2px 5px;; text-align: right; background-color: {};";
+
+        let total_amount = Self::get_total_sum(&items, &victim);
+        let dropped_amount = Self::get_dropped_sum(&items);
+        if let Some(victim) = victim {
+            reports::table_start(output, "Victim", table_style, "Victim");
+            reports::table_row_start(output, "");
+            reports::table_cell_head(output, "Total Amount", head_style, "Total");
+            reports::table_cell_head(output, "Dropped Amount", head_style, "Dropped");
+            reports::table_cell_head(output, "Damage Taken", head_style, "Damage");
+            reports::table_cell_head(output, "Ship Type", head_style, "Ship Type");
+            reports::table_cell_head(output, "Faction Name", head_style, "Faction");
+            reports::table_cell_head(output, "Alliance Name", head_style, "Alliance");
+            reports::table_cell_head(output, "Corporation Name", head_style, "Corporation");
+            reports::table_cell_head(output, "Character Name", head_style, "Character");
+            reports::table_row_end(output);
+            reports::table_row_start(output, "");
+
+            let total_amount_style  = format!("{} background-color: {};", numeric_style, Self::volume_color(&total_amount));
+            let dropped_amount_style  = format!("{} background-color: {};", numeric_style, Self::volume_color(&dropped_amount));
+
+            reports::table_row_end(output);
+            reports::table_cell(output, "Total Amount", total_amount_style, total_amount.separated_string());
+            reports::table_cell(output, "Dropped Amount", dropped_amount_style, dropped_amount.separated_string());
+            reports::table_cell(output, "Damage Taken", numeric_style, victim.damage_taken.separated_string());
+            reports::table_cell(output, "Ship Type", text_style, ctx.get_api_href("ship", victim.get_id("ship"), victim.get_name("ship")));
+            reports::table_cell(output, "Faction Name", text_style, ctx.get_api_href("faction", victim.get_id("faction"), victim.get_name("faction")));
+            reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_href("alliance", victim.get_id("alliance"), victim.get_name("alliance")));
+            reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_href("corporation", victim.get_id("corporation"), victim.get_name("corporation")));
+            reports::table_cell(output, "Character Name", text_style, ctx.get_api_href("character", victim.get_id("character"), victim.get_name("character")));
+            reports::table_end(output);
+        }
 
         if let Some(attackers) = attackers {
             reports::table_start(output, "Attackers", table_style, "Attackers");
@@ -263,10 +279,11 @@ impl Killmail {
             reports::table_cell_head(output, "Damage Done", head_style, "Damage");
             reports::table_cell_head(output, "Weapon", head_style, "Weapon");
             reports::table_cell_head(output, "Ship Type", head_style, "Ship Type");
-            reports::table_cell_head(output, "Character Name", head_style, "Character");
-            reports::table_cell_head(output, "Corporation Name", head_style, "Corporation");
-            reports::table_cell_head(output, "Alliance Name", head_style, "Alliance");
             reports::table_cell_head(output, "Faction Name", head_style, "Faction");
+            reports::table_cell_head(output, "Alliance Name", head_style, "Alliance");
+            reports::table_cell_head(output, "Corporation Name", head_style, "Corporation");
+            reports::table_cell_head(output, "Character Name", head_style, "Character");
+
             reports::table_row_end(output);
             for attacker in attackers {
                 reports::table_row_start(output, format!("background-color: {};", Self::npc_attacker_color(&attacker)));
@@ -275,10 +292,10 @@ impl Killmail {
                 reports::table_cell(output, "Damage Done", numeric_style, attacker.damage_done.separated_string());
                 reports::table_cell(output, "Weapon", text_style, ctx.get_api_href("weapon", attacker.get_id("weapon"), attacker.get_name("weapon")));
                 reports::table_cell(output, "Ship Type", text_style, ctx.get_api_href("ship", attacker.get_id("ship"), attacker.get_name("ship")));
-                reports::table_cell(output, "Character Name", text_style, ctx.get_api_href("character", attacker.get_id("character"), attacker.get_name("character")));
-                reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_href("corporation", attacker.get_id("corporation"), attacker.get_name("corporation")));
-                reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_href("alliance", attacker.get_id("alliance"), attacker.get_name("alliance")));
                 reports::table_cell(output, "Faction Name", text_style, ctx.get_api_href("faction", attacker.get_id("faction"), attacker.get_name("faction")));
+                reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_href("alliance", attacker.get_id("alliance"), attacker.get_name("alliance")));
+                reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_href("corporation", attacker.get_id("corporation"), attacker.get_name("corporation")));
+                reports::table_cell(output, "Character Name", text_style, ctx.get_api_href("character", attacker.get_id("character"), attacker.get_name("character")));
                 reports::table_row_end(output);
             }
             reports::table_end(output);
