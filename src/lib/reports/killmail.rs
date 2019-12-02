@@ -200,6 +200,7 @@ impl Killmail {
             reports::table_cell(output, "Reference to ZKB", text_style, ctx.get_zkb_href("kill", killmail_id, format!("zkb")));
             reports::table_cell(output, "Killmail Amount", text_style, total_span);
             reports::table_cell(output, "Dropped Amount", text_style, dropped_span);
+            reports::table_cell(output, "Ship Destroyed", text_style, ctx.get_api_href("ship", victim.get_id("ship"), victim.get_name("ship")));
             reports::table_cell(output, "Attackers Count", text_style, attackers_count.separated_string());
             reports::table_cell(output, "Region", text_style, ctx.get_api_href("region", killmail.get_id("region"), killmail.get_name("region")));
             reports::table_cell(output, "Constellation", text_style, ctx.get_api_href("constellation", killmail.get_id("constellation"), killmail.get_name("constellation")));
