@@ -158,8 +158,8 @@ impl AppContext {
     pub fn get_dotlan_href<S1: Into<String>, S2: Into<String>, S3: Into<String>>(&self, region: S1, system: S2, name: S3) -> String {
         format!(
             r#"<a href="http://evemaps.dotlan.net/map/{region}/{system}/">{name}</a>"#,
-            region = region.into(),
-            system = system.into(),
+            region = region.into().replace(" ", "_"),
+            system = system.into().replace(" ", "_"),
             name = name.into())
     }
 
