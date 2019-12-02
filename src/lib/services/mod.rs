@@ -140,20 +140,29 @@ impl AppContext {
         }
     }
 
-    pub fn get_api_href<S: Into<String>>(&self, class: S, id: i32, name: String) -> String {
+    pub fn get_api_href<S1: Into<String>, S2: Into<String>>(&self, class: S1, id: i32, name: S2) -> String {
         format!(r#"<a href="http://{server}/navigator/api/{class}/{id}">{name}</a>"#,
             server = self.server,
             class = class.into(),
             id = id,
-            name = name)
+            name = name.into())
     }
 
-    pub fn get_zkb_href<S: Into<String>>(&self, class: S, id: i32, name: String) -> String {
+    pub fn get_zkb_href<S1: Into<String>, S2: Into<String>>(&self, class: S1, id: i32, name: S2) -> String {
         format!(r#"<a href="https://zkillboard.com/{class}/{id}/">{name}</a>"#,
             class = class.into(),
             id = id,
-            name = name)
+            name = name.into())
     }
+
+    pub fn get_dotlan_href<S1: Into<String>, S2: Into<String>, S3: Into<String>>(&self, region: S1, system: S2, name: S3) -> String {
+        format!(
+            r#"<a href="http://evemaps.dotlan.net/map/{region}/{system}/">{name}</a>"#,
+            region = region.into(),
+            system = system.into(),
+            name = name.into())
+    }
+
 }
 
 pub struct Channel<T>{

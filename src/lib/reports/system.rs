@@ -1,10 +1,7 @@
 use crate::api;
-use super::{FAIL};
 use crate::models;
 use crate::services;
 use crate::services::Context;
-//use crate::services::{Context, Area, Category, Model, Report};
-//use crate::reports::*;
 use crate::reports;
 use crate::provider;
 
@@ -13,24 +10,17 @@ use std::fmt::Write;
 #[derive(Debug, PartialEq)]
 pub struct System;
 impl System {
-    // pub fn write(output: &mut dyn Write, system: &models::system::System, _ctx: &Context) {
-    //     reports::div(output, format!("{}", victim.get_name("character")));
-    // }
 
-    pub fn write(output: &mut dyn Write, system: &api::system::System, ctx: &Context) {
-        let root = reports::root(ctx);
-        let url = format!("{}/api/system/{}", root, system.system_id);
-        let name = format!("{} ({:.2})", system.name, system.security_status);
-        std::fmt::write(
-            output,
-            format_args!(
-                r#"<div id="{id}" data-name="{name}">System: {url} {zkb}</div>"#,
-                id = system.system_id,
-                url = reports::href(&url, &name),
-                zkb = reports::href(system.zkb(), String::from("(zkb)")),
-                name = system.name
-            )
-        ).expect(FAIL);
+    pub fn write(output: &mut dyn Write, system: &models::system::SystemNamed, ctx: &Context) {
+        let content = format!(
+            r#"<span id="{id}" data-name="{name}">System: {api} {zkb} {map}</span>"#,
+            id = system.system_id,
+            name = system.get_name("system"),
+            api = ctx.get_api_href("system", system.get_id("system"), system.get_name("system")),
+            zkb = ctx.get_zkb_href("system", system.get_id("system"), "(zkb)"),
+            map = ctx.get_dotlan_href(system.get_name("region"), system.get_name("system"), "(dotlan)")
+        );
+        reports::div(output, content);
     }
 
     pub fn load(id: &i32, ctx: &Context) -> Option<models::system::SystemNamed> {
@@ -59,10 +49,10 @@ impl System {
     }
 
     fn get_system_href(id: &i32, ctx: &Context) -> String {
-        use services::{Category, Report};
-        match reports::load(Category::System(*id), ctx) {
-            Report::System(system) => ctx.get_api_href("system", system.system_id, system.get_name("system")),
-            _ => String::from("...Unknown...")
+        if let Some(system) = Self::load(id, ctx) {
+            ctx.get_api_href("system", system.system_id, system.get_name("system"))
+        } else {
+            String::from("...Unknown...")
         }
     }
 
@@ -145,18 +135,13 @@ impl System {
     }
 
     fn observatory_report(output: &mut dyn Write, id: &i32, ctx: &Context) {
-        use services::{Category, Report};
-        match reports::load(Category::System(*id), &ctx) {
-            Report::System(system) => {
-                if system.has_observatory() {
-                    reports::div(output, format!(r#"<span style="color: green;">Jovian Observatory</span>"#));
-                }
-                reports::jovian_buttons(output, &system.system_id, &system.get_name("system"));
-                reports::div(output, format!("Nearest system with Jovian Observatory:"));
-                Self::report_observatory_path(output, id, ctx);
-            },
-            Report::NotFoundId(id) => reports::div(output, format!("System {} was not found", id)),
-            report => warn!("Unexpected report {:?}", report)
+        if let Some(system) = Self::load(id, &ctx) {
+            if system.has_observatory() {
+                reports::div(output, format!(r#"<span style="color: green;">Jovian Observatory</span>"#));
+            }
+            reports::jovian_buttons(output, &system.system_id, &system.get_name("system"));
+            reports::div(output, format!("Nearest system with Jovian Observatory:"));
+            Self::report_observatory_path(output, id, ctx);
         }
     }
 
@@ -200,13 +185,13 @@ impl System {
 
     fn report_by_id(id: &i32, ctx: &Context, full_report: reports::ReportType) -> String {
         let mut output = String::new();
-        if let Some(object) = api::system::System::new(id) {
-            Self::write(&mut output, &object, ctx);
+        if let Some(system) = Self::load(id, ctx) {
+            Self::write(&mut output, &system, ctx);
             if full_report == reports::ReportType::Full {
-                reports::lazy(&mut output, format!("api/constellation_brief/{}", object.constellation_id), &ctx);
-                reports::lazy(&mut output, format!("api/region_brief/{}", object.get_region_id().unwrap_or_default()), &ctx);
-                Self::neighbors(&mut output, &object.system_id, &ctx);
-                Self::observatory_report(&mut output, &object.system_id, &ctx);
+                reports::lazy(&mut output, format!("api/constellation_brief/{}", system.get_id("constellation")), &ctx);
+                reports::lazy(&mut output, format!("api/region_brief/{}", system.get_id("region")), &ctx);
+                Self::neighbors(&mut output, &id, &ctx);
+                Self::observatory_report(&mut output, &id, &ctx);
                 reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
             }
         } else {

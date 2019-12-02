@@ -244,8 +244,8 @@ SELECT
 	constellations.region_id AS region_id,
 	regions_names.object_name AS region_name
 FROM constellations
-JOIN objects constellations_names ON constellations.constellation_id = constellations_names.object_id
-JOIN objects regions_names ON constellations.region_id = regions_names.object_id;
+LEFT JOIN objects constellations_names ON constellations.constellation_id = constellations_names.object_id
+LEFT JOIN objects regions_names ON constellations.region_id = regions_names.object_id;
 
 DROP VIEW IF EXISTS neighbors_regions;
 CREATE VIEW IF NOT EXISTS neighbors_regions AS
@@ -257,10 +257,10 @@ SELECT DISTINCT
 FROM stargates
 JOIN systems own ON own.system_id = stargates.system_id
 JOIN constellations own_c ON own.constellation_id = own_c.constellation_id
-JOIN objects own_object ON own_c.region_id = own_object.object_id
+LEFT JOIN objects own_object ON own_c.region_id = own_object.object_id
 JOIN systems neighbors ON neighbors.system_id = stargates.dst_system_id
 JOIN constellations neighbors_c ON neighbors.constellation_id = neighbors_c.constellation_id
-JOIN objects neighbors_object ON neighbors_c.region_id = neighbors_object.object_id
+LEFT JOIN objects neighbors_object ON neighbors_c.region_id = neighbors_object.object_id
 WHERE neighbors_c.region_id != own_c.region_id
 GROUP BY own_id, own_name, neighbor_id, neighbor_name;
 
@@ -273,9 +273,9 @@ SELECT DISTINCT
 	neighbors_object.object_name AS neighbor_name
 FROM stargates
 JOIN systems own ON own.system_id = stargates.system_id
-JOIN objects own_object ON own.constellation_id = own_object.object_id
+LEFT JOIN objects own_object ON own.constellation_id = own_object.object_id
 JOIN systems neighbors ON neighbors.system_id = stargates.dst_system_id
-JOIN objects neighbors_object ON neighbors.constellation_id = neighbors_object.object_id
+LEFT JOIN objects neighbors_object ON neighbors.constellation_id = neighbors_object.object_id
 WHERE neighbors.constellation_id != own.constellation_id
 GROUP BY own_id, own_name, neighbor_id, neighbor_name;
 
@@ -288,9 +288,9 @@ SELECT DISTINCT
 	neighbors_object.object_name AS neighbor_name
 FROM stargates
 JOIN systems own ON own.system_id = stargates.system_id
-JOIN objects own_object ON own.system_id = own_object.object_id
+LEFT JOIN objects own_object ON own.system_id = own_object.object_id
 JOIN systems neighbors ON neighbors.system_id = stargates.dst_system_id
-JOIN objects neighbors_object ON neighbors.system_id = neighbors_object.object_id
+LEFT JOIN objects neighbors_object ON neighbors.system_id = neighbors_object.object_id
 WHERE neighbors.system_id != own.system_id;
 
 DROP VIEW IF EXISTS named_systems;
