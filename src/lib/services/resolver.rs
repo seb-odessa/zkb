@@ -1,6 +1,5 @@
 use crate::api;
 use crate::services::{AppContext, Command, Message, Api, Model, Category};
-use std::collections::HashSet;
 
 pub fn run(context: actix_web::web::Data<AppContext>) {
     info!("Started");
