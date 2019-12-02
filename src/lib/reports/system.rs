@@ -80,14 +80,12 @@ impl System {
     fn report_observatory_path(output: &mut dyn Write, id: &i32, ctx: &Context) {
         use services::{Category, Report};
         use std::collections::HashSet;
-        let arrow = format!("&nbsp;&gt;&nbsp;");
+        let arrow = format!("&nbsp;=&gt;&nbsp;");
         let mut covered = HashSet::new();
         match reports::load(Category::ObservatoryPath(*id), &ctx) {
             Report::ObservatoryPath(paths) => {
-                for (row, path) in paths.iter().enumerate() {
-                    if row > 5 {
-                        break;
-                    }
+                let mut rest = 5;
+                for path in &paths {
                     if path.s1_jo {
                         if covered.insert(&path.s1_id) {
                             reports::div(output, format!("{}{}",
@@ -128,6 +126,13 @@ impl System {
                                 arrow, Self::get_system_href(&path.s5_id, ctx),
                             ));
                         }
+                    } else {
+                        rest = rest + 1;
+                    }
+                    if 0 == rest {
+                        break;
+                    } else {
+                        rest = rest - 1;
                     }
                 }
             },
