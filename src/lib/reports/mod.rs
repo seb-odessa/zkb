@@ -41,6 +41,21 @@ pub enum ReportType{
     Brief,
 }
 
+pub trait Reportable {
+    fn report(category: &String, arg: &String, ctx: &Context) -> String {
+        if let Ok(ref id) = arg.parse::<i32>() {
+            Self::report_by_id(id, ctx)
+        } else if let Some(ref id) = find_id(category, arg, ctx) {
+            Self::report_by_id(id, ctx)
+        } else {
+            format!("<div>{} {} was not found</div>", category, arg)
+        }
+    }
+
+    fn report_by_id(id: &i32, ctx: &Context) -> String;
+}
+
+
 pub fn root(context: &Context) -> String {
     format!("http://{}/navigator", &context.server)
 }
@@ -159,8 +174,6 @@ pub fn zkb_href(category: &'static str, id: &Option<i32>, name: &Option<String>)
 pub fn self_href(api: &str, id: &i32, name: &String) -> String {
     format!("<a href=\"{}/{}\">{}</a>", api, id, name)
 }
-
-
 
 pub fn link_system(id: &i32, name: &String) -> String {
     format!("<a href=\"../system/{}\">{}</a>", id, name)

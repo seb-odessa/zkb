@@ -1,4 +1,3 @@
-use crate::api;
 use crate::models;
 use crate::services;
 use crate::services::Context;
@@ -58,6 +57,7 @@ impl System {
 
     // todo create api type for route
     fn get_route(departure: &i32, destination: &i32) -> Option<Vec<i32>> {
+        use crate::api;
         let uri = format!("route/{}/{}", departure, destination);
         let response = api::gw::eve_api(&uri).unwrap_or_default();
         serde_json::from_str(&response).ok()
@@ -182,14 +182,6 @@ impl System {
             Self::report_by_id(id, ctx, report_type)
         } else {
             format!("<div>System {} was not found in DB</div>", arg)
-        }
-    }
-
-    pub fn security_status(id: &i32) -> String {
-        if let Some(system) = api::system::System::new(id) {
-            format!("{:.2}", system.security_status)
-        } else {
-            format!("Can't query System({}) from CCP API", id)
         }
     }
 

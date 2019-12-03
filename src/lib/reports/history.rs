@@ -18,7 +18,7 @@ impl History {
         return 0;
     }
 
-    fn report(category: Category, minutes: &Integer, ctx: &Context) -> String {
+    fn report_impl(category: Category, minutes: &Integer, ctx: &Context) -> String {
         let mut output = String::new();
         let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
         let timestamp = start.format("%Y-%m-%d %H:%M:%S").to_string();
@@ -42,48 +42,35 @@ impl History {
     }
 
     pub fn system(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report(Category::History((Area::System(*id), *minutes)), minutes, ctx)
+        Self::report_impl(Category::History((Area::System(*id), *minutes)), minutes, ctx)
     }
 
     pub fn region(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report(Category::History((Area::Region(*id), *minutes)), minutes, ctx)
+        Self::report_impl(Category::History((Area::Region(*id), *minutes)), minutes, ctx)
     }
 
     pub fn constellation(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report(Category::History((Area::Constellation(*id), *minutes)), minutes, ctx)
+        Self::report_impl(Category::History((Area::Constellation(*id), *minutes)), minutes, ctx)
     }
 
-    pub fn character_wins(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report(Category::Wins((Actor::Character(*id), *minutes)), minutes, ctx)
+    pub fn report(category: &String, class: &String, id: &Integer, minutes: &Integer, ctx: &Context) -> String {
+        let actor = match category.as_ref() {
+            "character" => Actor::Character(*id),
+            "corporation" => Actor::Corporation(*id),
+            "alliance" => Actor::Alliance(*id),
+            "faction" => Actor::Faction(*id),
+            _ => return format!("Unexpected category")
+        };
+
+        let category = match class.as_ref() {
+            "wins" => Category::Wins((actor, *minutes)),
+            "losses" => Category::Losses((actor, *minutes)),
+            _ => return format!("Unexpected report class")
+        };
+
+        Self::report_impl(category, minutes, ctx)
     }
 
-    pub fn character_losses(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report(Category::Losses((Actor::Character(*id), *minutes)), minutes, ctx)
-    }
-
-    pub fn corporation_wins(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report(Category::Wins((Actor::Corporation(*id), *minutes)), minutes, ctx)
-    }
-
-    pub fn corporation_losses(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report(Category::Losses((Actor::Corporation(*id), *minutes)), minutes, ctx)
-    }
-
-    pub fn alliance_wins(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report(Category::Wins((Actor::Alliance(*id), *minutes)), minutes, ctx)
-    }
-
-    pub fn alliance_losses(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report(Category::Losses((Actor::Alliance(*id), *minutes)), minutes, ctx)
-    }
-
-    pub fn faction_wins(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report(Category::Wins((Actor::Faction(*id), *minutes)), minutes, ctx)
-    }
-
-    pub fn faction_losses(id: &Integer, minutes: &Integer, ctx: &Context) -> String {
-        Self::report(Category::Losses((Actor::Faction(*id), *minutes)), minutes, ctx)
-    }
 
     pub fn system_count(id: &Integer, minutes: &Integer, ctx: &Context) -> i32 {
         Self::count(Category::HistoryCount((Area::System(*id), *minutes)), ctx)

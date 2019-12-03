@@ -1,5 +1,6 @@
 use crate::services::{Context, Command, Message};
 use crate::reports;
+use crate::reports::Reportable;
 
 use actix_rt;
 use actix_web::{web, App, HttpServer, HttpResponse};
@@ -57,10 +58,22 @@ fn history(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
         "alliance_losses" => reports::History::alliance_losses(&id, &minutes, &ctx),
         "faction_wins" => reports::History::faction_wins(&id, &minutes, &ctx),
         "faction_losses" => reports::History::faction_losses(&id, &minutes, &ctx),
-
         _=> format!("Unknown Area Type {} ", info.0)
     };
 
+    HttpResponse::Ok()
+        .content_type("text/html; charset=UTF-8")
+        .header("X-Header", "zkb")
+        .body(body)
+}
+
+fn report(info: web::Path<(String, String, i32, i32)>, ctx: Context) -> HttpResponse {
+    info!("/report/{:?}", info);
+    let category = &info.0;
+    let class = &info.1;
+    let id = info.2;
+    let minutes = info.3;
+    let body = reports::History::report(category, class, &id, &minutes, &ctx);
     HttpResponse::Ok()
         .content_type("text/html; charset=UTF-8")
         .header("X-Header", "zkb")
@@ -79,10 +92,10 @@ fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
         "stargate" => reports::Stargate::report(&info.1, &ctx),
         "killmail_brief" => reports::Killmail::brief(&info.1, &ctx),
         "killmail" => reports::Killmail::report(&info.1, &ctx),
-        "character" => reports::Character::report(&info.1, &ctx),
-        "corporation" => reports::Corporation::report(&info.1, &ctx),
-        "alliance" => reports::Alliance::report(&info.1, &ctx),
-        "faction" => reports::Faction::report(&info.1, &ctx),
+        "character" => reports::Character::report(&info.0, &info.1, &ctx),
+        "corporation" => reports::Corporation::report(&info.0, &info.1, &ctx),
+        "alliance" => reports::Alliance::report(&info.0, &info.1, &ctx),
+        "faction" => reports::Faction::report(&info.0, &info.1, &ctx),
         _=> format!("Unknown Type {} ", info.0)
     };
 
@@ -105,7 +118,6 @@ fn cmd(info: web::Path<String>, ctx: Context) -> String {
 fn services(info: web::Path<(String, i32)>, ctx: Context) -> String {
     info!("/services/{}/{}", info.0, info.1);
     match info.0.as_ref() {
-        "system_security_status" => reports::System::security_status(&info.1),
         "observatory_add" => reports::System::observatory_add(&info.1, &ctx),
         "observatory_remove" => reports::System::observatory_remove(&info.1, &ctx),
         _ => format!("/services/{}/{}", info.0, info.1)
@@ -139,6 +151,7 @@ pub fn run(context: Context) {
             .route("/navigator/services/{type}/{id}", web::get().to(services))
             .route("/navigator/services/{type}/{first}/{second}", web::get().to(services2))
             .route("/navigator/history/{area}/{id}/{minutes}", web::get().to(history))
+            .route("/navigator/report/{category}/{class}/{id}/{minutes}", web::get().to(report))
     })
     .bind(address)
     .unwrap()
