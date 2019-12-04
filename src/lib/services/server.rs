@@ -7,10 +7,6 @@ use actix_rt;
 use actix_web::{web, App, HttpServer, HttpResponse};
 
 
-pub fn root(context: &Context) -> String {
-    format!("http://{}/navigator", &context.server)
-}
-
 fn quit(ctx: &Context) -> String {
     ctx.commands.push(Command::Quit);
     ctx.commands.push(Command::Quit);
@@ -108,20 +104,26 @@ fn cmd(info: web::Path<String>, ctx: Context) -> String {
     }
 }
 
-fn services(info: web::Path<(String, i32)>, ctx: Context) -> String {
-    info!("/services/{}/{}", info.0, info.1);
-    match info.0.as_ref() {
-        "observatory_add" => reports::System::observatory_add(&info.1, &ctx),
-        "observatory_remove" => reports::System::observatory_remove(&info.1, &ctx),
-        _ => format!("/services/{}/{}", info.0, info.1)
-    }
-}
-
-fn services2(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
+fn services(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
     info!("/services/{}/{}/{}", info.0, info.1, info.2);
     let body = match info.0.as_ref() {
         "route" => reports::System::route(info.1, info.2, &ctx),
         _ => format!("/services/{}/{}/{}", info.0, info.1, info.2)
+    };
+
+    HttpResponse::Ok()
+        .content_type("text/html; charset=UTF-8")
+        .header("X-Header", "zkb")
+        .body(body)
+}
+
+fn hidden(info: web::Path<(String, i32, String)>, ctx: Context) -> HttpResponse {
+    let (area, id, cmd) = info.into_inner();
+
+    let body = match (area.as_ref(), id, cmd.as_ref()){
+        ("system", id, "add") => reports::System::observatory_add(&id, &ctx),
+        ("system", id, "del") => reports::System::observatory_del(&id, &ctx),
+        _ => String::new()
     };
 
     HttpResponse::Ok()
@@ -140,9 +142,9 @@ pub fn run(context: Context) {
             .register_data(context.clone())
             .route("/navigator/find/{name}", web::get().to(find))
             .route("/navigator/api/{type}/{id}", web::get().to(api))
+            .route("/navigator/api/{type}/{id}/{cmd}", web::get().to(hidden))
             .route("/navigator/cmd/{cmd}", web::get().to(cmd))
-            .route("/navigator/services/{type}/{id}", web::get().to(services))
-            .route("/navigator/services/{type}/{first}/{second}", web::get().to(services2))
+            .route("/navigator/services/{type}/{first}/{second}", web::get().to(services))
             .route("/navigator/history/{area}/{id}/{minutes}", web::get().to(history))
             .route("/navigator/report/{category}/{class}/{id}/{minutes}", web::get().to(report))
     })

@@ -1,7 +1,6 @@
 use crate::models;
 use crate::services::{Context, Area, Category, Report};
 use crate::reports;
-use crate::reports::ReportableEx;
 use std::fmt::Write;
 
 #[derive(Debug, PartialEq)]

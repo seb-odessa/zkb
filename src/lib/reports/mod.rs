@@ -79,10 +79,6 @@ pub trait ReportableEx {
     fn report_by_id(id: &i32, ctx: &Context, report_type: ReportType) -> String;
 }
 
-pub fn root(context: &Context) -> String {
-    format!("http://{}/navigator", &context.server)
-}
-
 pub fn href<S: Into<String>>(url: S, name: S) -> String{
     format!(r#"<a href="{url}">{name}</a>"#, url = url.into(), name = name.into())
 }
@@ -124,33 +120,8 @@ pub fn table_end(output: &mut dyn Write, ) {
     std::fmt::write(output,format_args!("</table>")).expect(FAIL);
 }
 
-
 pub fn tip<S0: Into<String>, S1: Into<String>>(tip: S0, content: S1) -> String{
     format!(r#"<span title="{}">{}</span>"#, tip.into(), content.into())
-}
-
-pub fn jovian_buttons(output: &mut dyn Write, id: &i32, name: &String) {
-    std::fmt::write(
-        output,
-        format_args!(r###"
-                <span id="JovianButtons" data-id="{id}" data-name="{name}">
-                <span> Jovian Observatory </span>
-                <button onclick="registerJovianObservatory()">Register</button>
-                <button onclick="unregisterJovianObservatory()">Unregister</button>
-                </span>
-                <script>
-                    function registerJovianObservatory() {{
-                        document.getElementById("{id}").style.color = "red";
-                    }}
-
-                    function unregisterJovianObservatory() {{
-                        document.getElementById("{id}").style.color = "green";
-                    }}
-                </script>
-            "###,
-            id=id,
-            name=name)
-    ).expect(FAIL);
 }
 
 pub fn lazy<S: Into<String>>(output: &mut dyn Write, url: S, ctx: &Context) {
@@ -165,45 +136,9 @@ pub fn lazy<S: Into<String>>(output: &mut dyn Write, url: S, ctx: &Context) {
                .catch((err) => console.log("Can’t access " + "{root}/{api}" + ": " + err));
         </script>"##,
         id=crate::create_id(),
-        root=root(ctx),
+        root=ctx.get_root(),
         api=url.into())
     ).expect(FAIL);
-}
-
-pub fn load_later<S: Into<String>>(output: &mut dyn Write, id: &String, api: S, root: &String) {
-    std::fmt::write(
-        output,
-        format_args!(r##"
-
-        <script>
-            fetch("{root}/{api}")
-               .then(response => response.text())
-               .then(text => document.getElementById("{id}").innerText = text)
-               .catch((err) => console.log("Can’t access " + "{root}/{api}" + ": " + err));
-        </script>"##,
-        id=id,
-        api=api.into(),
-        root=root)
-    ).expect(FAIL);
-}
-
-pub fn zkb_href(category: &'static str, id: &Option<i32>, name: &Option<String>) -> String {
-    format!("<a href=\"https://zkillboard.com/{}/{}/\">{}</a>",
-        category,
-        id.as_ref().cloned().unwrap_or(0),
-        name.as_ref().cloned().unwrap_or_default())
-}
-
-pub fn self_href(api: &str, id: &i32, name: &String) -> String {
-    format!("<a href=\"{}/{}\">{}</a>", api, id, name)
-}
-
-pub fn link_system(id: &i32, name: &String) -> String {
-    format!("<a href=\"../system/{}\">{}</a>", id, name)
-}
-
-pub fn link_killmail(id: &i32) -> String {
-    format!("<a href=\"../killmail/{}\">{}</a>", id, id)
 }
 
 pub fn find_id<S: Into<String>>(category: S, name: S, ctx: &Context) -> Option<i32> {

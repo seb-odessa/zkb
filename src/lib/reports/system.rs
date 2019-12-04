@@ -22,7 +22,7 @@ impl reports::ReportableEx for System {
                 reports::lazy(&mut output, format!("api/constellation_brief/{}", system.get_id("constellation")), &ctx);
                 reports::lazy(&mut output, format!("api/region_brief/{}", system.get_id("region")), &ctx);
                 Self::neighbors(&mut output, &id, &ctx);
-                Self::observatory_report(&mut output, &id, &ctx);
+                Self::observatory_report(&mut output, &system, &ctx);
                 reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
             }
         }
@@ -33,12 +33,12 @@ impl System {
 
     pub fn write(output: &mut dyn Write, system: &models::system::SystemNamed, ctx: &Context) {
         let content = format!(
-            r#"<span id="{id}" data-name="{name}">System: {api} {zkb} {map}</span>"#,
+            r#"<span id="{id}" data-name="{name}">System: {api}  [{zkb}] [{map}]</span>"#,
             id = system.system_id,
             name = system.get_name("system"),
             api = ctx.get_api_href("system", system.get_id("system"), system.get_name("system")),
-            zkb = ctx.get_zkb_href("system", system.get_id("system"), "(zkb)"),
-            map = ctx.get_dotlan_href(system.get_name("region"), system.get_name("system"), "(dotlan)")
+            zkb = ctx.get_zkb_href("system", system.get_id("system"), "zkb"),
+            map = ctx.get_dotlan_href(system.get_name("region"), system.get_name("system"), "dotlan")
         );
         reports::div(output, content);
     }
@@ -165,15 +165,16 @@ impl System {
         }
     }
 
-    fn observatory_report(output: &mut dyn Write, id: &i32, ctx: &Context) {
-        if let Some(system) = Self::load(id, &ctx) {
-            if system.has_observatory() {
-                reports::div(output, format!(r#"<span style="color: green;">Jovian Observatory</span>"#));
-            }
-            reports::jovian_buttons(output, &system.system_id, &system.get_name("system"));
-            reports::div(output, format!("Nearest system with Jovian Observatory:"));
-            Self::report_observatory_path(output, id, ctx);
+    fn observatory_report(output: &mut dyn Write, system: &models::system::SystemNamed, ctx: &Context) {
+        if system.has_observatory() {
+            let name = system.get_name("system");
+            let observatory = reports::span("", "color: green;", "Jovian Observatory");
+            let content = reports::span("", "", format!("<span>There are {} in the {} system.</span>", observatory, name));
+            reports::div(output, content);
         }
+
+        reports::div(output, format!("Nearest system with Jovian Observatory:"));
+        Self::report_observatory_path(output, &system.system_id, ctx);
     }
 
     pub fn observatory_add(id: &i32, ctx: &Context) -> String {
@@ -182,45 +183,11 @@ impl System {
         String::from("Done")
     }
 
-    pub fn observatory_remove(id: &i32, ctx: &Context) -> String {
+    pub fn observatory_del(id: &i32, ctx: &Context) -> String {
         use services::{Message, Model};
         ctx.database.push(Message::Delete(Model::Observatory(*id)));
         String::from("Done")
     }
 
-    // pub fn brief(arg: &String, ctx: &Context) -> String {
-    //     Self::perform_report(arg, ctx, reports::ReportType::Brief)
-    // }
-
-    // pub fn report(arg: &String, ctx: &Context) -> String {
-    //     Self::perform_report(arg, ctx, reports::ReportType::Full)
-    // }
-
-    // fn perform_report(arg: &String, ctx: &Context, report_type: reports::ReportType) -> String {
-    //     if let Ok(ref id) = arg.parse::<i32>() {
-    //         Self::report_by_id(id, ctx, report_type)
-    //     } else if let Some(ref id) = reports::find_id("solar_system", arg, ctx) {
-    //         Self::report_by_id(id, ctx, report_type)
-    //     } else {
-    //         format!("<div>System {} was not found in DB</div>", arg)
-    //     }
-    // }
-
-    // fn report_by_id(id: &i32, ctx: &Context, full_report: reports::ReportType) -> String {
-    //     let mut output = String::new();
-    //     if let Some(system) = Self::load(id, ctx) {
-    //         Self::write(&mut output, &system, ctx);
-    //         if full_report == reports::ReportType::Full {
-    //             reports::lazy(&mut output, format!("api/constellation_brief/{}", system.get_id("constellation")), &ctx);
-    //             reports::lazy(&mut output, format!("api/region_brief/{}", system.get_id("region")), &ctx);
-    //             Self::neighbors(&mut output, &id, &ctx);
-    //             Self::observatory_report(&mut output, &id, &ctx);
-    //             reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
-    //         }
-    //     } else {
-    //         reports::div(&mut output, format!("Can't query System({}) from CCP API", id));
-    //     }
-    //     return output;
-    // }
 }
 

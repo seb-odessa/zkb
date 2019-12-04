@@ -1,10 +1,11 @@
 use crate::api;
 use crate::services::Context;
-use crate::services::server::root;
+
 use crate::reports::FAIL;
 
 use std::fmt::Write;
 use std::fmt::write;
+
 
 #[derive(Debug, PartialEq)]
 pub struct Names {
@@ -45,7 +46,7 @@ impl Names {
 
     pub fn report(name: &String, ctx: &Context) -> String {
         let mut output = String::new();
-        let root = root(&ctx);
+        let root = ctx.get_root();
         write(&mut output, format_args!("<div>&lt{}&gt</div>", name)).expect(FAIL);
         if let Some(name) = Names::new(name) {
             Self::fmt(&mut output, &root, "", &name.names.agents);

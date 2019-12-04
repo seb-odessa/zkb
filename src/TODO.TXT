@@ -2,10 +2,10 @@ v)Сделать полный вывод по killmail
 Сделать отдельный демон для обновления цен
 v) Сделать быстрый рассчет путей до ближайшей системы с обсерваторией
 v) Исправить reports::System для использования модели вместо API класса
-v)Добавить load метод в reports::System
-Исправить reports::Constellaton для использования модели вместо API класса
-Исправить reports::Region для использования модели вместо API класса
+v) Добавить load метод в reports::System
+v) Исправить reports::Constellaton для использования модели вместо API класса
+v) Исправить reports::Region для использования модели вместо API класса
 v) Добавить history отчёты по character/corp/alli/faction
 Добавить history отчёты по ship
-
+Исправить find
 Introduce trait for get_name/get_id

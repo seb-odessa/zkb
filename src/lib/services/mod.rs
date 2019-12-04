@@ -143,6 +143,10 @@ impl AppContext {
         }
     }
 
+    pub fn get_root(&self) ->String {
+        format!("http://{}/navigator", &self.server)
+    }
+
     pub fn get_api_href<S1: Into<String>, S2: Into<String>>(&self, class: S1, id: i32, name: S2) -> String {
         format!(r#"<a href="http://{server}/navigator/api/{class}/{id}">{name}</a>"#,
             server = self.server,
