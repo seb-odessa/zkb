@@ -1,6 +1,7 @@
 use crate::services::{Context, Command, Message};
 use crate::reports;
 use crate::reports::Reportable;
+use crate::reports::ReportableEx;
 
 use actix_rt;
 use actix_web::{web, App, HttpServer, HttpResponse};
@@ -50,14 +51,6 @@ fn history(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
         "system" => reports::History::system(&id, &minutes, &ctx),
         "region" => reports::History::region(&id, &minutes, &ctx),
         "constellation" => reports::History::constellation(&id, &minutes, &ctx),
-        "character_wins" => reports::History::character_wins(&id, &minutes, &ctx),
-        "character_losses" => reports::History::character_losses(&id, &minutes, &ctx),
-        "corporation_wins" => reports::History::corporation_wins(&id, &minutes, &ctx),
-        "corporation_losses" => reports::History::corporation_losses(&id, &minutes, &ctx),
-        "alliance_wins" => reports::History::alliance_wins(&id, &minutes, &ctx),
-        "alliance_losses" => reports::History::alliance_losses(&id, &minutes, &ctx),
-        "faction_wins" => reports::History::faction_wins(&id, &minutes, &ctx),
-        "faction_losses" => reports::History::faction_losses(&id, &minutes, &ctx),
         _=> format!("Unknown Area Type {} ", info.0)
     };
 

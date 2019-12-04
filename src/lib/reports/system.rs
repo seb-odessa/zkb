@@ -8,6 +8,27 @@ use std::fmt::Write;
 
 #[derive(Debug, PartialEq)]
 pub struct System;
+impl reports::ReportableEx for System {
+
+    fn get_category() -> String {
+        String::from("system")
+    }
+
+    fn report_by_id(id: &i32, ctx: &Context, report_type: reports::ReportType) -> String {
+        let mut output = String::new();
+        if let Some(system) = Self::load(id, ctx) {
+            Self::write(&mut output, &system, ctx);
+            if report_type == reports::ReportType::Full {
+                reports::lazy(&mut output, format!("api/constellation_brief/{}", system.get_id("constellation")), &ctx);
+                reports::lazy(&mut output, format!("api/region_brief/{}", system.get_id("region")), &ctx);
+                Self::neighbors(&mut output, &id, &ctx);
+                Self::observatory_report(&mut output, &id, &ctx);
+                reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
+            }
+        }
+        return output;
+    }
+}
 impl System {
 
     pub fn write(output: &mut dyn Write, system: &models::system::SystemNamed, ctx: &Context) {
@@ -167,39 +188,39 @@ impl System {
         String::from("Done")
     }
 
-    pub fn brief(arg: &String, ctx: &Context) -> String {
-        Self::perform_report(arg, ctx, reports::ReportType::Brief)
-    }
+    // pub fn brief(arg: &String, ctx: &Context) -> String {
+    //     Self::perform_report(arg, ctx, reports::ReportType::Brief)
+    // }
 
-    pub fn report(arg: &String, ctx: &Context) -> String {
-        Self::perform_report(arg, ctx, reports::ReportType::Full)
-    }
+    // pub fn report(arg: &String, ctx: &Context) -> String {
+    //     Self::perform_report(arg, ctx, reports::ReportType::Full)
+    // }
 
-    fn perform_report(arg: &String, ctx: &Context, report_type: reports::ReportType) -> String {
-        if let Ok(ref id) = arg.parse::<i32>() {
-            Self::report_by_id(id, ctx, report_type)
-        } else if let Some(ref id) = reports::find_id("solar_system", arg, ctx) {
-            Self::report_by_id(id, ctx, report_type)
-        } else {
-            format!("<div>System {} was not found in DB</div>", arg)
-        }
-    }
+    // fn perform_report(arg: &String, ctx: &Context, report_type: reports::ReportType) -> String {
+    //     if let Ok(ref id) = arg.parse::<i32>() {
+    //         Self::report_by_id(id, ctx, report_type)
+    //     } else if let Some(ref id) = reports::find_id("solar_system", arg, ctx) {
+    //         Self::report_by_id(id, ctx, report_type)
+    //     } else {
+    //         format!("<div>System {} was not found in DB</div>", arg)
+    //     }
+    // }
 
-    fn report_by_id(id: &i32, ctx: &Context, full_report: reports::ReportType) -> String {
-        let mut output = String::new();
-        if let Some(system) = Self::load(id, ctx) {
-            Self::write(&mut output, &system, ctx);
-            if full_report == reports::ReportType::Full {
-                reports::lazy(&mut output, format!("api/constellation_brief/{}", system.get_id("constellation")), &ctx);
-                reports::lazy(&mut output, format!("api/region_brief/{}", system.get_id("region")), &ctx);
-                Self::neighbors(&mut output, &id, &ctx);
-                Self::observatory_report(&mut output, &id, &ctx);
-                reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
-            }
-        } else {
-            reports::div(&mut output, format!("Can't query System({}) from CCP API", id));
-        }
-        return output;
-    }
+    // fn report_by_id(id: &i32, ctx: &Context, full_report: reports::ReportType) -> String {
+    //     let mut output = String::new();
+    //     if let Some(system) = Self::load(id, ctx) {
+    //         Self::write(&mut output, &system, ctx);
+    //         if full_report == reports::ReportType::Full {
+    //             reports::lazy(&mut output, format!("api/constellation_brief/{}", system.get_id("constellation")), &ctx);
+    //             reports::lazy(&mut output, format!("api/region_brief/{}", system.get_id("region")), &ctx);
+    //             Self::neighbors(&mut output, &id, &ctx);
+    //             Self::observatory_report(&mut output, &id, &ctx);
+    //             reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
+    //         }
+    //     } else {
+    //         reports::div(&mut output, format!("Can't query System({}) from CCP API", id));
+    //     }
+    //     return output;
+    // }
 }
 

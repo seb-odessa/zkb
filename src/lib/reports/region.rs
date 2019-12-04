@@ -1,70 +1,62 @@
-use crate::api;
+use crate::models;
 use crate::services::{Context, Area, Category, Report};
-use crate::reports::*;
 use crate::reports;
+use crate::reports::ReportableEx;
+use std::fmt::Write;
 
 #[derive(Debug, PartialEq)]
 pub struct Region;
+impl reports::ReportableEx for Region {
+
+    fn get_category() -> String {
+        String::from("region")
+    }
+
+    fn report_by_id(id: &i32, ctx: &Context, report_type: reports::ReportType) -> String {
+        let mut output = String::new();
+        if let Report::Region(region) = reports::load(Category::Region(*id), &ctx) {
+            Self::write(&mut output, &region, ctx);
+            if report_type == reports::ReportType::Full {
+                Self::neighbors(&mut output, id, ctx);
+                reports::lazy(&mut output, format!("history/region/{}/{}", id, 60), &ctx);
+            }
+        }
+        return output;
+    }
+}
 impl Region {
 
-    fn write(output: &mut dyn Write, region: &api::region::Region, root: &String) {
-        let url = format!("{}/api/region/{}", root, region.region_id);
-        std::fmt::write(
-            output,
-            format_args!(
-                r#"<div id="{id}" data-name="{name}">Region: {url}</div>"#,
-                id = region.region_id,
-                url = href(&url, &region.name),
-                name = region.name
-            )
-        ).expect(FAIL);
+    fn format(region: &models::region::RegionNamed, ctx: &Context) -> String {
+        let id = region.get_id();
+        let name = region.get_name();
+        format!(
+            r#"<span id="{id}" data-name="{name}">Region: {api}  [{zkb}] [{map}]</span>"#,
+            id = id,
+            name = name.clone(),
+            api = ctx.get_api_href("region", id, &name),
+            zkb = ctx.get_zkb_href("region", id, "zkb"),
+            map = ctx.get_dotlan_href(&name, "", "dotlan")
+        )
+    }
+
+    pub fn write(output: &mut dyn Write, region: &models::region::RegionNamed, ctx: &Context) {
+        reports::div(output, Self::format(region, ctx));
     }
 
     fn neighbors(output: &mut dyn Write, id: &i32, ctx: &Context) {
-        let root = root(&ctx);
+        use reports::history::History;
         if let Report::RegionNeighbors(neighbors) = reports::load(Category::Neighbors(Area::Region(*id)), &ctx) {
+            let category = Self::get_category();
             for neighbor in &neighbors {
-                let url = format!("{}/api/region/{}", root, neighbor.neighbor_id);
+                let id = neighbor.get_id("neighbor");
                 let name = neighbor.get_name("neighbor");
-                div(output, format!("neighbor: [ {} : {} : {} ] {}",
-                    tip("Kills at last 10 minutes", format!("{:0>3}", history::History::region_count(&neighbor.neighbor_id, &10, ctx))),
-                    tip("Kills at last 60 minutes", format!("{:0>3}", history::History::region_count(&neighbor.neighbor_id, &60, ctx))),
-                    tip("Kills at last 6 hours", format!("{:0>3}", history::History::region_count(&neighbor.neighbor_id, &360, ctx))),
-                    href(&url, &name),
+                reports::div(output, format!("neighbor: [ {} : {} : {} ] {}",
+                    reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::region_count(&neighbor.neighbor_id, &10, ctx))),
+                    reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::region_count(&neighbor.neighbor_id, &60, ctx))),
+                    reports::tip("Kills at last 6 hours", format!("{:0>3}", History::region_count(&neighbor.neighbor_id, &360, ctx))),
+                    ctx.get_api_href(&category, id, name),
                 ));
             }
         }
-    }
-
-    pub fn brief(arg: &String, ctx: &Context) -> String {
-        Self::perform_report(arg, ctx, ReportType::Brief)
-    }
-
-    pub fn report(arg: &String, ctx: &Context) -> String {
-        Self::perform_report(arg, ctx, ReportType::Full)
-    }
-
-    fn perform_report(arg: &String, ctx: &Context, report_type: ReportType) -> String {
-        if let Ok(ref id) = arg.parse::<i32>() {
-            Self::report_by_id(id, ctx, report_type)
-        } else if let Some(ref id) = find_id("region", arg, ctx) {
-            Self::report_by_id(id, ctx, report_type)
-        } else {
-            format!("<div>Region {} was not found</div>", arg)
-        }
-    }
-
-    fn report_by_id(id: &i32, ctx: &Context, report_type: ReportType) -> String {
-        let mut output = String::new();
-        if let Some(object) = api::region::Region::new(id) {
-            Self::write(&mut output, &object, &root(ctx));
-            if report_type == ReportType::Full {
-                Self::neighbors(&mut output, &object.region_id, ctx);
-                lazy(&mut output, format!("history/region/{}/{}", id, 60), &ctx);
-            }
-        } else {
-            div(&mut output, format!("Can't query Region({}) from CCP API", id));
-        }
-        return output;
     }
 }

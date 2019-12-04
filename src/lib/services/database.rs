@@ -127,16 +127,45 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                     match category {
                         Category::System(id) => {
                             match models::system::SystemNamed::load(&conn, &id) {
-                                Ok(object) => {
+                                Ok(system) => {
                                     info!("loaded system {} queue length: {}", id, context.database.len());
-                                    get_name_if_none(&context.resolver, &object.system_name, object.system_id);
-                                    get_name_if_none(&context.resolver, &object.constellation_name, object.constellation_id);
-                                    get_name_if_none(&context.resolver, &object.region_name, object.region_id);
-                                    context.responses.push(Message::Report((msg_id, Report::System(object))));
+                                    get_name_if_none(&context.resolver, &system.system_name, system.system_id);
+                                    get_name_if_none(&context.resolver, &system.constellation_name, system.constellation_id);
+                                    get_name_if_none(&context.resolver, &system.region_name, system.region_id);
+                                    context.responses.push(Message::Report((msg_id, Report::System(system))));
                                 },
                                 Err(e) => {
                                     warn!("was not able to load system: {}", e);
                                     context.database.push(Message::Check(Category::System(*id)));
+                                    context.responses.push(Message::Report((msg_id, Report::NotFoundId(*id))));
+                                }
+                            }
+                        },
+                        Category::Region(id) => {
+                            match models::region::RegionNamed::load(&conn, &id) {
+                                Ok(region) => {
+                                    info!("loaded region {} queue length: {}", id, context.database.len());
+                                    get_name_if_none(&context.resolver, &region.region_name, region.region_id);
+                                    context.responses.push(Message::Report((msg_id, Report::Region(region))));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load region: {}", e);
+                                    context.database.push(Message::Check(Category::Region(*id)));
+                                    context.responses.push(Message::Report((msg_id, Report::NotFoundId(*id))));
+                                }
+                            }
+                        }
+                        Category::Constellation(id) => {
+                            match models::constellation::ConstellationNamed::load(&conn, &id) {
+                                Ok(constellation) => {
+                                    info!("loaded constellation {} queue length: {}", id, context.database.len());
+                                    get_name_if_none(&context.resolver, &constellation.region_name, constellation.region_id);
+                                    get_name_if_none(&context.resolver, &constellation.constellation_name, constellation.constellation_id);
+                                    context.responses.push(Message::Report((msg_id, Report::Constellation(constellation))));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load constellation: {}", e);
+                                    context.database.push(Message::Check(Category::Constellation(*id)));
                                     context.responses.push(Message::Report((msg_id, Report::NotFoundId(*id))));
                                 }
                             }
@@ -433,6 +462,9 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                 known.insert(id);
                             }
                         }
+                        Category::Region(_) => {
+                            // Nothing to do here
+                        },
                         Category::Constellation(id) => {
                             if !known.contains(&id) && !models::constellation::Constellation::exist(&conn, &id)
                             {

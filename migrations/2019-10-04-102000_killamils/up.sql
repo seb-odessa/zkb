@@ -305,7 +305,7 @@ SELECT
 	systems.security_status			AS security_status,
 	CASE WHEN observatories.system_id IS NOT NULL THEN "Jovian Observatory" ELSE NULL END AS observatory
 FROM systems
-JOIN constellations ON constellations.constellation_id = systems.constellation_id
+LEFT JOIN constellations ON constellations.constellation_id = systems.constellation_id
 LEFT JOIN objects sys ON sys.object_id = systems.system_id
 LEFT JOIN objects con ON con.object_id = systems.constellation_id
 LEFT JOIN objects reg ON reg.object_id = constellations.region_id

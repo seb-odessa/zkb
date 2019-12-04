@@ -55,6 +55,29 @@ pub trait Reportable {
     fn report_by_id(id: &i32, ctx: &Context) -> String;
 }
 
+pub trait ReportableEx {
+    fn get_category() -> String;
+
+    fn brief(arg: &String, ctx: &Context) -> String {
+        Self::perform_report(arg, ctx, ReportType::Brief)
+    }
+
+    fn report(arg: &String, ctx: &Context) -> String {
+        Self::perform_report(arg, ctx, ReportType::Full)
+    }
+
+    fn perform_report(arg: &String, ctx: &Context, report_type: ReportType) -> String {
+        if let Ok(ref id) = arg.parse::<i32>() {
+            Self::report_by_id(id, ctx, report_type)
+        } else if let Some(ref id) = find_id(&Self::get_category(), arg, ctx) {
+            Self::report_by_id(id, ctx, report_type)
+        } else {
+            format!("<div>{} {} was not found</div>", Self::get_category(), arg)
+        }
+    }
+
+    fn report_by_id(id: &i32, ctx: &Context, report_type: ReportType) -> String;
+}
 
 pub fn root(context: &Context) -> String {
     format!("http://{}/navigator", &context.server)

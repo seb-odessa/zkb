@@ -67,9 +67,10 @@ pub enum Category{
     Items(i32),
     ObservatoryPath(i32),
     System(i32),
+    Region(i32),
+    Constellation(i32),
     Systems((Area, Filter)),
     Stargate(i32),
-    Constellation(i32),
     History((Area, i32)),
     Wins((Actor, i32)),
     Losses((Actor, i32)),
@@ -87,6 +88,8 @@ pub enum Report{
     History(Vec<models::killmail::KillmailNamed>),
     HistoryCount(i32),
     System(models::system::SystemNamed),
+    Region(models::region::RegionNamed),
+    Constellation(models::constellation::ConstellationNamed),
     Systems(Vec<models::system::SystemNamed>),
     SystemNeighbors(Vec<models::system::SystemNeighbors>),
     ConstellationNeighbors(Vec<models::constellation::ConstellationNeighbors>),
@@ -156,11 +159,14 @@ impl AppContext {
     }
 
     pub fn get_dotlan_href<S1: Into<String>, S2: Into<String>, S3: Into<String>>(&self, region: S1, system: S2, name: S3) -> String {
-        format!(
-            r#"<a href="http://evemaps.dotlan.net/map/{region}/{system}/">{name}</a>"#,
-            region = region.into().replace(" ", "_"),
-            system = system.into().replace(" ", "_"),
-            name = name.into())
+        let region = region.into().replace(" ", "_");
+        let system = system.into().replace(" ", "_");
+        let name = name.into();
+        if system.is_empty() {
+            format!(r#"<a href="http://evemaps.dotlan.net/map/{}">{}</a>"#, region, name)
+        } else {
+            format!(r#"<a href="http://evemaps.dotlan.net/map/{}/{}/">{}</a>"#, region, system, name)
+        }
     }
 
 }
