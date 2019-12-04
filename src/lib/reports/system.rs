@@ -11,7 +11,7 @@ pub struct System;
 impl reports::ReportableEx for System {
 
     fn get_category() -> String {
-        String::from("system")
+        String::from("solar_system")
     }
 
     fn report_by_id(id: &i32, ctx: &Context, report_type: reports::ReportType) -> String {

@@ -46,7 +46,6 @@ impl Region {
     fn neighbors(output: &mut dyn Write, id: &i32, ctx: &Context) {
         use reports::history::History;
         if let Report::RegionNeighbors(neighbors) = reports::load(Category::Neighbors(Area::Region(*id)), &ctx) {
-            let category = Self::get_category();
             for neighbor in &neighbors {
                 let id = neighbor.get_id("neighbor");
                 let name = neighbor.get_name("neighbor");
@@ -54,7 +53,7 @@ impl Region {
                     reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::region_count(&neighbor.neighbor_id, &10, ctx))),
                     reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::region_count(&neighbor.neighbor_id, &60, ctx))),
                     reports::tip("Kills at last 6 hours", format!("{:0>3}", History::region_count(&neighbor.neighbor_id, &360, ctx))),
-                    ctx.get_api_href(&category, id, name),
+                    ctx.get_api_href("region", id, name),
                 ));
             }
         }
