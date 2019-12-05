@@ -171,14 +171,11 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                             }
                         },
                         Category::Systems((area, filter)) => {
-                            let query = match filter {
-                                Filter::WithJovianObservatoryOnly => models::system::QuerySystem::WithJovianObservatoryOnly,
-                                Filter::Any => models::system::QuerySystem::Any
-                            };
+                            use models::system::SystemNamed;
                             let systems = match area {
-                                Area::System(id) => models::system::SystemNamed::load(&conn, &id).and_then(|system| Ok(vec![system])),
-                                Area::Region(id) => models::system::SystemNamed::load_from_region(&conn, &id, query),
-                                Area::Constellation(id) => models::system::SystemNamed::load_from_constellation(&conn, &id, query),
+                                Area::System(id) => SystemNamed::load(&conn, &id).and_then(|system| Ok(vec![system])),
+                                Area::Constellation(id) => SystemNamed::load_from_constellation(&conn, &id, filter),
+                                Area::Region(id) => SystemNamed::load_from_region(&conn, &id, filter),
                             };
                             match systems {
                                 Ok(systems) => {
@@ -187,6 +184,24 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                                 },
                                 Err(e) => {
                                     warn!("was not able to load systems: {}", e);
+                                    context.responses.push(Message::Report((msg_id, Report::QueryFailed(e.to_string()))));
+                                }
+                            }
+                        },
+                        Category::Constellations(area) => {
+                            use models::constellation::ConstellationNamed;
+                            let constellations = match area {
+                                Area::System(_) => Ok(Vec::new()),
+                                Area::Constellation(id) => ConstellationNamed::load(&conn, &id).and_then(|constellation| Ok(vec![constellation])),
+                                Area::Region(id) => ConstellationNamed::load_from_region(&conn, &id),
+                            };
+                            match constellations {
+                                Ok(constellations) => {
+                                    info!("loaded {} constellations, queue length: {}", constellations.len(), context.database.len());
+                                    context.responses.push(Message::Report((msg_id, Report::Constellations(constellations))));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load constellations: {}", e);
                                     context.responses.push(Message::Report((msg_id, Report::QueryFailed(e.to_string()))));
                                 }
                             }

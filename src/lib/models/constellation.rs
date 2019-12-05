@@ -73,6 +73,13 @@ pub struct ConstellationNamed {
 	pub region_name: OptString,
 }
 impl ConstellationNamed {
+    pub fn get_id(&self, name: &str) -> Integer {
+        match name {
+            "constellation" => self.constellation_id,
+            "region" => self.region_id,
+            _ => 0
+        }
+    }
 
     pub fn get_name(&self, name: &str) -> String {
         match name {
@@ -86,7 +93,7 @@ impl ConstellationNamed {
         use diesel::prelude::*;
         named_constellations::table.find(id).first(conn)
     }
-    pub fn in_region(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
+    pub fn load_from_region(conn: &Connection, id: &Integer) -> QueryResult<Vec<Self>> {
         use diesel::prelude::*;
         named_constellations::table
             .filter(named_constellations::region_id.eq(id))

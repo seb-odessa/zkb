@@ -24,6 +24,8 @@ impl reports::ReportableEx for System {
                 Self::neighbors(&mut output, &id, &ctx);
                 Self::observatory_report(&mut output, &system, &ctx);
                 reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
+                reports::systems(&mut output, &system.get_id("constellation"), &ctx);
+                reports::constellations(&mut output, &system.get_id("region"), &ctx);
             }
         }
         return output;

@@ -41,10 +41,13 @@ impl System {
     }
 }
 
-#[derive(Debug, PartialEq)]
-pub enum QuerySystem {
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum SystemFilter {
     Any,
-    WithJovianObservatoryOnly
+    WithJovianObservatoryOnly,
+    NullSec,
+    LowSec,
+    HiSec
 }
 
 
@@ -117,35 +120,67 @@ impl SystemNamed {
         named_systems::table.find(id).first(conn)
     }
 
-    pub fn load_from_constellation(conn: &Connection, id: &Integer, query: QuerySystem) -> QueryResult<Vec<Self>> {
+    pub fn load_from_constellation(conn: &Connection, id: &Integer, query: &SystemFilter) -> QueryResult<Vec<Self>> {
         use diesel::prelude::*;
         info!("Load systems from constellation {}", &id);
         match query {
-            QuerySystem::Any =>
+            SystemFilter::Any =>
                 named_systems::table
                     .filter(named_systems::constellation_id.eq(id))
                     .load(conn),
-            QuerySystem::WithJovianObservatoryOnly =>
+            SystemFilter::WithJovianObservatoryOnly =>
                 named_systems::table
                     .filter(named_systems::constellation_id.eq(id))
                     .filter(named_systems::observatory.is_not_null())
                     .load(conn),
+            SystemFilter::NullSec =>
+                named_systems::table
+                    .filter(named_systems::constellation_id.eq(id))
+                    .filter(named_systems::security_status.lt(0.0))
+                    .load(conn),
+            SystemFilter::LowSec =>
+                named_systems::table
+                    .filter(named_systems::constellation_id.eq(id))
+                    .filter(named_systems::security_status.gt(0.0).and(named_systems::security_status.lt(0.5)))
+                    .load(conn),
+            SystemFilter::HiSec =>
+                named_systems::table
+                    .filter(named_systems::constellation_id.eq(id))
+                    .filter(named_systems::security_status.gt(0.5))
+                    .load(conn),
+
         }
     }
 
-    pub fn load_from_region(conn: &Connection, id: &Integer, query: QuerySystem) -> QueryResult<Vec<Self>> {
+    pub fn load_from_region(conn: &Connection, id: &Integer, query: &SystemFilter) -> QueryResult<Vec<Self>> {
         use diesel::prelude::*;
         info!("Load systems from region {}", &id);
         match query {
-            QuerySystem::Any =>
+            SystemFilter::Any =>
                 named_systems::table
                     .filter(named_systems::region_id.eq(id))
                     .load(conn),
-            QuerySystem::WithJovianObservatoryOnly =>
+            SystemFilter::WithJovianObservatoryOnly =>
                 named_systems::table
                     .filter(named_systems::region_id.eq(id))
                     .filter(named_systems::observatory.is_not_null())
                     .load(conn),
+            SystemFilter::NullSec =>
+                named_systems::table
+                    .filter(named_systems::region_id.eq(id))
+                    .filter(named_systems::security_status.le(0.0))
+                    .load(conn),
+            SystemFilter::LowSec =>
+                named_systems::table
+                    .filter(named_systems::region_id.eq(id))
+                    .filter(named_systems::security_status.gt(0.0).and(named_systems::security_status.lt(0.5)))
+                    .load(conn),
+            SystemFilter::HiSec =>
+                named_systems::table
+                    .filter(named_systems::region_id.eq(id))
+                    .filter(named_systems::security_status.ge(0.5))
+                    .load(conn),
+
         }
     }
 }

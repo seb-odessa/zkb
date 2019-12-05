@@ -78,7 +78,7 @@ fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
         "region_brief" => reports::Region::brief(&info.1, &ctx),
         "system" => reports::System::report(&info.1, &ctx),
         "system_brief" => reports::System::brief(&info.1, &ctx),
-        "stargate" => reports::Stargate::report(&info.1, &ctx),
+//        "stargate" => reports::Stargate::report(&info.1, &ctx),
         "killmail_brief" => reports::Killmail::brief(&info.1, &ctx),
         "killmail" => reports::Killmail::report(&info.1, &ctx),
         "character" => reports::Character::report(&info.0, &info.1, &ctx),

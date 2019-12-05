@@ -1,6 +1,7 @@
 use crate::models;
 use crate::services::{Context, Area, Category, Report};
 use crate::reports;
+
 use std::fmt::Write;
 
 #[derive(Debug, PartialEq)]
@@ -18,6 +19,7 @@ impl reports::ReportableEx for Region {
             if report_type == reports::ReportType::Full {
                 Self::neighbors(&mut output, id, ctx);
                 reports::lazy(&mut output, format!("history/region/{}/{}", id, 60), &ctx);
+                reports::constellations(&mut output, &region.region_id, &ctx);
             }
         }
         return output;
@@ -57,4 +59,5 @@ impl Region {
             }
         }
     }
+
 }

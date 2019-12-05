@@ -1,7 +1,8 @@
 use crate::models;
 use crate::services::{Context, Area, Category, Report};
-use crate::reports::*;
 use crate::reports;
+
+use std::fmt::Write;
 
 #[derive(Debug, PartialEq)]
 pub struct Constellation;
@@ -13,12 +14,14 @@ impl reports::ReportableEx for Constellation {
 
     fn report_by_id(id: &i32, ctx: &Context, report_type: reports::ReportType) -> String {
         let mut output = String::new();
-        if let Report::Constellation(object) = reports::load(Category::Constellation(*id), &ctx) {
-            Self::write(&mut output, &object, &ctx);
-            if report_type == ReportType::Full {
-                reports::lazy(&mut output, format!("api/region_brief/{}", object.region_id), &ctx);
-                Self::neighbors(&mut output, &object.constellation_id, &ctx);
+        if let Report::Constellation(constellation) = reports::load(Category::Constellation(*id), &ctx) {
+            Self::write(&mut output, &constellation, &ctx);
+            if report_type == reports::ReportType::Full {
+                reports::lazy(&mut output, format!("api/region_brief/{}", constellation.region_id), &ctx);
+                Self::neighbors(&mut output, &constellation.constellation_id, &ctx);
                 reports::lazy(&mut output, format!("history/constellation/{}/{}", id, 60), &ctx);
+                reports::systems(&mut output, &constellation.constellation_id, &ctx);
+                reports::constellations(&mut output, &constellation.region_id, &ctx);
             }
         }
         return output;
@@ -45,13 +48,14 @@ impl Constellation {
 
     fn neighbors(output: &mut dyn Write, id: &i32, ctx: &Context) {
         if let Report::ConstellationNeighbors(neighbors) = reports::load(Category::Neighbors(Area::Constellation(*id)), &ctx) {
+            use reports::history::History;
             for neighbor in &neighbors {
                 let id = neighbor.neighbor_id;
                 let name = neighbor.get_name("neighbor");
-                div(output, format!("neighbor: [ {} : {} : {} ] {}",
-                    tip("Kills at last 10 minutes", format!("{:0>3}", history::History::constellation_count(&neighbor.neighbor_id, &10, ctx))),
-                    tip("Kills at last 60 minutes", format!("{:0>3}", history::History::constellation_count(&neighbor.neighbor_id, &60, ctx))),
-                    tip("Kills at last 6 hours", format!("{:0>3}", history::History::constellation_count(&neighbor.neighbor_id, &360, ctx))),
+                reports::div(output, format!("neighbor: [ {} : {} : {} ] {}",
+                    reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::constellation_count(&neighbor.neighbor_id, &10, ctx))),
+                    reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::constellation_count(&neighbor.neighbor_id, &60, ctx))),
+                    reports::tip("Kills at last 6 hours", format!("{:0>3}", History::constellation_count(&neighbor.neighbor_id, &360, ctx))),
                     ctx.get_api_href("constellation", id, name)
                 ));
             }

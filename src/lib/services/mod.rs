@@ -13,6 +13,8 @@ use actix_web::web;
 
 pub type Context = web::Data<AppContext>;
 
+pub use models::system::SystemFilter;
+
 #[derive(Debug, PartialEq)]
 pub enum Command{
     Quit,
@@ -53,12 +55,6 @@ pub enum Actor{
 
 
 #[derive(Debug, PartialEq)]
-pub enum Filter {
-    Any,
-    WithJovianObservatoryOnly,
-}
-
-#[derive(Debug, PartialEq)]
 pub enum Category{
     Object(i32),
     Killmail(i32),
@@ -69,7 +65,8 @@ pub enum Category{
     System(i32),
     Region(i32),
     Constellation(i32),
-    Systems((Area, Filter)),
+    Systems((Area, SystemFilter)),
+    Constellations(Area),
     Stargate(i32),
     History((Area, i32)),
     Wins((Actor, i32)),

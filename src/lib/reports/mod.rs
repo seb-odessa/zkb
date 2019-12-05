@@ -13,7 +13,7 @@ mod corporation;
 mod alliance;
 mod faction;
 
-use crate::services::{Context, Category, Message, Report};
+use crate::services::{Context, Category, Message, Report, Area};
 use std::fmt::Write;
 
 
@@ -24,7 +24,6 @@ pub use attacker::Attacker;
 pub use history::History;
 pub use system::System;
 pub use region::Region;
-pub use stargate::Stargate;
 pub use constellation::Constellation;
 pub use item::Item;
 pub use character::Character;
@@ -170,4 +169,41 @@ pub fn load(category: Category, ctx: &Context) -> Report {
     }
 }
 
+pub fn constellations(output: &mut dyn Write, region_id: &i32, ctx: &Context) {
+        use std::collections::BTreeMap;
+        if let Report::Constellations(constellations) = load(Category::Constellations(Area::Region(*region_id)), &ctx) {
+            let mut map = BTreeMap::new();
+            for constellation in &constellations {
+                let id = constellation.get_id("constellation");
+                let name = constellation.get_name("constellation");
+                let url = span("Constellation", "", ctx.get_api_href("constellation", id, &name));
+                map.insert(name, url);
+            }
+            let mut list = String::new();
+            for (_, url) in &map {
+                list += url;
+                list += " ";
+            }
+            div(output, format!("Constellation in Region: {}", list));
+        }
+    }
 
+pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
+        use crate::models::system::*;
+        use std::collections::BTreeMap;
+        if let Report::Systems(systems) = load(Category::Systems((Area::Constellation(*constellation_id), SystemFilter::Any)), &ctx) {
+            let mut map = BTreeMap::new();
+            for system in &systems {
+                let id = system.get_id("system");
+                let name = system.get_name("system");
+                let url = span("Solar System", "", ctx.get_api_href("system", id, &name));
+                map.insert(name, url);
+            }
+            let mut list = String::new();
+            for (_, url) in & map {
+                list += url;
+                list += " ";
+            }
+            div(output, format!("Systems in constellation: {}", list));
+        }
+    }
