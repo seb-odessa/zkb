@@ -2,6 +2,8 @@ use crate::services::{Context, Command, Message};
 use crate::reports;
 use crate::reports::Reportable;
 use crate::reports::ReportableEx;
+use serde::{Deserialize, Serialize};
+
 
 use actix_rt;
 use actix_web::{web, App, HttpServer, HttpResponse};
@@ -78,7 +80,6 @@ fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
         "region_brief" => reports::Region::brief(&info.1, &ctx),
         "system" => reports::System::report(&info.1, &ctx),
         "system_brief" => reports::System::brief(&info.1, &ctx),
-//        "stargate" => reports::Stargate::report(&info.1, &ctx),
         "killmail_brief" => reports::Killmail::brief(&info.1, &ctx),
         "killmail" => reports::Killmail::report(&info.1, &ctx),
         "character" => reports::Character::report(&info.0, &info.1, &ctx),
@@ -132,6 +133,48 @@ fn hidden(info: web::Path<(String, i32, String)>, ctx: Context) -> HttpResponse 
         .body(body)
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+struct Node {
+    id: i32,
+    label: String
+}
+impl Node {
+    pub fn new<S: Into<String>>(id: i32, label: S) -> Self { Self{id: id, label: label.into()} }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+struct Edge {
+    from: i32,
+    to: i32
+}
+impl Edge {
+    pub fn new(from: i32, to: i32) -> Self { Self{from, to} }
+}
+
+fn nodes(_info: web::Path<String>, _ctx: Context) -> HttpResponse {
+
+    let nodes = vec![Node::new(1, "Node 1"), Node::new(2, "Node 2"), Node::new(3, "Node 3"), Node::new(4, "Node 4"), Node::new(5, "Node 5")];
+    let json = serde_json::to_string(&nodes).ok().unwrap_or_default();
+    HttpResponse::Ok()
+        .content_type("application/json; charset=UTF-8")
+        .header("X-Header", "zkb")
+        .body(json)
+}
+
+fn edges(_info: web::Path<String>, _ctx: Context) -> HttpResponse {
+
+    let edges = vec![
+        Edge::new(1, 3), Edge::new(1, 2),Edge::new(2, 4),Edge::new(2, 5),Edge::new(3, 2),Edge::new(3, 5),Edge::new(5, 1),
+        Edge::new(3, 1), Edge::new(2, 1),Edge::new(4, 2),Edge::new(5, 2),Edge::new(2, 3),Edge::new(5, 3),Edge::new(1, 5),
+        ];
+    let json = serde_json::to_string(&edges).ok().unwrap_or_default();
+    HttpResponse::Ok()
+        .content_type("application/json; charset=UTF-8")
+        .header("X-Header", "zkb")
+        .body(json)
+
+}
+
 
 pub fn run(context: Context) {
     let address = context.server.clone();
@@ -147,6 +190,8 @@ pub fn run(context: Context) {
             .route("/navigator/services/{type}/{first}/{second}", web::get().to(services))
             .route("/navigator/history/{area}/{id}/{minutes}", web::get().to(history))
             .route("/navigator/report/{category}/{class}/{id}/{minutes}", web::get().to(report))
+            .route("/navigator/json/nodes/{id}", web::get().to(nodes))
+            .route("/navigator/json/edges/{id}", web::get().to(edges))
     })
     .bind(address)
     .unwrap()

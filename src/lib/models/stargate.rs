@@ -40,3 +40,33 @@ impl Stargate {
         table::stargates.find(id).select(table::stargate_id).first(conn) == Ok(*id)
     }
 }
+
+#[derive(Queryable, Associations, Debug, PartialEq)]
+#[table_name = "stargates"]
+pub struct SystemLink {
+    pub system_id: Integer,
+    pub dst_system_id: Integer,
+}
+impl SystemLink {
+    // pub fn load(conn: &Connection, constellation_id: &Integer, minutes: &Integer) -> QueryResult<Vec<Self>> {
+    //     use diesel::prelude::*;
+
+    //     let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
+    //     info!("Load killmails after {}", &start);
+    //     attackers::table.inner_join(named_killmails::table.on(named_killmails::killmail_id.eq(attackers::killmail_id)))
+    //         .filter(named_killmails::killmail_time.gt(start))
+    //         .filter(attackers::character_id.eq(character_id))
+    //         .select((
+    //             named_killmails::killmail_id,
+    //             named_killmails::killmail_time,
+    //             named_killmails::system_id,
+    //             named_killmails::system_name,
+    //             named_killmails::constellation_id,
+    //             named_killmails::constellation_name,
+    //             named_killmails::region_id,
+    //             named_killmails::region_name,
+    //          ))
+    //         .order(named_killmails::killmail_time.desc())
+    //         .load(conn)
+    // }
+}

@@ -10,10 +10,6 @@ impl Stargate {
         if let Ok(ref id) = arg.parse::<i32>() {
             Self::report_by_id(id, ctx)
         }
-        // Not implemented
-        // else if let Some(ref id) = find_id("region", arg, ctx) {
-        //     Self::report_by_id(id, ctx)
-        //}
         else {
             format!("<div>Stargate {} was not found</div>", arg)
         }

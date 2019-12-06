@@ -170,40 +170,72 @@ pub fn load(category: Category, ctx: &Context) -> Report {
 }
 
 pub fn constellations(output: &mut dyn Write, region_id: &i32, ctx: &Context) {
-        use std::collections::BTreeMap;
-        if let Report::Constellations(constellations) = load(Category::Constellations(Area::Region(*region_id)), &ctx) {
-            let mut map = BTreeMap::new();
+    use std::collections::BTreeMap;
+    if let Report::Constellations(constellations) = load(Category::Constellations(Area::Region(*region_id)), &ctx) {
+        let mut map = BTreeMap::new();
             for constellation in &constellations {
-                let id = constellation.get_id("constellation");
-                let name = constellation.get_name("constellation");
-                let url = span("Constellation", "", ctx.get_api_href("constellation", id, &name));
-                map.insert(name, url);
-            }
-            let mut list = String::new();
-            for (_, url) in &map {
-                list += url;
-                list += " ";
-            }
-            div(output, format!("Constellation in Region: {}", list));
+            let id = constellation.get_id("constellation");
+            let name = constellation.get_name("constellation");
+            let url = span("Constellation", "", ctx.get_api_href("constellation", id, &name));
+            map.insert(name, url);
         }
+        let mut list = String::new();
+        for (_, url) in &map {
+            list += url;
+            list += " ";
+        }
+        div(output, format!("Constellation in Region: {}", list));
     }
+}
 
 pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
-        use crate::models::system::*;
-        use std::collections::BTreeMap;
-        if let Report::Systems(systems) = load(Category::Systems((Area::Constellation(*constellation_id), SystemFilter::Any)), &ctx) {
-            let mut map = BTreeMap::new();
-            for system in &systems {
-                let id = system.get_id("system");
-                let name = system.get_name("system");
-                let url = span("Solar System", "", ctx.get_api_href("system", id, &name));
-                map.insert(name, url);
-            }
-            let mut list = String::new();
-            for (_, url) in & map {
-                list += url;
-                list += " ";
-            }
-            div(output, format!("Systems in constellation: {}", list));
+    use crate::models::system::*;
+    use std::collections::BTreeMap;
+    if let Report::Systems(systems) = load(Category::Systems((Area::Constellation(*constellation_id), SystemFilter::Any)), &ctx) {
+        let mut map = BTreeMap::new();
+        for system in &systems {
+            let id = system.get_id("system");
+            let name = system.get_name("system");
+            let url = span("Solar System", "", ctx.get_api_href("system", id, &name));
+            map.insert(name, url);
         }
+        let mut list = String::new();
+        for (_, url) in & map {
+            list += url;
+            list += " ";
+        }
+        div(output, format!("Systems in constellation: {}", list));
     }
+}
+
+pub fn map<S: Into<String>>(output: &mut dyn Write, nodes: S, edges: S, ctx: &Context) {
+    std::fmt::write(
+        output,
+        format_args!(r##"
+            <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+            <style type="text/css"> #map {{ width: 600px; height: 400px; border: 1px solid lightgray; }} </style>
+            <div id = "map">...</div>
+            <script type="text/javascript">
+
+                const start = async function() {{
+                    var nodes = await fetch("{root}/{nodes}").then(response => response.json());
+                    var edges = await fetch("{root}/{edges}").then(response => response.json());
+
+                    var nodes_ds = new vis.DataSet(nodes);
+                    var edges_ds = new vis.DataSet(edges);
+                    console.log("Nodes DS" + nodes_ds);
+                    console.log("Edges DS" + edges_ds);
+                    var container = document.getElementById('map');
+                    var data = {{ nodes: nodes_ds, edges: edges_ds }};
+                    var options = {{}};
+                    var map = new vis.Network(container, data, options);
+                }}
+
+                start();
+            </script>
+        "##,
+        root=ctx.get_root(),
+        nodes=nodes.into(),
+        edges=edges.into(),
+    )).expect(FAIL);
+}
