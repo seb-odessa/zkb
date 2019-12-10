@@ -34,7 +34,7 @@ impl Region {
             r#"<span id="{id}" data-name="{name}">Region: {api}  [{zkb}] [{map}]</span>"#,
             id = id,
             name = name.clone(),
-            api = ctx.get_api_href("region", id, &name),
+            api = ctx.get_api_link("region", &name),
             zkb = ctx.get_zkb_href("region", id, "zkb"),
             map = ctx.get_dotlan_href(&name, "", "dotlan")
         )
@@ -51,10 +51,10 @@ impl Region {
                 let id = neighbor.get_id("neighbor");
                 let name = neighbor.get_name("neighbor");
                 reports::div(output, format!("neighbor: [ {} : {} : {} ] {}",
-                    reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::region_count(&neighbor.neighbor_id, &10, ctx))),
-                    reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::region_count(&neighbor.neighbor_id, &60, ctx))),
-                    reports::tip("Kills at last 6 hours", format!("{:0>3}", History::region_count(&neighbor.neighbor_id, &360, ctx))),
-                    ctx.get_api_href("region", id, name),
+                    reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::region_count(&id, &10, ctx))),
+                    reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::region_count(&id, &60, ctx))),
+                    reports::tip("Kills at last 6 hours", format!("{:0>3}", History::region_count(&id, &360, ctx))),
+                    ctx.get_api_link("region", name),
                 ));
             }
         }

@@ -141,9 +141,9 @@ impl Killmail {
 
                 time = ctx.get_api_href("killmail", killmail_id, killmail.killmail_time.time().to_string()),
                 zkb = ctx.get_zkb_href("kill", killmail_id, format!("zkb")),
-                region = ctx.get_api_href("region", killmail.get_id("region"), killmail.get_name("region")),
-                constellation = ctx.get_api_href("constellation", killmail.get_id("constellation"), killmail.get_name("constellation")),
-                system = ctx.get_api_href("system", killmail.get_id("system"), killmail.get_name("system")),
+                region = ctx.get_api_link("region", killmail.get_name("region")),
+                constellation = ctx.get_api_link("constellation", killmail.get_name("constellation")),
+                system = ctx.get_api_link("system", killmail.get_name("system")),
                 security_status = security_status,
                 count = attackers_count,
                 dropped = dropped,
@@ -202,14 +202,14 @@ impl Killmail {
             reports::table_cell(output, "Dropped Amount", text_style, dropped_span);
             reports::table_cell(output, "Ship Destroyed", text_style, ctx.get_zkb_href("ship", victim.get_id("ship"), victim.get_name("ship")));
             reports::table_cell(output, "Attackers Count", text_style, attackers_count.separated_string());
-            reports::table_cell(output, "Region", text_style, ctx.get_api_href("region", killmail.get_id("region"), killmail.get_name("region")));
-            reports::table_cell(output, "Constellation", text_style, ctx.get_api_href("constellation", killmail.get_id("constellation"), killmail.get_name("constellation")));
-            reports::table_cell(output, "System", system_style, ctx.get_api_href("system", killmail.get_id("system"), killmail.get_name("system")));
+            reports::table_cell(output, "Region", text_style, ctx.get_api_link("region", killmail.get_name("region")));
+            reports::table_cell(output, "Constellation", text_style, ctx.get_api_link("constellation", killmail.get_name("constellation")));
+            reports::table_cell(output, "System", system_style, ctx.get_api_link("system", killmail.get_name("system")));
             reports::table_cell(output, "Security status", text_style, security_status_span);
-            reports::table_cell(output, "Faction Name", text_style, ctx.get_api_href("faction", victim.get_id("faction"), victim.get_name("faction")));
-            reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_href("alliance", victim.get_id("alliance"), victim.get_name("alliance")));
-            reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_href("corporation", victim.get_id("corporation"), victim.get_name("corporation")));
-            reports::table_cell(output, "Character Name", text_style, ctx.get_api_href("character", victim.get_id("character"), victim.get_name("character")));
+            reports::table_cell(output, "Faction Name", text_style, ctx.get_api_link("faction", victim.get_name("faction")));
+            reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_link("alliance", victim.get_name("alliance")));
+            reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_link("corporation", victim.get_name("corporation")));
+            reports::table_cell(output, "Character Name", text_style, ctx.get_api_link("character", victim.get_name("character")));
             reports::table_row_end(output);
         }
     }
@@ -228,9 +228,9 @@ impl Killmail {
         if let Some(system) = system {
             reports::div(output,
                 format!("Location: {} : {} : {}",
-                    ctx.get_api_href("region", system.get_id("region"), system.get_name("region")),
-                    ctx.get_api_href("constellation", system.get_id("constellation"), system.get_name("constellation")),
-                    ctx.get_api_href("system", system.get_id("system"), system.get_name("system")),
+                    ctx.get_api_link("region", system.get_name("region")),
+                    ctx.get_api_link("constellation", system.get_name("constellation")),
+                    ctx.get_api_link("system", system.get_name("system")),
                 )
             );
         }
@@ -262,11 +262,11 @@ impl Killmail {
             reports::table_cell(output, "Total Amount", total_amount_style, total_amount.separated_string());
             reports::table_cell(output, "Dropped Amount", dropped_amount_style, dropped_amount.separated_string());
             reports::table_cell(output, "Damage Taken", numeric_style, victim.damage_taken.separated_string());
-            reports::table_cell(output, "Ship Type", text_style, ctx.get_api_href("ship", victim.get_id("ship"), victim.get_name("ship")));
-            reports::table_cell(output, "Faction Name", text_style, ctx.get_api_href("faction", victim.get_id("faction"), victim.get_name("faction")));
-            reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_href("alliance", victim.get_id("alliance"), victim.get_name("alliance")));
-            reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_href("corporation", victim.get_id("corporation"), victim.get_name("corporation")));
-            reports::table_cell(output, "Character Name", text_style, ctx.get_api_href("character", victim.get_id("character"), victim.get_name("character")));
+            reports::table_cell(output, "Ship Type", text_style, ctx.get_zkb_href("ship", victim.get_id("ship"), victim.get_name("ship")));
+            reports::table_cell(output, "Faction Name", text_style, ctx.get_api_link("faction", victim.get_name("faction")));
+            reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_link("alliance", victim.get_name("alliance")));
+            reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_link("corporation", victim.get_name("corporation")));
+            reports::table_cell(output, "Character Name", text_style, ctx.get_api_link("character", victim.get_name("character")));
             reports::table_end(output);
         }
 
@@ -289,12 +289,12 @@ impl Killmail {
                 reports::table_cell(output, "Security Status", text_style, attacker.security_status.separated_string());
                 reports::table_cell(output, "Final Blow", text_style, attacker.final_blow.to_string());
                 reports::table_cell(output, "Damage Done", numeric_style, attacker.damage_done.separated_string());
-                reports::table_cell(output, "Weapon", text_style, ctx.get_api_href("weapon", attacker.get_id("weapon"), attacker.get_name("weapon")));
-                reports::table_cell(output, "Ship Type", text_style, ctx.get_api_href("ship", attacker.get_id("ship"), attacker.get_name("ship")));
-                reports::table_cell(output, "Faction Name", text_style, ctx.get_api_href("faction", attacker.get_id("faction"), attacker.get_name("faction")));
-                reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_href("alliance", attacker.get_id("alliance"), attacker.get_name("alliance")));
-                reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_href("corporation", attacker.get_id("corporation"), attacker.get_name("corporation")));
-                reports::table_cell(output, "Character Name", text_style, ctx.get_api_href("character", attacker.get_id("character"), attacker.get_name("character")));
+                reports::table_cell(output, "Weapon", text_style, ctx.get_zkb_href("item", attacker.get_id("weapon"), attacker.get_name("weapon")));
+                reports::table_cell(output, "Ship Type", text_style, ctx.get_api_link("ship", attacker.get_name("ship")));
+                reports::table_cell(output, "Faction Name", text_style, ctx.get_api_link("faction", attacker.get_name("faction")));
+                reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_link("alliance", attacker.get_name("alliance")));
+                reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_link("corporation", attacker.get_name("corporation")));
+                reports::table_cell(output, "Character Name", text_style, ctx.get_api_link("character", attacker.get_name("character")));
                 reports::table_row_end(output);
             }
             reports::table_end(output);

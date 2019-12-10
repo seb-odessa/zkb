@@ -39,7 +39,7 @@ impl System {
             r#"<span id="{id}" data-name="{name}">System: {api}  [{zkb}] [{map}]</span>"#,
             id = system.system_id,
             name = system.get_name("system"),
-            api = ctx.get_api_href("system", system.get_id("system"), system.get_name("system")),
+            api = ctx.get_api_link("system", system.get_name("system")),
             zkb = ctx.get_zkb_href("system", system.get_id("system"), "zkb"),
             map = ctx.get_dotlan_href(system.get_name("region"), system.get_name("system"), "dotlan")
         );
@@ -65,7 +65,7 @@ impl System {
                     reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &10, ctx))),
                     reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &60, ctx))),
                     reports::tip("Kills at last 6 hours", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &360, ctx))),
-                    ctx.get_api_href("system", neighbor.neighbor_id, neighbor.get_name("neighbor")),
+                    ctx.get_api_link("system", neighbor.get_name("neighbor")),
                 ));
             }
         }
@@ -73,7 +73,7 @@ impl System {
 
     fn get_system_href(id: &i32, ctx: &Context) -> String {
         if let Some(system) = Self::load(id, ctx) {
-            ctx.get_api_href("system", system.system_id, system.get_name("system"))
+            ctx.get_api_link("system", system.get_name("system"))
         } else {
             String::from("...Unknown...")
         }

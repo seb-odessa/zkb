@@ -37,7 +37,7 @@ impl Constellation {
             r#"<span id="{id}" data-name="{name}">Constellation: {api}  [{map}]</span>"#,
             id = id,
             name = &name,
-            api = ctx.get_api_href("constellation", id, &name),
+            api = ctx.get_api_link("constellation", &name),
             map = ctx.get_dotlan_href(region_name, &name, "dotlan")
         )
     }
@@ -53,10 +53,10 @@ impl Constellation {
                 let id = neighbor.neighbor_id;
                 let name = neighbor.get_name("neighbor");
                 reports::div(output, format!("neighbor: [ {} : {} : {} ] {}",
-                    reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::constellation_count(&neighbor.neighbor_id, &10, ctx))),
-                    reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::constellation_count(&neighbor.neighbor_id, &60, ctx))),
-                    reports::tip("Kills at last 6 hours", format!("{:0>3}", History::constellation_count(&neighbor.neighbor_id, &360, ctx))),
-                    ctx.get_api_href("constellation", id, name)
+                    reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::constellation_count(&id, &10, ctx))),
+                    reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::constellation_count(&id, &60, ctx))),
+                    reports::tip("Kills at last 6 hours", format!("{:0>3}", History::constellation_count(&id, &360, ctx))),
+                    ctx.get_api_link("constellation", name)
                 ));
             }
         }

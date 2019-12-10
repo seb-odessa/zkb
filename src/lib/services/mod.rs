@@ -145,6 +145,13 @@ impl AppContext {
         format!("http://{}/navigator", &self.server)
     }
 
+    pub fn get_api_link<S1: Into<String>, S2: Into<String>>(&self, class: S1, name: S2) -> String {
+        format!(r#"<a href="{root}/api/{class}/{name}">{name}</a>"#,
+            root = self.get_root(),
+            class = class.into(),
+            name = name.into())
+    }
+
     pub fn get_api_href<S1: Into<String>, S2: Into<String>>(&self, class: S1, id: i32, name: S2) -> String {
         format!(r#"<a href="{root}/api/{class}/{id}">{name}</a>"#,
             root = self.get_root(),

@@ -16,30 +16,22 @@ impl Victim {
     pub fn report_name(id: &i32, ctx: &Context) -> String {
         let mut result = String::new();
         if let Some(victim) = reports::Victim::load(&id, ctx) {
-            if let Some(id) = victim.faction_id {
-                if !result.is_empty() {
-                    result = result + " : ";
-                }
-                result = result + &reports::tip("faction", ctx.get_api_href("faction", id, victim.get_name("faction")));
+            if !result.is_empty() {
+                result = result + " : ";
             }
-            if let Some(id) = victim.alliance_id {
-                if !result.is_empty() {
-                    result = result + " : ";
-                }
-                result = result + &reports::tip("alliance", ctx.get_api_href("alliance", id, victim.get_name("alliance")));
+            result = result + &reports::tip("faction", ctx.get_api_link("faction",  victim.get_name("faction")));
+            if !result.is_empty() {
+                result = result + " : ";
             }
-            if let Some(id) = victim.corporation_id {
-                if !result.is_empty() {
-                    result = result + " : ";
-                }
-                result = result + &reports::tip("corporation", ctx.get_api_href("corporation", id, victim.get_name("corporation")));
+            result = result + &reports::tip("alliance", ctx.get_api_link("alliance", victim.get_name("alliance")));
+            if !result.is_empty() {
+                result = result + " : ";
             }
-            if let Some(id) = victim.character_id {
-                if !result.is_empty() {
-                    result = result + " : ";
-                }
-                result = result + &reports::tip("character", ctx.get_api_href("character", id, victim.get_name("character")));
+            result = result + &reports::tip("corporation", ctx.get_api_link("corporation", victim.get_name("corporation")));
+            if !result.is_empty() {
+                result = result + " : ";
             }
+            result = result + &reports::tip("character", ctx.get_api_link("character", victim.get_name("character")));
         }
         return result;
     }

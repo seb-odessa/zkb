@@ -173,10 +173,9 @@ pub fn constellations(output: &mut dyn Write, region_id: &i32, ctx: &Context) {
     use std::collections::BTreeMap;
     if let Report::Constellations(constellations) = load(Category::Constellations(Area::Region(*region_id)), &ctx) {
         let mut map = BTreeMap::new();
-            for constellation in &constellations {
-            let id = constellation.get_id("constellation");
+        for constellation in &constellations {
             let name = constellation.get_name("constellation");
-            let url = span("Constellation", "", ctx.get_api_href("constellation", id, &name));
+            let url = span("Constellation", "", ctx.get_api_link("constellation", &name));
             map.insert(name, url);
         }
         let mut list = String::new();
@@ -194,9 +193,8 @@ pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
     if let Report::Systems(systems) = load(Category::Systems((Area::Constellation(*constellation_id), SystemFilter::Any)), &ctx) {
         let mut map = BTreeMap::new();
         for system in &systems {
-            let id = system.get_id("system");
             let name = system.get_name("system");
-            let url = span("Solar System", "", ctx.get_api_href("system", id, &name));
+            let url = span("Solar System", "", ctx.get_api_link("system", &name));
             map.insert(name, url);
         }
         let mut list = String::new();
