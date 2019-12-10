@@ -15,7 +15,7 @@ fn try_enqueue_check(queue: &Queue, id: &Option<i32>) {
     }
 }
 
-fn get_name_if_none(queue: &Queue, name: &Option<String>, id: i32) {
+pub fn get_name_if_none(queue: &Queue, name: &Option<String>, id: i32) {
     if name.is_none() {
         info!("Queue Object with id {}", id);
         queue.push(Message::Receive(Api::Object(id)));
@@ -125,6 +125,19 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                 }
                 Message::Find((msg_id, ref category)) => {
                     match category {
+                        Category::Object(id) => {
+                            match models::object::Object::load(&conn, &id) {
+                                Ok(object) => {
+                                    info!("loaded object {} queue length: {}", id, context.database.len());
+                                    context.responses.push(Message::Report((msg_id, Report::Object(object))));
+                                },
+                                Err(e) => {
+                                    warn!("was not able to load object: {}", e);
+                                    context.database.push(Message::Check(Category::Object(*id)));
+                                    context.responses.push(Message::Report((msg_id, Report::NotFoundId(*id))));
+                                }
+                            }
+                        }
                         Category::System(id) => {
                             match models::system::SystemNamed::load(&conn, &id) {
                                 Ok(system) => {

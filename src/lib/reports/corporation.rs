@@ -3,6 +3,7 @@ use crate::reports;
 
 #[derive(Debug, PartialEq)]
 pub struct Corporation;
+
 impl reports::Reportable for Corporation {
 
     fn report_by_id(id: &i32, ctx: &Context) -> String {

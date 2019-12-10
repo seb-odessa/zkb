@@ -1,7 +1,7 @@
 use crate::schema::objects;
 use super::{Integer, Connection, QueryResult};
 
-#[derive(Queryable, Insertable, Associations, Debug)]
+#[derive(Queryable, Insertable, Associations, Debug, PartialEq)]
 #[table_name = "objects"]
 pub struct Object {
     pub object_id: Integer,
@@ -24,5 +24,11 @@ impl Object {
             .filter(table::category_id.eq(category_id).and(table::object_name.like(name)))
             .select(table::object_id)
             .load(conn)
+    }
+
+    pub fn load(conn: &Connection, id: &Integer) -> QueryResult<Self> {
+        use diesel::prelude::*;
+        use crate::schema::objects::dsl as table;
+        table::objects.find(id).first(conn)
     }
 }

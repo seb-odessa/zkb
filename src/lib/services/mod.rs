@@ -93,6 +93,7 @@ pub enum Report{
     RegionNeighbors(Vec<models::region::RegionNeighbors>),
     Constellations(Vec<models::constellation::ConstellationNamed>),
     ObservatoryPath(Vec<models::system::ObservatoryPath>),
+    Object(models::object::Object),
     Id(i32),
     NotFoundId(i32),
     NotFoundName(String),
