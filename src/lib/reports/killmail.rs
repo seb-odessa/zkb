@@ -290,7 +290,7 @@ impl Killmail {
                 reports::table_cell(output, "Final Blow", text_style, attacker.final_blow.to_string());
                 reports::table_cell(output, "Damage Done", numeric_style, attacker.damage_done.separated_string());
                 reports::table_cell(output, "Weapon", text_style, ctx.get_zkb_href("item", attacker.get_id("weapon"), attacker.get_name("weapon")));
-                reports::table_cell(output, "Ship Type", text_style, ctx.get_api_link("ship", attacker.get_name("ship")));
+                reports::table_cell(output, "Ship Type", text_style, ctx.get_zkb_href("ship", attacker.get_id("ship"), attacker.get_name("ship")));
                 reports::table_cell(output, "Faction Name", text_style, ctx.get_api_link("faction", attacker.get_name("faction")));
                 reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_link("alliance", attacker.get_name("alliance")));
                 reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_link("corporation", attacker.get_name("corporation")));
