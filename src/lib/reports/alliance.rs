@@ -23,7 +23,7 @@ impl Alliance {
         let mut output = String::new();
         if let Some(alliance) = api::alliance::Alliance::new(id) {
             reports::div(&mut output, format!("Alliance:     {} [{}]", alliance.name, alliance.ticker));
-            reports::div(&mut output, format!("Founded:      {}", alliance.date_founded.format("%Y-%m-%D %H:%M:%S").to_string()));
+            reports::div(&mut output, format!("Founded:      {}", alliance.date_founded.format("%Y-%m-%d %H:%M:%S").to_string()));
             reports::div(&mut output, format!("Corporation:  {}", ""));
             reports::div(&mut output, format!("CEO: {}",
                 alliance.executor_corporation_id

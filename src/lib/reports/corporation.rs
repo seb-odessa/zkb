@@ -43,7 +43,7 @@ impl Corporation {
                 api::character::Character::new(&corporation.creator_id).map(|ch| ch.name).unwrap_or_default()
             ));
             if let Some(ref date_founded) = corporation.date_founded {
-                reports::div(&mut output, format!("Founded:      {}", date_founded.format("%Y-%m-%D %H:%M:%S").to_string()));
+                reports::div(&mut output, format!("Founded:      {}", date_founded..format("%Y-%m-%d %H:%M:%S").to_string()));
             }
 
         }
