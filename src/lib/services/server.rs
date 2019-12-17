@@ -64,7 +64,22 @@ fn report(info: web::Path<(String, String, i32, i32)>, ctx: Context) -> HttpResp
     let class = &info.1;
     let id = info.2;
     let minutes = info.3;
+
     let body = reports::History::report(category, class, &id, &minutes, &ctx);
+
+    HttpResponse::Ok()
+        .content_type("text/html; charset=UTF-8")
+        .header("X-Header", "zkb")
+        .body(body)
+}
+
+fn desc(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
+    let body = match info.0.as_ref() {
+        "alliance" => reports::Alliance::description(&info.1, &ctx),
+        "corporation" => reports::Corporation::description(&info.1, &ctx),
+        _=> format!("Unknown Type {} ", info.0)
+    };
+
     HttpResponse::Ok()
         .content_type("text/html; charset=UTF-8")
         .header("X-Header", "zkb")
@@ -186,6 +201,7 @@ pub fn run(context: Context) {
             .route("/navigator/find/{name}", web::get().to(find))
             .route("/navigator/api/{type}/{id}", web::get().to(api))
             .route("/navigator/api/{type}/{id}/{cmd}", web::get().to(hidden))
+            .route("/navigator/desc/{area}/{id}", web::get().to(desc))
             .route("/navigator/cmd/{cmd}", web::get().to(cmd))
             .route("/navigator/services/{type}/{first}/{second}", web::get().to(services))
             .route("/navigator/history/{area}/{id}/{minutes}", web::get().to(history))

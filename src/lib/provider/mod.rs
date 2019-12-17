@@ -4,6 +4,8 @@ use crate::api::stargate::Stargate;
 use crate::api::character::Character;
 use crate::api::region::Region;
 use crate::api::constellation::Constellation;
+use crate::api::alliance::Alliance;
+use crate::api::corporation::Corporation;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
@@ -28,10 +30,12 @@ lazy_static! {
     static ref OBJECTS: Mutex<HashMap<i32, Object>> = Mutex::new(HashMap::new());
     static ref SYSTEMS: Mutex<HashMap<i32, System>> = Mutex::new(HashMap::new());
     static ref STARGATES: Mutex<HashMap<i32, Stargate>> = Mutex::new(HashMap::new());
-    static ref CHARACTER: Mutex<HashMap<i32, Character>> = Mutex::new(HashMap::new());
-    static ref REGION: Mutex<HashMap<i32, Region>> = Mutex::new(HashMap::new());
-    static ref CONSTELLATION: Mutex<HashMap<i32, Constellation>> = Mutex::new(HashMap::new());
+    static ref CHARACTERS: Mutex<HashMap<i32, Character>> = Mutex::new(HashMap::new());
+    static ref REGIONS: Mutex<HashMap<i32, Region>> = Mutex::new(HashMap::new());
+    static ref CONSTELLATIONS: Mutex<HashMap<i32, Constellation>> = Mutex::new(HashMap::new());
     static ref ROUTES: Mutex<HashMap<Route, Vec<i32>>> = Mutex::new(HashMap::new());
+    static ref ALLIANCES: Mutex<HashMap<i32, Alliance>> = Mutex::new(HashMap::new());
+    static ref CORPORATIONS: Mutex<HashMap<i32, Corporation>> = Mutex::new(HashMap::new());
 }
 
 pub fn get_object<L>(key: &i32, loader: &L) -> Option<Object>
@@ -100,7 +104,7 @@ pub fn get_character<L>(key: &i32, loader: &L) -> Option<Character>
     where
         L: Fn(&i32)->Option<Character>
 {
-    let mut object = if let Ok(map) = CHARACTER.try_lock() {
+    let mut object = if let Ok(map) = CHARACTERS.try_lock() {
         map.get(key).cloned()
     } else {
         None
@@ -109,7 +113,7 @@ pub fn get_character<L>(key: &i32, loader: &L) -> Option<Character>
     if object.is_none() {
         if let Some(received) = loader(key) {
             object = Some(received.clone());
-            if let Ok(ref mut map) = CHARACTER.try_lock() {
+            if let Ok(ref mut map) = CHARACTERS.try_lock() {
                 map.entry(*key).or_insert(received);
             }
         }
@@ -122,7 +126,7 @@ pub fn get_constellation<L>(key: &i32, loader: &L) -> Option<Constellation>
     where
         L: Fn(&i32)->Option<Constellation>
 {
-    let mut object = if let Ok(map) = CONSTELLATION.try_lock() {
+    let mut object = if let Ok(map) = CONSTELLATIONS.try_lock() {
         map.get(key).cloned()
     } else {
         None
@@ -131,7 +135,7 @@ pub fn get_constellation<L>(key: &i32, loader: &L) -> Option<Constellation>
     if object.is_none() {
         if let Some(received) = loader(key) {
             object = Some(received.clone());
-            if let Ok(ref mut map) = CONSTELLATION.try_lock() {
+            if let Ok(ref mut map) = CONSTELLATIONS.try_lock() {
                 map.entry(*key).or_insert(received);
             }
         }
@@ -143,7 +147,7 @@ pub fn get_region<L>(key: &i32, loader: &L) -> Option<Region>
     where
         L: Fn(&i32)->Option<Region>
 {
-    let mut object = if let Ok(map) = REGION.try_lock() {
+    let mut object = if let Ok(map) = REGIONS.try_lock() {
         map.get(key).cloned()
     } else {
         None
@@ -152,7 +156,7 @@ pub fn get_region<L>(key: &i32, loader: &L) -> Option<Region>
     if object.is_none() {
         if let Some(received) = loader(key) {
             object = Some(received.clone());
-            if let Ok(ref mut map) = REGION.try_lock() {
+            if let Ok(ref mut map) = REGIONS.try_lock() {
                 map.entry(*key).or_insert(received);
             }
         }
@@ -179,4 +183,46 @@ pub fn get_route<L>(src: &i32, dst: &i32, loader: &L) -> Option<Vec<i32>>
         }
     }
     return route;
+}
+
+pub fn get_alliance<L>(key: &i32, loader: &L) -> Option<Alliance>
+    where
+        L: Fn(&i32)->Option<Alliance>
+{
+    let mut object = if let Ok(map) = ALLIANCES.try_lock() {
+        map.get(key).cloned()
+    } else {
+        None
+    };
+
+    if object.is_none() {
+        if let Some(received) = loader(key) {
+            object = Some(received.clone());
+            if let Ok(ref mut map) = ALLIANCES.try_lock() {
+                map.entry(*key).or_insert(received);
+            }
+        }
+    }
+    return object;
+}
+
+pub fn get_corporation<L>(key: &i32, loader: &L) -> Option<Corporation>
+    where
+        L: Fn(&i32)->Option<Corporation>
+{
+    let mut object = if let Ok(map) = CORPORATIONS.try_lock() {
+        map.get(key).cloned()
+    } else {
+        None
+    };
+
+    if object.is_none() {
+        if let Some(received) = loader(key) {
+            object = Some(received.clone());
+            if let Ok(ref mut map) = CORPORATIONS.try_lock() {
+                map.entry(*key).or_insert(received);
+            }
+        }
+    }
+    return object;
 }

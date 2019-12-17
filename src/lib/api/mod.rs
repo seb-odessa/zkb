@@ -12,6 +12,8 @@ pub mod region;
 pub mod constellation;
 pub mod stargate;
 pub mod names;
+pub mod alliance;
+pub mod corporation;
 
 pub use killmail::Killmail;
 pub use killmail::Victim;
@@ -20,11 +22,14 @@ pub use killmail::Item;
 pub use object::Object;
 
 pub type BoolRequired = bool;
+pub type BoolOptional = Option<bool>;
 pub type IntRequired = i32;
 pub type FloatRequired = f32;
 pub type FloatOptional = Option<f32>;
 pub type IntOptional = Option<i32>;
+pub type LongOptional = Option<i64>;
 pub type TimeRequired = DateTime<Utc>;
+pub type TimeOptional = Option<DateTime<Utc>>;
 pub type StrRequired = String;
 pub type StrOptional = Option<String>;
 pub type PositionOptional = Option<Position>;
