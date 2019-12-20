@@ -47,10 +47,10 @@ impl System {
     }
 
     pub fn load(id: &i32, ctx: &Context) -> Option<models::system::SystemNamed> {
-        use services::{Category, Report};
+        use services::{Message, Api,  Category, Report};
         match reports::load(Category::System(*id), &ctx) {
             Report::System(system) => return Some(system),
-            Report::NotFoundId(id) => warn!("{} was not found", id),
+            Report::NotFoundId(id) => ctx.resolver.push(Message::Receive(Api::System(id))),
             report => warn!("Unexpected report {:?}", report)
         }
         return None;
