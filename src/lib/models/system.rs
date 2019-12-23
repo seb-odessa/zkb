@@ -60,6 +60,15 @@ pub struct SystemNeighbors {
 	pub neighbor_name: OptString,
 }
 impl SystemNeighbors {
+
+    pub fn get_id(&self, name: &str) -> Integer {
+        match name {
+            "own" => self.own_id,
+            "neighbor" => self.neighbor_id,
+            _ => 0
+        }
+    }
+
     pub fn get_name(&self, name: &str) -> String {
         match name {
             "own" => self.own_name.clone(),

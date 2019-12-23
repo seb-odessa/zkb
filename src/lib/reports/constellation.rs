@@ -1,5 +1,6 @@
 use crate::models;
-use crate::services::{Context, Area, Category, Report};
+use crate::services;
+use crate::services::Context;
 use crate::reports;
 
 use std::fmt::Write;
@@ -13,6 +14,7 @@ impl reports::ReportableEx for Constellation {
     }
 
     fn report_by_id(id: &i32, ctx: &Context, report_type: reports::ReportType) -> String {
+        use services::{Category, Report};
         let mut output = String::new();
         if let Report::Constellation(constellation) = reports::load(Category::Constellation(*id), &ctx) {
             Self::write(&mut output, &constellation, &ctx);
@@ -47,11 +49,15 @@ impl Constellation {
     }
 
     fn neighbors(output: &mut dyn Write, id: &i32, ctx: &Context) {
+        use services::{Category, Report, Area, Message, Api};
         if let Report::ConstellationNeighbors(neighbors) = reports::load(Category::Neighbors(Area::Constellation(*id)), &ctx) {
             use reports::history::History;
             for neighbor in &neighbors {
                 let id = neighbor.neighbor_id;
                 let name = neighbor.get_name("neighbor");
+                if name.is_empty() {
+                    ctx.resolver.push(Message::Receive(Api::Object(id)));
+                }
                 reports::div(output, format!("neighbor: [ {} : {} : {} ] {}",
                     reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::constellation_count(&id, &10, ctx))),
                     reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::constellation_count(&id, &60, ctx))),

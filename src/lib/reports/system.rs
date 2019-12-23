@@ -57,15 +57,21 @@ impl System {
     }
 
     fn neighbors(output: &mut dyn Write, id: &i32, ctx: &Context) {
-        use services::{Category, Report, Area};
+        use services::{Category, Report, Area, Message, Api};
         use reports::history::History;
         if let Report::SystemNeighbors(neighbors) = reports::load(Category::Neighbors(Area::System(*id)), &ctx) {
             for neighbor in &neighbors {
-                reports::div(output, format!("neighbor: [ {} : {} : {} ] {}",
+                let id = neighbor.get_id("neighbor");
+                let name = neighbor.get_name("neighbor");
+                if name.is_empty() {
+                    ctx.resolver.push(Message::Receive(Api::Object(id)));
+                }
+                reports::div(output, format!("neighbor: [ {} : {} : {} ] {} ({})",
                     reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &10, ctx))),
                     reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &60, ctx))),
                     reports::tip("Kills at last 6 hours", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &360, ctx))),
-                    ctx.get_api_link("system", neighbor.get_name("neighbor")),
+                    ctx.get_api_link("system", name),
+                    ctx.get_zkb_href("system", id, "zkb")
                 ));
             }
         }
