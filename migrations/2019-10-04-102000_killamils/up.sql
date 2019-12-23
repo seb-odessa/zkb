@@ -11,9 +11,10 @@ DROP INDEX IF EXISTS c_category_name_idx;
 CREATE INDEX IF NOT EXISTS categories_category_name_idx ON categories(category_name);
 
 CREATE TABLE IF NOT EXISTS objects(
-    object_id INTEGER NOT NULL PRIMARY KEY ON CONFLICT IGNORE,
+    object_id INTEGER NOT NULL,
     category_id INTEGER NOT NULL,
-    object_name TEXT NOT NULL UNIQUE ON CONFLICT IGNORE,
+    object_name TEXT NOT NULL,
+    PRIMARY KEY(object_id, category_id) ON CONFLICT IGNORE,
     FOREIGN KEY(category_id) REFERENCES categories(category_id)
 );
 DROP INDEX IF EXISTS o_object_name_idx;
