@@ -227,10 +227,11 @@ impl Killmail {
 
         if let Some(system) = system {
             reports::div(output,
-                format!("Location: {} : {} : {}",
+                format!("Location: {} : {} : {} ({:0.1})",
                     ctx.get_api_link("region", system.get_name("region")),
                     ctx.get_api_link("constellation", system.get_name("constellation")),
                     ctx.get_api_link("system", system.get_name("system")),
+                    system.security_status
                 )
             );
         }
