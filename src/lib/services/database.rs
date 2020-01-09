@@ -3,7 +3,7 @@ use crate::services::*;
 use crate::models;
 use crate::services::{AppContext, Command, Message, Category, Report};
 use models::Connection;
-use std::collections::HashSet;
+//use std::collections::HashSet;
 
 fn enqueue_check(queue: &Queue, id: &i32) {
     queue.push(Message::Check(Category::Object(*id)));
@@ -52,8 +52,8 @@ fn handle_killmail(queue: &Queue, killmail: &api::Killmail) {
 
 pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
     info!("Started");
-    let mut known = HashSet::new();
-    let mut objects = HashSet::new();
+//    let mut known = HashSet::new();
+//    let mut objects = HashSet::new();
     loop {
         if let Some(Command::Quit) = context.commands.pop() {
             context.commands.push(Command::Quit);
@@ -477,35 +477,41 @@ pub fn run(conn: Connection, context: actix_web::web::Data<AppContext>) {
                 Message::Check(category) => {
                     match category {
                         Category::Object(id) => {
-                            if objects.contains(&id) && !models::ObjectsApi::exist(&conn, &id) {
+                            if
+//                            objects.contains(&id) &&
+                              !models::ObjectsApi::exist(&conn, &id) {
                                 context.resolver.push(Message::Receive(Api::Object(id)));
-                                objects.insert(id);
+//                                objects.insert(id);
                             }
                         },
                         Category::System(id) => {
-                            if !known.contains(&id)
-                             && !models::system::System::exist(&conn, &id)
+                            if
+                            //    !known.contains(&id) &&
+                               !models::system::System::exist(&conn, &id)
                             {
                                 context.resolver.push(Message::Receive(Api::System(id)));
-                                known.insert(id);
+                                // known.insert(id);
                             }
                         }
                         Category::Region(_) => {
                             // Nothing to do here
                         },
                         Category::Constellation(id) => {
-                            if !known.contains(&id) && !models::constellation::Constellation::exist(&conn, &id)
+                            if
+                            //    !known.contains(&id) &&
+                               !models::constellation::Constellation::exist(&conn, &id)
                             {
                                 context.resolver.push(Message::Receive(Api::Constellation(id)));
-                                known.insert(id);
+                                // known.insert(id);
                             }
                         },
                         Category::Stargate(id) => {
-                            if !known.contains(&id)
-                            && !models::stargate::Stargate::exist(&conn, &id)
+                            if
+                            //    !known.contains(&id) &&
+                               !models::stargate::Stargate::exist(&conn, &id)
                             {
                                 context.resolver.push(Message::Receive(Api::Stargate(id)));
-                                known.insert(id);
+                                // known.insert(id);
                             }
                         },
                         model => {
