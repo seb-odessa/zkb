@@ -22,10 +22,9 @@ impl Alliance {
     pub fn description(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
         if let Some(alliance) = api::alliance::Alliance::new(id) {
-            let who = ctx.get_evewho_href("alliance", *id, "evewho");
-            reports::div(&mut output, format!("Alliance:     {} [{}] ({})", alliance.name, alliance.ticker, who));
-            reports::div(&mut output, format!("Founded:      {}", alliance.date_founded.format("%Y-%m-%d %H:%M:%S").to_string()));
-            reports::div(&mut output, format!("Corporation:  {}", ""));
+            reports::div(&mut output, format!("Alliance: [{}] {}",alliance.ticker, ctx.get_full_desc("alliance", *id, alliance.name)));
+            reports::div(&mut output, format!("Founded:       {}", alliance.date_founded.format("%Y-%m-%d %H:%M:%S").to_string()));
+            reports::div(&mut output, format!("Corporation:   {}", ""));
             reports::div(&mut output, format!("CEO: {}",
                 alliance.executor_corporation_id
                     .and_then(|id| api::character::Character::new(&id))

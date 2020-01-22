@@ -14,29 +14,17 @@ impl Character {
         } else {
             String::new()
         };
-        reports::div(output, format!("Name: {} ({})", name, ctx.get_evewho_href("character", *id, "evewho")));
+        reports::div(output, format!("Name: {}",ctx.get_full_desc("character", *id, name)));
 
         if let Some(character) = api::character::Character::new(&id) {
             let id = character.corporation_id;
             if let Report::Object(obj) = reports::load(Category::Object(id), &ctx) {
-                reports::div(output,
-                    format!("Corporation: {} ({}) ({})",
-                        ctx.get_api_href("corporation", id, obj.object_name),
-                        ctx.get_zkb_href("corporation", id, "zkb"),
-                        ctx.get_evewho_href("corporation", id, "evewho")
-                    )
-                );
+                reports::div(output, format!("Corporation: {}",ctx.get_full_desc("corporation", id, obj.object_name)));
             }
             if let Some(alliance_id) = character.alliance_id {
                 let id = alliance_id;
                 if let Report::Object(obj) = reports::load(Category::Object(id), &ctx) {
-                    reports::div(output,
-                        format!("Alliance: {} ({}) ({})",
-                            ctx.get_api_href("alliance", id, obj.object_name),
-                            ctx.get_zkb_href("alliance", id, "zkb"),
-                            ctx.get_evewho_href("alliance", id, "evewho")
-                        )
-                    );
+                    reports::div(output, format!("Alliance:  {}",ctx.get_full_desc("alliance", id, obj.object_name)));
                 }
             }
             if let Some(ss) = character.security_status {

@@ -184,6 +184,16 @@ impl AppContext {
             id = id,
             name = name.into())
     }
+
+    pub fn get_full_desc<S1: Into<String>, S2: Into<String>>(&self, class: S1, id: i32, name: S2) -> String {
+        let owned = class.into();
+        format!("{} ({}) ({})",
+            self.get_api_href(owned.clone(), id, name),
+            self.get_zkb_href(owned.clone(), id, "zkb"),
+            self.get_evewho_href(owned.clone(), id, "evewho")
+        )
+    }
+
 }
 
 pub struct Channel<T>{
