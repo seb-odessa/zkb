@@ -10,7 +10,7 @@ impl Character {
 
     fn info(output: &mut dyn Write, id: &i32, ctx: &Context) {
         let name = if let Report::Object(obj) = reports::load(Category::Object(*id), &ctx) {
-            ctx.get_zkb_href("character", *id, obj.object_name)
+            obj.object_name
         } else {
             String::new()
         };

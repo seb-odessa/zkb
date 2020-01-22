@@ -31,7 +31,7 @@ impl Corporation {
                 reports::div(&mut output, format!("Alliance:         {}",
                     ctx.get_full_desc("alliance",
                         *alliance_id,
-                        api::corporation::Corporation::new(&alliance_id).map(|x| x.name).unwrap_or_default()
+                        api::alliance::Alliance::new(&alliance_id).map(|x| x.name).unwrap_or_default()
                     )
                 ));
             }
