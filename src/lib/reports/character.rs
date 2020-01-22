@@ -9,18 +9,34 @@ pub struct Character;
 impl Character {
 
     fn info(output: &mut dyn Write, id: &i32, ctx: &Context) {
-        if let Report::Object(obj) = reports::load(Category::Object(*id), &ctx) {
-            reports::div(output, format!("Name: {}", ctx.get_zkb_href("character", *id, obj.object_name)));
-        }
+        let name = if let Report::Object(obj) = reports::load(Category::Object(*id), &ctx) {
+            ctx.get_zkb_href("character", *id, obj.object_name)
+        } else {
+            String::new()
+        };
+        reports::div(output, format!("Name: {} ({})", name, ctx.get_evewho_href("character", *id, "evewho")));
+
         if let Some(character) = api::character::Character::new(&id) {
             let id = character.corporation_id;
             if let Report::Object(obj) = reports::load(Category::Object(id), &ctx) {
-                reports::div(output, format!("Corporation: {}", ctx.get_zkb_href("corporation", id, obj.object_name)));
+                reports::div(output,
+                    format!("Corporation: {} ({}) ({})",
+                        ctx.get_api_href("corporation", id, obj.object_name),
+                        ctx.get_zkb_href("corporation", id, "zkb"),
+                        ctx.get_evewho_href("corporation", id, "evewho")
+                    )
+                );
             }
             if let Some(alliance_id) = character.alliance_id {
                 let id = alliance_id;
                 if let Report::Object(obj) = reports::load(Category::Object(id), &ctx) {
-                    reports::div(output, format!("Alliance: {}", ctx.get_zkb_href("alliance", id, obj.object_name)));
+                    reports::div(output,
+                        format!("Alliance: {} ({}) ({})",
+                            ctx.get_api_href("alliance", id, obj.object_name),
+                            ctx.get_zkb_href("alliance", id, "zkb"),
+                            ctx.get_evewho_href("alliance", id, "evewho")
+                        )
+                    );
                 }
             }
             if let Some(ss) = character.security_status {

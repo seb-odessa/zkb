@@ -178,6 +178,12 @@ impl AppContext {
         }
     }
 
+    pub fn get_evewho_href<S1: Into<String>, S2: Into<String>>(&self, class: S1, id: i32, name: S2) -> String {
+        format!(r#"<a href="https://evewho.com/{class}/{id}/">{name}</a>"#,
+            class = class.into(),
+            id = id,
+            name = name.into())
+    }
 }
 
 pub struct Channel<T>{

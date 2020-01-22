@@ -19,10 +19,11 @@ impl reports::Reportable for Alliance {
 }
 
 impl Alliance {
-    pub fn description(id: &i32, _ctx: &Context) -> String {
+    pub fn description(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
         if let Some(alliance) = api::alliance::Alliance::new(id) {
-            reports::div(&mut output, format!("Alliance:     {} [{}]", alliance.name, alliance.ticker));
+            let who = ctx.get_evewho_href("alliance", *id, "evewho");
+            reports::div(&mut output, format!("Alliance:     {} [{}] ({})", alliance.name, alliance.ticker, who));
             reports::div(&mut output, format!("Founded:      {}", alliance.date_founded.format("%Y-%m-%d %H:%M:%S").to_string()));
             reports::div(&mut output, format!("Corporation:  {}", ""));
             reports::div(&mut output, format!("CEO: {}",

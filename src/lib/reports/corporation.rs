@@ -29,10 +29,11 @@ impl reports::Reportable for Corporation {
 */
 
 impl Corporation {
-    pub fn description(id: &i32, _ctx: &Context) -> String {
+    pub fn description(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
         if let Some(corporation) = api::corporation::Corporation::new(id) {
-            reports::div(&mut output, format!("Corporation:  {} [{}]", corporation.name, corporation.ticker));
+            let who = ctx.get_evewho_href("corporation", *id, "evewho");
+            reports::div(&mut output, format!("Corporation:  {} [{}] ({})", corporation.name, corporation.ticker, who));
             reports::div(&mut output, format!("Members:  {}", corporation.member_count));
             reports::div(&mut output, format!("Taxes:    {}", corporation.tax_rate));
             reports::div(&mut output, format!("Eligible War: {}", corporation.war_eligible.unwrap_or(false)));
