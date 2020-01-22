@@ -119,6 +119,7 @@ impl KillmailNamed {
                 named_killmails::region_id,
                 named_killmails::region_name,
              ))
+            .distinct()
             .order(named_killmails::killmail_time.desc())
             .load(conn)
     }
@@ -141,6 +142,7 @@ impl KillmailNamed {
                 named_killmails::region_id,
                 named_killmails::region_name,
              ))
+            .distinct()
             .order(named_killmails::killmail_time.desc())
             .load(conn)
     }
@@ -163,6 +165,7 @@ impl KillmailNamed {
                 named_killmails::region_id,
                 named_killmails::region_name,
              ))
+            .distinct()
             .order(named_killmails::killmail_time.desc())
             .load(conn)
     }
@@ -185,6 +188,7 @@ impl KillmailNamed {
                 named_killmails::region_id,
                 named_killmails::region_name,
              ))
+            .distinct()
             .order(named_killmails::killmail_time.desc())
             .load(conn)
     }
@@ -207,6 +211,7 @@ impl KillmailNamed {
                 named_killmails::region_id,
                 named_killmails::region_name,
              ))
+            .distinct()
             .order(named_killmails::killmail_time.desc())
             .load(conn)
     }
@@ -229,6 +234,7 @@ impl KillmailNamed {
                 named_killmails::region_id,
                 named_killmails::region_name,
              ))
+            .distinct()
             .order(named_killmails::killmail_time.desc())
             .load(conn)
     }
