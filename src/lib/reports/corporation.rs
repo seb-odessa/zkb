@@ -27,17 +27,17 @@ impl Corporation {
             reports::div(&mut output, format!("Taxes:            {}", corporation.tax_rate));
             reports::div(&mut output, format!("Eligible War:     {}", corporation.war_eligible.unwrap_or(false)));
             reports::div(&mut output, format!("CEO:              {}",
-                ctx.get_full_desc("character",
+                ctx.get_full_desc("corporation",
                     corporation.ceo_id,
-                    api::character::Character::new(&corporation.ceo_id).map(|ch| ch.name).unwrap_or_default())
+                    api::corporation::Corporation::new(&corporation.ceo_id).map(|ch| ch.name).unwrap_or_default())
             ));
             reports::div(&mut output, format!("Creator:          {}",
-                ctx.get_full_desc("character",
+                ctx.get_full_desc("corporation",
                     corporation.creator_id,
-                    api::character::Character::new(&corporation.creator_id).map(|ch| ch.name).unwrap_or_default())
+                    api::corporation::Corporation::new(&corporation.creator_id).map(|ch| ch.name).unwrap_or_default())
             ));
             if let Some(ref date_founded) = corporation.date_founded {
-                reports::div(&mut output, format!("Founded:      {}", date_founded.format("%Y-%m-%d %H:%M:%S").to_string()));
+                reports::div(&mut output, format!("Founded:          {}", date_founded.format("%Y-%m-%d %H:%M:%S").to_string()));
             }
 
         }
