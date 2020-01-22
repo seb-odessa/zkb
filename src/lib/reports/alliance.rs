@@ -23,12 +23,24 @@ impl Alliance {
         let mut output = String::new();
         if let Some(alliance) = api::alliance::Alliance::new(id) {
             reports::div(&mut output, format!("Alliance: [{}] {}",alliance.ticker, ctx.get_full_desc("alliance", *id, alliance.name)));
-            reports::div(&mut output, format!("Founded:       {}", alliance.date_founded.format("%Y-%m-%d %H:%M:%S").to_string()));
-            reports::div(&mut output, format!("Corporation:   {}", ""));
-            reports::div(&mut output, format!("CEO: {}",
-                alliance.executor_corporation_id
-                    .and_then(|id| api::character::Character::new(&id))
-                    .map(|character| character.name).unwrap_or_default()));
+            reports::div(&mut output, format!("Founded:          {}", alliance.date_founded.format("%Y-%m-%d %H:%M:%S").to_string()));
+            reports::div(&mut output, format!("Creator:          {}",
+                ctx.get_full_desc("character",
+                    alliance.creator_id,
+                    api::character::Character::new(&alliance.creator_id).map(|ch| ch.name).unwrap_or_default())
+            ));
+            reports::div(&mut output, format!("Creator Corp:     {}",
+                ctx.get_full_desc("corporation",
+                    alliance.creator_corporation_id,
+                    api::character::Character::new(&alliance.creator_corporation_id).map(|ch| ch.name).unwrap_or_default())
+            ));
+            if let Some(executor_id) = alliance.executor_corporation_id {
+                reports::div(&mut output, format!("CEO: {}",
+                    ctx.get_full_desc("corporation",
+                        executor_id,
+                        api::character::Character::new(&executor_id).map(|ch| ch.name).unwrap_or_default())
+                ));
+            }
         }
         return output;
     }
