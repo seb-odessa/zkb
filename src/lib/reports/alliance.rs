@@ -32,13 +32,13 @@ impl Alliance {
             reports::div(&mut output, format!("Creator Corp:     {}",
                 ctx.get_full_desc("corporation",
                     alliance.creator_corporation_id,
-                    api::character::Character::new(&alliance.creator_corporation_id).map(|ch| ch.name).unwrap_or_default())
+                    api::corporation::Corporation::new(&alliance.creator_corporation_id).map(|ch| ch.name).unwrap_or_default())
             ));
             if let Some(executor_id) = alliance.executor_corporation_id {
                 reports::div(&mut output, format!("CEO: {}",
                     ctx.get_full_desc("corporation",
                         executor_id,
-                        api::character::Character::new(&executor_id).map(|ch| ch.name).unwrap_or_default())
+                        api::corporation::Corporation::new(&executor_id).map(|ch| ch.name).unwrap_or_default())
                 ));
             }
         }

@@ -18,28 +18,41 @@ impl reports::Reportable for Corporation {
     }
 }
 
+    // pub ceo_id: IntRequired,
+    // pub creator_id: IntRequired,
+    // pub description: StrOptional,
+
 impl Corporation {
     pub fn description(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
         if let Some(corporation) = api::corporation::Corporation::new(id) {
             reports::div(&mut output, format!("Corporation: [{}] {}", corporation.ticker, ctx.get_full_desc("corporation", *id, corporation.name)));
+            if let Some(ref alliance_id) = corporation.alliance_id {
+                reports::div(&mut output, format!("Alliance:         {}",
+                    ctx.get_full_desc("alliance",
+                        *alliance_id,
+                        api::corporation::Corporation::new(&alliance_id).map(|x| x.name).unwrap_or_default()
+                    )
+                ));
+            }
             reports::div(&mut output, format!("Members:          {}", corporation.member_count));
             reports::div(&mut output, format!("Taxes:            {}", corporation.tax_rate));
             reports::div(&mut output, format!("Eligible War:     {}", corporation.war_eligible.unwrap_or(false)));
+            reports::div(&mut output, format!("URL    :          {}", corporation.url.clone().unwrap_or_default()));
+            reports::div(&mut output, format!("Founded:          {}", corporation.date_founded.clone().map(|x| x.format("%Y-%m-%d %H:%M:%S").to_string()).unwrap_or_default()));
             reports::div(&mut output, format!("CEO:              {}",
                 ctx.get_full_desc("corporation",
                     corporation.ceo_id,
-                    api::corporation::Corporation::new(&corporation.ceo_id).map(|ch| ch.name).unwrap_or_default())
+                    api::character::Character::new(&corporation.ceo_id).map(|x| x.name).unwrap_or_default())
             ));
             reports::div(&mut output, format!("Creator:          {}",
                 ctx.get_full_desc("corporation",
                     corporation.creator_id,
-                    api::corporation::Corporation::new(&corporation.creator_id).map(|ch| ch.name).unwrap_or_default())
+                    api::character::Character::new(&corporation.creator_id).map(|x| x.name).unwrap_or_default())
             ));
-            if let Some(ref date_founded) = corporation.date_founded {
-                reports::div(&mut output, format!("Founded:          {}", date_founded.format("%Y-%m-%d %H:%M:%S").to_string()));
+            if let Some(ref description) = corporation.description {
+                reports::div(&mut output, format!("Description:     {}",description));
             }
-
         }
         return output;
     }
