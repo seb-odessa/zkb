@@ -18,10 +18,6 @@ impl reports::Reportable for Corporation {
     }
 }
 
-    // pub ceo_id: IntRequired,
-    // pub creator_id: IntRequired,
-    // pub description: StrOptional,
-
 impl Corporation {
     pub fn description(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
@@ -50,9 +46,6 @@ impl Corporation {
                     corporation.creator_id,
                     api::character::Character::new(&corporation.creator_id).map(|x| x.name).unwrap_or_default())
             ));
-            if let Some(ref description) = corporation.description {
-                reports::div(&mut output, format!("Description:     {}",description));
-            }
         }
         return output;
     }
