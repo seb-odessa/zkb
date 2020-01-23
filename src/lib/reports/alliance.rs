@@ -35,7 +35,7 @@ impl Alliance {
                     api::corporation::Corporation::new(&alliance.creator_corporation_id).map(|ch| ch.name).unwrap_or_default())
             ));
             if let Some(executor_id) = alliance.executor_corporation_id {
-                reports::div(&mut output, format!("CEO: {}",
+                reports::div(&mut output, format!("Executor Corp:    {}",
                     ctx.get_full_desc("corporation",
                         executor_id,
                         api::corporation::Corporation::new(&executor_id).map(|ch| ch.name).unwrap_or_default())

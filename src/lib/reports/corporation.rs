@@ -37,12 +37,12 @@ impl Corporation {
             reports::div(&mut output, format!("URL    :          {}", corporation.url.clone().unwrap_or_default()));
             reports::div(&mut output, format!("Founded:          {}", corporation.date_founded.clone().map(|x| x.format("%Y-%m-%d %H:%M:%S").to_string()).unwrap_or_default()));
             reports::div(&mut output, format!("CEO:              {}",
-                ctx.get_full_desc("corporation",
+                ctx.get_full_desc("character",
                     corporation.ceo_id,
                     api::character::Character::new(&corporation.ceo_id).map(|x| x.name).unwrap_or_default())
             ));
             reports::div(&mut output, format!("Creator:          {}",
-                ctx.get_full_desc("corporation",
+                ctx.get_full_desc("character",
                     corporation.creator_id,
                     api::character::Character::new(&corporation.creator_id).map(|x| x.name).unwrap_or_default())
             ));
