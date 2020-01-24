@@ -242,6 +242,42 @@ table! {
     }
 }
 
+table! {
+    combat_participants (killmail_id, killmail_id) {
+        killmail_id -> Integer,
+        killmail_time -> Timestamp,
+        victim_character_id -> Nullable<Integer>,
+        victim_character_name -> Nullable<Text>,
+        victim_corporation_id -> Nullable<Integer>,
+        victim_corporation_name -> Nullable<Text>,
+        victim_alliance_id -> Nullable<Integer>,
+        victim_alliance_name -> Nullable<Text>,
+        victim_faction_id -> Nullable<Integer>,
+    	victim_faction_name -> Nullable<Text>,
+        attacker_character_id -> Nullable<Integer>,
+        attacker_character_name -> Nullable<Text>,
+        attacker_corporation_id -> Nullable<Integer>,
+        attacker_corporation_name -> Nullable<Text>,
+        attacker_alliance_id -> Nullable<Integer>,
+        attacker_alliance_name -> Nullable<Text>,
+        attacker_faction_id -> Nullable<Integer>,
+    	attacker_faction_name -> Nullable<Text>,
+    }
+}
+
+table! {
+    combat_items (killmail_id, killmail_id) {
+        killmail_id -> Integer,
+        killmail_time -> Timestamp,
+        victim_ship_id -> Nullable<Integer>,
+        victim_ship_name -> Nullable<Text>,
+        attacker_ship_id -> Nullable<Integer>,
+        attacker_ship_name -> Nullable<Text>,
+        attacker_weapon_id -> Nullable<Integer>,
+        attacker_weapon_name -> Nullable<Text>,
+    }
+}
+
 joinable!(attackers -> killmails (killmail_id));
 joinable!(items -> killmails (killmail_id));
 joinable!(objects -> categories (category_id));

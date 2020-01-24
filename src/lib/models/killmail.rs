@@ -9,6 +9,14 @@ use crate::schema::named_killmails;
 use super::{Integer, OptInteger, OptString, DateTime, Connection, QueryResult};
 
 
+#[derive(Debug, PartialEq)]
+pub enum Actor{
+    Character(i32),
+    Corporation(i32),
+    Alliance(i32),
+    Faction(i32),
+}
+
 #[derive(Insertable)]
 #[table_name = "killmails"]
 pub struct Killmail {
@@ -335,3 +343,4 @@ impl KillmailNamed {
             .load(conn)
     }
 }
+
