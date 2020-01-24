@@ -153,6 +153,26 @@ impl Killmail {
         reports::div(output, content);
     }
 
+    pub fn write_head(output: &mut dyn Write) {
+        let head_style = "border: 1px solid black; padding: 2px 5px; text-align: center;";
+        reports::table_row_start(output, head_style);
+        reports::table_cell_head(output, "Time", head_style, "Time");
+        reports::table_cell_head(output, "Reference to ZKB", head_style, "ZKB");
+        reports::table_cell_head(output, "Killmail Amount", head_style, "Amount");
+        reports::table_cell_head(output, "Dropped Amount", head_style, "Dropped");
+        reports::table_cell_head(output, "Ship Destroyed", head_style, "Ship");
+        reports::table_cell_head(output, "Attackers Count", head_style, "Attackers");
+        reports::table_cell_head(output, "Region", head_style, "Region");
+        reports::table_cell_head(output, "Constellation", head_style, "Constellation");
+        reports::table_cell_head(output, "System", head_style, "System");
+        reports::table_cell_head(output, "Security status", head_style, "SS");
+        reports::table_cell_head(output, "Faction Name", head_style, "Faction");
+        reports::table_cell_head(output, "Alliance Name", head_style, "Alliance");
+        reports::table_cell_head(output, "Corporation Name", head_style, "Corporation");
+        reports::table_cell_head(output, "Character Name", head_style, "Character");
+        reports::table_row_end(output);
+    }
+
     pub fn write_row(output: &mut dyn Write, killmail: &killmail::KillmailNamed, ctx: &Context) {
         let text_style = "border: 1px solid black; padding: 2px 5px;";
 
