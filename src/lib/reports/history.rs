@@ -30,12 +30,15 @@ impl History {
         let table_style   = "border-collapse: collapse;";
         match reports::load(category, &ctx) {
             Report::History(history) => {
-                reports::table_start(&mut output, "Attackers", table_style, "");
-                reports::caption(&mut output, caption);
-                for killmail in history {
-                    reports::Killmail::write_row(&mut output, &killmail, &ctx);
+                if !history.is_empty(){
+                    reports::table_start(&mut output, "Attackers", table_style, "");
+                    reports::Killmail::write_head(&mut output);
+                    reports::caption(&mut output, caption);
+                    for killmail in history {
+                        reports::Killmail::write_row(&mut output, &killmail, &ctx);
+                    }
+                    reports::table_end(&mut output);
                 }
-                reports::table_end(&mut output);
             },
             Report::HistoryCount(count) => {
                 reports::div(&mut output, format!("{:0>3}", count));
