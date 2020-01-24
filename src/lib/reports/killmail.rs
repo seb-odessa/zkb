@@ -154,7 +154,7 @@ impl Killmail {
     }
 
     pub fn write_row(output: &mut dyn Write, killmail: &killmail::KillmailNamed, ctx: &Context) {
-        let text_style    = "border: 0px solid black; padding: 2px 5px;";
+        let text_style = "border: 1px solid black; padding: 2px 5px;";
 
         let killmail_id = killmail.killmail_id;
         let victim = reports::Victim::load(&killmail_id, ctx);

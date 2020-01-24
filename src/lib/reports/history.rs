@@ -22,14 +22,16 @@ impl History {
         let mut output = String::new();
         let start = DateTime::from((Utc::now() - Duration::minutes(*minutes as i64)).naive_utc());
         let timestamp = start.format("%Y-%m-%d %H:%M:%S").to_string();
-        match category {
-            Category::Wins((_,_)) => reports::div(&mut output, format!("Wins since {} ", timestamp)),
-            Category::Losses((_,_)) => reports::div(&mut output, format!("Losses since {} ", timestamp)),
-            _ => ()
-        }
+        let caption = match category {
+                    Category::Wins(_) => format!("Wins since {} ", timestamp),
+                    Category::Losses(_) => format!("Losses since {} ", timestamp),
+                    _ => String::new()
+        };
+        let table_style   = "border-collapse: collapse;";
         match reports::load(category, &ctx) {
             Report::History(history) => {
-                reports::table_start(&mut output, "Attackers", "border-collapse: collapse;", "");
+                reports::table_start(&mut output, "Attackers", table_style, "");
+                reports::caption(&mut output, caption);
                 for killmail in history {
                     reports::Killmail::write_row(&mut output, &killmail, &ctx);
                 }
