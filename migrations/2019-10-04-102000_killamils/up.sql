@@ -374,9 +374,9 @@ SELECT
    A.alliance_name AS attacker_alliance_name,
    A.faction_id AS attacker_faction_id,
    A.faction_name AS attacker_faction_name
-FROM named_victims V
-JOIN named_attackers A ON V.killmail_id = A.killmail_id
-JOIN named_killmails K  ON K.killmail_id = v.killmail_id;
+FROM named_killmails K
+JOIN named_victims V ON K.killmail_id = V.killmail_id
+JOIN named_attackers A ON K.killmail_id = A.killmail_id;
 
 CREATE VIEW IF NOT EXISTS combat_items AS
 SELECT
@@ -388,8 +388,8 @@ SELECT
    A.ship_name AS attacker_ship_name,
    A.weapon_id AS attacker_weaponr_id,
    A.weapon_name AS attacker_weapon_name
-FROM named_victims V
-JOIN named_attackers A ON V.killmail_id = A.killmail_id
-JOIN named_killmails K ON K.killmail_id = V.killmail_id;
+FROM named_killmails K
+JOIN named_victims V ON K.killmail_id = V.killmail_id
+JOIN named_attackers A ON K.killmail_id = A.killmail_id;
 
 
