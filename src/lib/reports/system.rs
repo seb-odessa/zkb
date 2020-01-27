@@ -175,8 +175,8 @@ impl System {
                     }
 
                     reports::table_row_start(&mut output, text_style);
-                    reports::table_cell(&mut output, "Region Name", text_style,         ctx.get_api_href("region", *id, system.get_name("region")));
-                    reports::table_cell(&mut output, "Constellation Name", text_style,  ctx.get_api_href("constellation", *id, system.get_name("constellation")));
+                    reports::table_cell(&mut output, "Region Name", text_style,         ctx.get_api_href("region", system.get_id("region"), system.get_name("region")));
+                    reports::table_cell(&mut output, "Constellation Name", text_style,  ctx.get_api_href("constellation", system.get_id("constellation"), system.get_name("constellation")));
                     reports::table_cell(&mut output, "System Name", text_style,         ctx.get_api_href("system", *id, system.get_name("system")));
                     reports::table_cell(&mut output, "System Security Status", num_style, format!("{:.2}", system.security_status));
                     reports::table_cell(&mut output, "10 minutes history", num_style,  History::system_count(&id, &10, ctx).separated_string());
