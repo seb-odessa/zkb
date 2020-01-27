@@ -157,8 +157,7 @@ impl Killmail {
         let head_style = "border: 1px solid black; padding: 2px 5px; text-align: center;";
         reports::table_row_start(output, head_style);
         reports::table_cell_head(output, "API/ZKB", head_style, "Time<br/>ZKB");
-        reports::table_cell_head(output, "Total Amount", head_style, "Amount");
-        reports::table_cell_head(output, "Dropped Amount", head_style, "Dropped");
+        reports::table_cell_head(output, "Total Amount/Dropped Amount", head_style, "Amount<br/>Dropped");
         reports::table_cell_head(output, "Ship Destroyed", head_style, "Ship");
         reports::table_cell_head(output, "Attackers Count", head_style, "Attackers");
         reports::table_cell_head(output, "Region/Constellation/System (SS)", head_style, "Region<br/>Constellation<br/>System");
@@ -202,10 +201,13 @@ impl Killmail {
             let row_style = format!("background-color: {};", Self::npc_kill_color(&attackers));
             let timestamp = killmail.killmail_time.time().format("%H:%M:%S").to_string();
             reports::table_row_start(output, row_style);
-            reports::table_cell(output, "Time", text_style, ctx.get_api_href("killmail", killmail_id, timestamp));
-            reports::table_cell(output, "Reference to ZKB", text_style, ctx.get_zkb_href("kill", killmail_id, format!("zkb")));
-            reports::table_cell(output, "Killmail Amount", text_style, total_span);
-            reports::table_cell(output, "Dropped Amount", text_style, dropped_span);
+            reports::table_cell(output, "API/ZKB", text_style,
+                format!("{}<br/>{}",
+                    ctx.get_api_href("killmail", killmail_id, timestamp),
+                    ctx.get_zkb_href("kill", killmail_id, format!("zkb"))
+                )
+            );
+            reports::table_cell(output, "Killmail Amount/Dropped Amount", text_style, format!("{}<br/>{}", total_span, dropped_span));
             reports::table_cell(output, "Ship Destroyed", text_style, ctx.get_zkb_href("ship", victim.get_id("ship"), victim.get_name("ship")));
             reports::table_cell(output, "Attackers Count", text_style, attackers_count.separated_string());
             reports::table_cell(output, "Region", text_style,
