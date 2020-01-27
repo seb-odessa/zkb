@@ -112,6 +112,21 @@ impl System {
     }
 
 
+    fn ss_color(status: f32) -> String {
+        if status <= 0.0 {"#FF0000"}
+        else if status < 0.1 {"#FF1A1A"}
+        else if status < 0.2 {"#FF3333"}
+        else if status < 0.3 {"#FF4D4D"}
+        else if status < 0.4 {"#FF6666"}
+        else if status < 0.5 {"#FF8080"}
+        else if status < 0.6 {"#00FF00"}
+        else if status < 0.7 {"#33FFFF"}
+        else if status < 0.8 {"#80FFFF"}
+        else if status < 0.9 {"#CCFFFF"}
+        else {"#FFFFFF"}
+        .to_string()
+    }
+
     pub fn route_named(safety: String, departure: String, destination: String, ctx: &Context) -> String {
         let category = "solar_system";
         let mut output = String::new();
@@ -132,9 +147,8 @@ impl System {
         };
 
         if let Some(ids) = route {
-            let table_style   = "border-collapse: collapse;";
+            let table_style = "border-collapse: collapse;";
             let head_style = "border: 1px solid black; padding: 2px 5px; text-align: center;";
-            let text_style = "border: 1px solid black; padding: 2px 5px;";
 
             reports::table_start(&mut output, "", table_style, "");
             reports::caption(&mut output, "Route");
@@ -153,7 +167,7 @@ impl System {
                     use services::{Message, Api};
                     use reports::history::History;
                     use crate::separator::Separatable;
-
+                    let text_style = &format!("border: 1px solid black; padding: 2px 5px; color: {};", Self::ss_color(system.security_status));
                     if system.get_name("system").is_empty() {
                         ctx.resolver.push(Message::Receive(Api::Object(system.get_id("system"))));
                     }
@@ -168,11 +182,11 @@ impl System {
                     reports::table_cell(&mut output, "Region Name", text_style,         ctx.get_api_href("region", *id, system.get_name("region")));
                     reports::table_cell(&mut output, "Constellation Name", text_style,  ctx.get_api_href("constellation", *id, system.get_name("constellation")));
                     reports::table_cell(&mut output, "System Name", text_style,         ctx.get_api_href("system", *id, system.get_name("system")));
-                    reports::table_cell(&mut output, "System Security Status", text_style, system.security_status.separated_string());
+                    reports::table_cell(&mut output, "System Security Status", text_style, format!("{:.2}", system.security_status));
                     reports::table_cell(&mut output, "10 minutes history", text_style,  History::system_count(&id, &10, ctx).separated_string());
-                    reports::table_cell(&mut output, "1 hour history", text_style,      History::system_count(&id, &10, ctx).separated_string());
-                    reports::table_cell(&mut output, "6 hours history", text_style,     History::system_count(&id, &10, ctx).separated_string());
-                    reports::table_cell(&mut output, "24 hours history", text_style,    History::system_count(&id, &10, ctx).separated_string());
+                    reports::table_cell(&mut output, "1 hour history", text_style,      History::system_count(&id, &60, ctx).separated_string());
+                    reports::table_cell(&mut output, "6 hours history", text_style,     History::system_count(&id, &360, ctx).separated_string());
+                    reports::table_cell(&mut output, "24 hours history", text_style,    History::system_count(&id, &1440, ctx).separated_string());
                     reports::table_row_end(&mut output);
                 }
             }
