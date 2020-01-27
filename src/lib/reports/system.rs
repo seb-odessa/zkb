@@ -112,17 +112,10 @@ impl System {
     }
 
 
-    fn ss_color(status: f32) -> String {
-        if status <= 0.0 {"#FF0000"}
-        else if status < 0.1 {"#FF1A1A"}
-        else if status < 0.2 {"#FF3333"}
-        else if status < 0.3 {"#FF4D4D"}
-        else if status < 0.4 {"#FF6666"}
-        else if status < 0.5 {"#FF8080"}
-        else if status < 0.6 {"#00FF00"}
-        else if status < 0.7 {"#33FFFF"}
-        else if status < 0.8 {"#80FFFF"}
-        else if status < 0.9 {"#CCFFFF"}
+    fn kills_color(count: i32) -> String {
+        if count > 10 {"#FF0000"}
+        else if count > 5 {"#FF5050"}
+        else if count > 1 {"#FFCCCC"}
         else {"#FFFFFF"}
         .to_string()
     }
@@ -167,7 +160,7 @@ impl System {
                     use services::{Message, Api};
                     use reports::history::History;
                     use crate::separator::Separatable;
-                    let text_style = &format!("border: 1px solid black; padding: 2px 5px; color: {};", Self::ss_color(system.security_status));
+                    let text_style = &format!("border: 1px solid black; padding: 2px 5px; background-color: {};", Self::kills_color(History::system_count(&id, &10, ctx)));
                     if system.get_name("system").is_empty() {
                         ctx.resolver.push(Message::Receive(Api::Object(system.get_id("system"))));
                     }
