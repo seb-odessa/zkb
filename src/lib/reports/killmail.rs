@@ -159,9 +159,11 @@ impl Killmail {
         reports::table_cell_head(output, "API/ZKB", head_style, "Time<br/>ZKB");
         reports::table_cell_head(output, "Total Amount/Dropped Amount", head_style, "Amount<br/>Dropped");
         reports::table_cell_head(output, "Ship Destroyed", head_style, "Ship");
-        reports::table_cell_head(output, "Attackers Count", head_style, "Attackers");
+        reports::table_cell_head(output, "Damage Taken", head_style, "Damage");
         reports::table_cell_head(output, "Region/Constellation/System (SS)", head_style, "Region<br/>Constellation<br/>System");
-        reports::table_cell_head(output, "Faction/Alliance/Corporation/Character", head_style, "Faction<br/>Alliance<br/>Corporation<br/>Character");
+        reports::table_cell_head(output, "Victim's Faction/Alliance/Corporation/Character", head_style, "Faction<br/>Alliance<br/>Corporation<br/>Character");
+        reports::table_cell_head(output, "Attackers Count", head_style, "Attackers");
+        reports::table_cell_head(output, "Attacker's Faction/Alliance/Corporation/Character", head_style, "Faction<br/>Alliance<br/>Corporation<br/>Character");
         reports::table_row_end(output);
     }
 
@@ -177,10 +179,6 @@ impl Killmail {
         let mut security = 0.0;
         if let Some(system) = system {
             security = system.security_status;
-        }
-        let mut attackers_count = 0;
-        if let Some(ref attackers) = attackers {
-            attackers_count = attackers.len();
         }
 
         let dropped_sum = Self::get_dropped_sum(&items);
@@ -209,7 +207,7 @@ impl Killmail {
             );
             reports::table_cell(output, "Killmail Amount/Dropped Amount", text_style, format!("{}<br/>{}", total_span, dropped_span));
             reports::table_cell(output, "Ship Destroyed", text_style, ctx.get_zkb_href("ship", victim.get_id("ship"), victim.get_name("ship")));
-            reports::table_cell(output, "Attackers Count", text_style, attackers_count.separated_string());
+            reports::table_cell(output, "Damage Taken", text_style, victim.damage_taken.separated_string());
             reports::table_cell(output, "Region", text_style,
                 format!("{}<br/>{}<br/>{} {}",
                     ctx.get_api_link("region", killmail.get_name("region")),
@@ -221,7 +219,7 @@ impl Killmail {
                     )
                 )
             );
-            reports::table_cell(output, "Faction/Alliance/Corporation/Character", text_style,
+            reports::table_cell(output, "Victim Faction/Alliance/Corporation/Character", text_style,
                 format!("{}<br/>{}<br/>{}<br/>{}",
                     ctx.get_api_link("faction", victim.get_name("faction")),
                     ctx.get_api_link("alliance", victim.get_name("alliance")),
@@ -229,6 +227,21 @@ impl Killmail {
                     ctx.get_api_link("character", victim.get_name("character"))
                 )
             );
+            if let Some(ref attackers) = attackers {
+                reports::table_cell(output, "Attackers Count", text_style, attackers.len().separated_string());
+                for attacker in attackers {
+                    if attacker.final_blow {
+                        reports::table_cell(output, "Victim Faction/Alliance/Corporation/Character", text_style,
+                            format!("{}<br/>{}<br/>{}<br/>{}",
+                                ctx.get_api_link("faction", attacker.get_name("faction")),
+                                ctx.get_api_link("alliance", attacker.get_name("alliance")),
+                                ctx.get_api_link("corporation", attacker.get_name("corporation")),
+                                ctx.get_api_link("character", attacker.get_name("character"))
+                            )
+                        );
+                    }
+                }
+            }
             reports::table_row_end(output);
         }
     }
