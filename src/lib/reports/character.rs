@@ -14,17 +14,17 @@ impl Character {
         } else {
             String::new()
         };
-        reports::div(output, format!("Name: {}",ctx.get_full_desc("character", *id, name)));
+        reports::div(output, format!("Name: {}",ctx.get_actor_desc("character", *id, name)));
 
         if let Some(character) = api::character::Character::new(&id) {
             let id = character.corporation_id;
             if let Report::Object(obj) = reports::load(Category::Object(id), &ctx) {
-                reports::div(output, format!("Corporation: {}",ctx.get_full_desc("corporation", id, obj.object_name)));
+                reports::div(output, format!("Corporation: {}",ctx.get_actor_desc("corporation", id, obj.object_name)));
             }
             if let Some(alliance_id) = character.alliance_id {
                 let id = alliance_id;
                 if let Report::Object(obj) = reports::load(Category::Object(id), &ctx) {
-                    reports::div(output, format!("Alliance:  {}",ctx.get_full_desc("alliance", id, obj.object_name)));
+                    reports::div(output, format!("Alliance:  {}",ctx.get_actor_desc("alliance", id, obj.object_name)));
                 }
             }
             if let Some(ss) = character.security_status {

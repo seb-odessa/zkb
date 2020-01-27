@@ -185,7 +185,7 @@ impl AppContext {
             name = name.into())
     }
 
-    pub fn get_full_desc<S1: Into<String>, S2: Into<String>>(&self, class: S1, id: i32, name: S2) -> String {
+    pub fn get_actor_desc<S1: Into<String>, S2: Into<String>>(&self, class: S1, id: i32, name: S2) -> String {
         let owned = class.into();
         format!("{} ({}) ({})",
             self.get_api_href(owned.clone(), id, name),
@@ -194,6 +194,13 @@ impl AppContext {
         )
     }
 
+    pub fn get_place_desc<S1: Into<String>, S2: Into<String>>(&self, class: S1, id: i32, name: S2) -> String {
+        let owned = class.into();
+        format!("{} [{}]",
+            self.get_api_href(owned.clone(), id, name),
+            self.get_zkb_href(owned.clone(), id, "zkb"),
+        )
+    }
 }
 
 pub struct Channel<T>{

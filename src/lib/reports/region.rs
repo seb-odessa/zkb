@@ -20,8 +20,8 @@ impl reports::ReportableEx for Region {
             Self::write(&mut output, &region, ctx);
             if report_type == reports::ReportType::Full {
                 Self::neighbors(&mut output, id, ctx);
-                reports::lazy(&mut output, format!("history/region/{}/{}", id, 60), &ctx);
                 reports::constellations(&mut output, &region.region_id, &ctx);
+                reports::lazy(&mut output, format!("history/region/{}/{}", id, 60), &ctx);
             }
         }
         return output;

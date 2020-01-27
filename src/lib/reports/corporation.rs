@@ -20,10 +20,10 @@ impl Corporation {
     pub fn description(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
         if let Some(corporation) = api::corporation::Corporation::new(id) {
-            reports::div(&mut output, format!("Corporation: [{}] {}", corporation.ticker, ctx.get_full_desc("corporation", *id, corporation.name)));
+            reports::div(&mut output, format!("Corporation: [{}] {}", corporation.ticker, ctx.get_actor_desc("corporation", *id, corporation.name)));
             if let Some(ref alliance_id) = corporation.alliance_id {
                 reports::div(&mut output, format!("Alliance:         {}",
-                    ctx.get_full_desc("alliance",
+                    ctx.get_actor_desc("alliance",
                         *alliance_id,
                         api::alliance::Alliance::new(&alliance_id).map(|x| x.name).unwrap_or_default()
                     )
@@ -35,12 +35,12 @@ impl Corporation {
             reports::div(&mut output, format!("URL    :          {}", corporation.url.clone().unwrap_or_default()));
             reports::div(&mut output, format!("Founded:          {}", corporation.date_founded.clone().map(|x| x.format("%Y-%m-%d %H:%M:%S").to_string()).unwrap_or_default()));
             reports::div(&mut output, format!("CEO:              {}",
-                ctx.get_full_desc("character",
+                ctx.get_actor_desc("character",
                     corporation.ceo_id,
                     api::character::Character::new(&corporation.ceo_id).map(|x| x.name).unwrap_or_default())
             ));
             reports::div(&mut output, format!("Creator:          {}",
-                ctx.get_full_desc("character",
+                ctx.get_actor_desc("character",
                     corporation.creator_id,
                     api::character::Character::new(&corporation.creator_id).map(|x| x.name).unwrap_or_default())
             ));

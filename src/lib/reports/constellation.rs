@@ -21,9 +21,9 @@ impl reports::ReportableEx for Constellation {
             if report_type == reports::ReportType::Full {
                 reports::lazy(&mut output, format!("api/region_brief/{}", constellation.region_id), &ctx);
                 Self::neighbors(&mut output, &constellation.constellation_id, &ctx);
-                reports::lazy(&mut output, format!("history/constellation/{}/{}", id, 60), &ctx);
                 reports::systems(&mut output, &constellation.constellation_id, &ctx);
                 reports::constellations(&mut output, &constellation.region_id, &ctx);
+                reports::lazy(&mut output, format!("history/constellation/{}/{}", id, 60), &ctx);
             }
         }
         return output;

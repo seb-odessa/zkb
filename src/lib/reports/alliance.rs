@@ -20,21 +20,21 @@ impl Alliance {
     pub fn description(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
         if let Some(alliance) = api::alliance::Alliance::new(id) {
-            reports::div(&mut output, format!("Alliance: [{}] {}",alliance.ticker, ctx.get_full_desc("alliance", *id, alliance.name)));
+            reports::div(&mut output, format!("Alliance: [{}] {}", alliance.ticker, ctx.get_actor_desc("alliance", *id, alliance.name)));
             reports::div(&mut output, format!("Founded:          {}", alliance.date_founded.format("%Y-%m-%d %H:%M:%S").to_string()));
             reports::div(&mut output, format!("Creator:          {}",
-                ctx.get_full_desc("character",
+                ctx.get_actor_desc("character",
                     alliance.creator_id,
                     api::character::Character::new(&alliance.creator_id).map(|ch| ch.name).unwrap_or_default())
             ));
             reports::div(&mut output, format!("Creator Corp:     {}",
-                ctx.get_full_desc("corporation",
+                ctx.get_actor_desc("corporation",
                     alliance.creator_corporation_id,
                     api::corporation::Corporation::new(&alliance.creator_corporation_id).map(|ch| ch.name).unwrap_or_default())
             ));
             if let Some(executor_id) = alliance.executor_corporation_id {
                 reports::div(&mut output, format!("Executor Corp:    {}",
-                    ctx.get_full_desc("corporation",
+                    ctx.get_actor_desc("corporation",
                         executor_id,
                         api::corporation::Corporation::new(&executor_id).map(|ch| ch.name).unwrap_or_default())
                 ));

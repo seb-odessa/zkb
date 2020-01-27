@@ -110,6 +110,19 @@ fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
         .body(body)
 }
 
+fn route(info: web::Path<(String, String, String)>, ctx: Context) -> HttpResponse {
+    let (route, departure, destination) = info.into_inner();
+
+    let body = "";
+
+
+    HttpResponse::Ok()
+        .content_type("text/html; charset=UTF-8")
+        .header("X-Header", "zkb")
+        .body(body)
+}
+
+
 fn cmd(info: web::Path<String>, ctx: Context) -> String {
     info!("/cmd/{}", info);
 
@@ -201,6 +214,7 @@ pub fn run(context: Context) {
             .route("/navigator/find/{name}", web::get().to(find))
             .route("/navigator/api/{type}/{id}", web::get().to(api))
             .route("/navigator/api/{type}/{id}/{cmd}", web::get().to(hidden))
+            .route("/navigator/api/route/{}/{}/{}", web::get().to(route))
             .route("/navigator/desc/{area}/{id}", web::get().to(desc))
             .route("/navigator/cmd/{cmd}", web::get().to(cmd))
             .route("/navigator/services/{type}/{first}/{second}", web::get().to(services))

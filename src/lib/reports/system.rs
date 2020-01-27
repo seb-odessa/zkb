@@ -23,9 +23,9 @@ impl reports::ReportableEx for System {
                 reports::lazy(&mut output, format!("api/region_brief/{}", system.get_id("region")), &ctx);
                 Self::neighbors(&mut output, &id, &ctx);
                 Self::observatory_report(&mut output, &system, &ctx);
-                reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
                 reports::systems(&mut output, &system.get_id("constellation"), &ctx);
                 reports::constellations(&mut output, &system.get_id("region"), &ctx);
+                reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
                 //reports::map(&mut output, "json/nodes/a", "json/edges/a", &ctx);
             }
         }
@@ -35,13 +35,13 @@ impl reports::ReportableEx for System {
 impl System {
 
     pub fn write(output: &mut dyn Write, system: &models::system::SystemNamed, ctx: &Context) {
-        let content = format!(
-            r#"<span id="{id}" data-name="{name}">System: {api}  [{zkb}] [{map}]</span>"#,
+        let id = system.get_id("system");
+        let name = system.get_name("system");
+        let content = format!(r#"<span id="{id}" data-name="{name}">System: {desc} [{map}]</span>"#,
             id = system.system_id,
-            name = system.get_name("system"),
-            api = ctx.get_api_link("system", system.get_name("system")),
-            zkb = ctx.get_zkb_href("system", system.get_id("system"), "zkb"),
-            map = ctx.get_dotlan_href(system.get_name("region"), system.get_name("system"), "dotlan")
+            name = &name,
+            desc = ctx.get_place_desc("system", id, &name),
+            map = ctx.get_dotlan_href(system.get_name("region"), &name, "dotlan")
         );
         reports::div(output, content);
     }
