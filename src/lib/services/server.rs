@@ -112,9 +112,7 @@ fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
 
 fn route(info: web::Path<(String, String, String)>, ctx: Context) -> HttpResponse {
     let (route, departure, destination) = info.into_inner();
-
-    let body = "";
-
+    let body = reports::System::route_named(route, departure, destination, &ctx);
 
     HttpResponse::Ok()
         .content_type("text/html; charset=UTF-8")

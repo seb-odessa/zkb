@@ -2,7 +2,6 @@ use crate::models;
 use crate::services;
 use crate::services::Context;
 use crate::reports;
-use crate::provider;
 
 use std::fmt::Write;
 
@@ -66,12 +65,11 @@ impl System {
                 if name.is_empty() {
                     ctx.resolver.push(Message::Receive(Api::Object(id)));
                 }
-                reports::div(output, format!("neighbor: [ {} : {} : {} ] {} ({})",
+                reports::div(output, format!("neighbor: [ {} : {} : {} ] {}",
                     reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &10, ctx))),
                     reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &60, ctx))),
                     reports::tip("Kills at last 6 hours", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &360, ctx))),
-                    ctx.get_api_link("system", name),
-                    ctx.get_zkb_href("system", id, "zkb")
+                    ctx.get_place_desc("system", id, name)
                 ));
             }
         }
@@ -86,16 +84,20 @@ impl System {
     }
 
     // todo create api type for route
-    fn get_route(departure: &i32, destination: &i32) -> Option<Vec<i32>> {
+    fn get_route(departure: &i32, destination: &i32, flag: &str) -> Option<Vec<i32>> {
         use crate::api;
-        let uri = format!("route/{}/{}", departure, destination);
+        let uri = if flag.is_empty(){
+            format!("route/{}/{}", departure, destination)
+        } else {
+            format!("route/{}/{}?flag={}", departure, destination, flag)
+        };
         let response = api::gw::eve_api(&uri).unwrap_or_default();
         serde_json::from_str(&response).ok()
     }
 
     pub fn route(departure: i32, destination: i32, ctx: &Context) -> String {
         let mut path = String::new();
-        if let Some(route) = provider::get_route(&departure, &destination, &Self::get_route) {
+        if let Some(route) = Self::get_route(&departure, &destination, "") {
             for id in route.iter().skip(1) {
                 if path.is_empty() {
                     path = Self::get_system_href(&id, ctx);
@@ -105,6 +107,51 @@ impl System {
             }
         }
         return path;
+    }
+
+
+    pub fn route_named(safety: String, departure: String, destination: String, ctx: &Context) -> String {
+        let category = "solar_system";
+        let mut output = String::new();
+        let src = reports::find_id(category, &departure, ctx).unwrap_or(0);
+        if 0 == src {
+            reports::div(&mut output, format!("departure {} was not found in category {}", category, departure));
+        }
+        let dst = reports::find_id(category, &destination, ctx).unwrap_or(0);
+        if 0 == src {
+            reports::div(&mut output, format!("destination {} was not found in category {}", category, destination));
+        }
+        if !vec!["short","safe","unsafe"].contains(&safety.as_ref()) {
+            reports::div(&mut output, format!("unknown flag {} will use 'short'", &safety));
+        }
+        let route = if vec!["insecure","unsafe", "u"].contains(&safety.as_ref()) {
+            Self::get_route(&src, &dst, "insecure")
+        } else if vec!["safe","secure", "s"].contains(&safety.as_ref()) {
+            Self::get_route(&src, &dst, "secure")
+        } else {
+            Self::get_route(&src, &dst, "shortest")
+        };
+        if let Some(ids) = route {
+            for id in &ids {
+                if let Some(system) = System::load(id, ctx) {
+                    use services::{Message, Api};
+                    use reports::history::History;
+
+                    let name = system.get_name("system");
+                    if name.is_empty() {
+                        ctx.resolver.push(Message::Receive(Api::Object(*id)));
+                    }
+                    reports::div(&mut output, format!("system: [ {} : {} : {} ] {}",
+                        reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::system_count(&id, &10, ctx))),
+                        reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::system_count(&id, &60, ctx))),
+                        reports::tip("Kills at last 6 hours", format!("{:0>3}", History::system_count(&id, &360, ctx))),
+                        ctx.get_place_desc("system", *id, name)
+                    ));
+                }
+            }
+        }
+
+        return output;
     }
 
     fn report_observatory_path(output: &mut dyn Write, id: &i32, ctx: &Context) {

@@ -57,12 +57,11 @@ impl Region {
                 if name.is_empty() {
                     ctx.resolver.push(Message::Receive(Api::Object(id)));
                 }
-                reports::div(output, format!("neighbor: [ {} : {} : {} ] {} ({})",
+                reports::div(output, format!("neighbor: [ {} : {} : {} ] {}",
                     reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::region_count(&id, &10, ctx))),
                     reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::region_count(&id, &60, ctx))),
                     reports::tip("Kills at last 6 hours", format!("{:0>3}", History::region_count(&id, &360, ctx))),
-                    ctx.get_api_link("region", name),
-                    ctx.get_zkb_href("region", id, "zkb"),
+                    ctx.get_place_desc("region", id, name)
                 ));
             }
         }
