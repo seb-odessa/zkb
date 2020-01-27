@@ -140,12 +140,14 @@ impl System {
         };
 
         if let Some(ids) = route {
+            let mut jumps = 0;
             let table_style = "border-collapse: collapse;";
             let head_style = "border: 1px solid black; padding: 2px 5px; text-align: center;";
 
             reports::table_start(&mut output, "", table_style, "");
             reports::caption(&mut output, "Route");
             reports::table_row_start(&mut output, head_style);
+            reports::table_cell_head(&mut output, "Jumps offset", head_style, "Jumps");
             reports::table_cell_head(&mut output, "Region Name", head_style, "Region");
             reports::table_cell_head(&mut output, "Constellation Name", head_style, "Constellation");
             reports::table_cell_head(&mut output, "System Name", head_style, "System");
@@ -175,6 +177,7 @@ impl System {
                     }
 
                     reports::table_row_start(&mut output, text_style);
+                    reports::table_cell(&mut output, "Jumps offset", num_style, format!("{}", jumps));
                     reports::table_cell(&mut output, "Region Name", text_style,         ctx.get_api_href("region", system.get_id("region"), system.get_name("region")));
                     reports::table_cell(&mut output, "Constellation Name", text_style,  ctx.get_api_href("constellation", system.get_id("constellation"), system.get_name("constellation")));
                     reports::table_cell(&mut output, "System Name", text_style,         ctx.get_api_href("system", *id, system.get_name("system")));
@@ -184,6 +187,7 @@ impl System {
                     reports::table_cell(&mut output, "6 hours history", num_style,     History::system_count(&id, &360, ctx).separated_string());
                     reports::table_cell(&mut output, "24 hours history", num_style,    History::system_count(&id, &1440, ctx).separated_string());
                     reports::table_row_end(&mut output);
+                    jumps = jumps + 1;
                 }
             }
             reports::table_end(&mut output);
