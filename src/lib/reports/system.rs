@@ -86,12 +86,14 @@ impl System {
     // todo create api type for route
     fn get_route(departure: &i32, destination: &i32, flag: &str) -> Option<Vec<i32>> {
         use crate::api;
-        let uri = if flag.is_empty(){
-            format!("route/{}/{}", departure, destination)
+        let response = if flag.is_empty(){
+            api::gw::eve_api(&format!("route/{}/{}", departure, destination)).unwrap_or_default()
         } else {
-            format!("route/{}/{}?flag={}", departure, destination, flag)
+            api::gw::eve_api_ex(
+                &format!("route/{}/{}", departure, destination),
+                &format!("flag={}", flag)
+            ).unwrap_or_default()
         };
-        let response = api::gw::eve_api(&uri).unwrap_or_default();
         serde_json::from_str(&response).ok()
     }
 
@@ -129,29 +131,52 @@ impl System {
             Self::get_route(&src, &dst, "")
         };
 
-        reports::div(&mut output, format!("departure {} = {}", departure, src));
-        reports::div(&mut output, format!("destination {} = {}", destination, dst));
-
         if let Some(ids) = route {
+            let table_style   = "border-collapse: collapse;";
+            let head_style = "border: 1px solid black; padding: 2px 5px; text-align: center;";
+            let text_style = "border: 1px solid black; padding: 2px 5px;";
+
+            reports::table_start(&mut output, "", table_style, "");
+            reports::caption(&mut output, "Route");
+            reports::table_row_start(&mut output, head_style);
+            reports::table_cell_head(&mut output, "Region Name", head_style, "Region");
+            reports::table_cell_head(&mut output, "Constellation Name", head_style, "Constellation");
+            reports::table_cell_head(&mut output, "System Name", head_style, "System");
+            reports::table_cell_head(&mut output, "System Security Status", head_style, "SSS");
+            reports::table_cell_head(&mut output, "10 minutes history", head_style, "10m");
+            reports::table_cell_head(&mut output, "1 hour history", head_style, "1h");
+            reports::table_cell_head(&mut output, "6 hours history", head_style, "6h");
+            reports::table_cell_head(&mut output, "24 hours history", head_style, "24h");
+            reports::table_row_end(&mut output);
             for id in &ids {
-                reports::div(&mut output, format!("id {}", id));
                 if let Some(system) = System::load(id, ctx) {
                     use services::{Message, Api};
                     use reports::history::History;
+                    use crate::separator::Separatable;
 
-                    let name = system.get_name("system");
-                    if name.is_empty() {
-                        ctx.resolver.push(Message::Receive(Api::Object(*id)));
+                    if system.get_name("system").is_empty() {
+                        ctx.resolver.push(Message::Receive(Api::Object(system.get_id("system"))));
                     }
-                    reports::div(&mut output, format!("system: [ {} : {} : {} : {} ] {}",
-                        reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::system_count(&id, &10, ctx))),
-                        reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::system_count(&id, &60, ctx))),
-                        reports::tip("Kills at last 6 hours", format!("{:0>3}", History::system_count(&id, &360, ctx))),
-                        reports::tip("Kills at last 24 hours", format!("{:0>3}", History::system_count(&id, &1440, ctx))),
-                        ctx.get_place_desc("system", *id, name)
-                    ));
+                    if system.get_name("constellation").is_empty() {
+                        ctx.resolver.push(Message::Receive(Api::Object(system.get_id("constellation"))));
+                    }
+                    if system.get_name("region").is_empty() {
+                        ctx.resolver.push(Message::Receive(Api::Object(system.get_id("region"))));
+                    }
+
+                    reports::table_row_start(&mut output, text_style);
+                    reports::table_cell(&mut output, "Region Name", text_style,         ctx.get_api_href("region", *id, system.get_name("region")));
+                    reports::table_cell(&mut output, "Constellation Name", text_style,  ctx.get_api_href("constellation", *id, system.get_name("constellation")));
+                    reports::table_cell(&mut output, "System Name", text_style,         ctx.get_api_href("system", *id, system.get_name("system")));
+                    reports::table_cell(&mut output, "System Security Status", text_style, system.security_status.separated_string());
+                    reports::table_cell(&mut output, "10 minutes history", text_style,  History::system_count(&id, &10, ctx).separated_string());
+                    reports::table_cell(&mut output, "1 hour history", text_style,      History::system_count(&id, &10, ctx).separated_string());
+                    reports::table_cell(&mut output, "6 hours history", text_style,     History::system_count(&id, &10, ctx).separated_string());
+                    reports::table_cell(&mut output, "24 hours history", text_style,    History::system_count(&id, &10, ctx).separated_string());
+                    reports::table_row_end(&mut output);
                 }
             }
+            reports::table_end(&mut output);
         }
 
         return output;
