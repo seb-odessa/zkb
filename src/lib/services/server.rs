@@ -212,7 +212,7 @@ pub fn run(context: Context) {
             .route("/navigator/find/{name}", web::get().to(find))
             .route("/navigator/api/{type}/{id}", web::get().to(api))
             .route("/navigator/api/{type}/{id}/{cmd}", web::get().to(hidden))
-            .route("/navigator/api/route/{}/{}/{}", web::get().to(route))
+            .route("/navigator/api/route/{safety}/{src}/{dst}", web::get().to(route))
             .route("/navigator/desc/{area}/{id}", web::get().to(desc))
             .route("/navigator/cmd/{cmd}", web::get().to(cmd))
             .route("/navigator/services/{type}/{first}/{second}", web::get().to(services))

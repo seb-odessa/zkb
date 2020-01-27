@@ -126,7 +126,7 @@ impl System {
         }
         let route = if vec!["insecure","unsafe", "u"].contains(&safety.as_ref()) {
             Self::get_route(&src, &dst, "insecure")
-        } else if vec!["safe","secure", "s"].contains(&safety.as_ref()) {
+        } else if vec!["safe", "secure", "s"].contains(&safety.as_ref()) {
             Self::get_route(&src, &dst, "secure")
         } else {
             Self::get_route(&src, &dst, "shortest")
@@ -141,10 +141,11 @@ impl System {
                     if name.is_empty() {
                         ctx.resolver.push(Message::Receive(Api::Object(*id)));
                     }
-                    reports::div(&mut output, format!("system: [ {} : {} : {} ] {}",
+                    reports::div(&mut output, format!("system: [ {} : {} : {} : {} ] {}",
                         reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::system_count(&id, &10, ctx))),
                         reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::system_count(&id, &60, ctx))),
                         reports::tip("Kills at last 6 hours", format!("{:0>3}", History::system_count(&id, &360, ctx))),
+                        reports::tip("Kills at last 24 hours", format!("{:0>3}", History::system_count(&id, &1440, ctx))),
                         ctx.get_place_desc("system", *id, name)
                     ));
                 }
