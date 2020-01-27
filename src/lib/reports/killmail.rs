@@ -208,23 +208,20 @@ impl Killmail {
             reports::table_cell(output, "Killmail Amount/Dropped Amount", text_style, format!("{}<br/>{}", total_span, dropped_span));
             reports::table_cell(output, "Ship Destroyed", text_style, ctx.get_zkb_href("ship", victim.get_id("ship"), victim.get_name("ship")));
             reports::table_cell(output, "Damage Taken", text_style, victim.damage_taken.separated_string());
-            reports::table_cell(output, "Region", text_style,
+            reports::table_cell(output, "", text_style,
                 format!("{}<br/>{}<br/>{} {}",
-                    ctx.get_api_link("region", killmail.get_name("region")),
-                    ctx.get_api_link("constellation", killmail.get_name("constellation")),
-                    ctx.get_api_link("system", killmail.get_name("system")),
-                    reports::span("System Security Status",
-                        format!("color: {};", Self::security_status_color(security)),
-                        format!("({:.2})", security),
-                    )
+                    reports::span("Region", "", ctx.get_api_link("region", killmail.get_name("region"))),
+                    reports::span("Constellation", "", ctx.get_api_link("constellation", killmail.get_name("constellation"))),
+                    reports::span("System", "", ctx.get_api_link("system", killmail.get_name("system"))),
+                    reports::span("System Security Status",format!("color: {};", Self::security_status_color(security)),format!("({:.2})", security))
                 )
             );
             reports::table_cell(output, "Victim Faction/Alliance/Corporation/Character", text_style,
                 format!("{}<br/>{}<br/>{}<br/>{}",
-                    ctx.get_api_link("faction", victim.get_name("faction")),
-                    ctx.get_api_link("alliance", victim.get_name("alliance")),
-                    ctx.get_api_link("corporation", victim.get_name("corporation")),
-                    ctx.get_api_link("character", victim.get_name("character"))
+                    reports::span("Faction", "", ctx.get_api_link("faction", victim.get_name("faction"))),
+                    reports::span("Alliance", "", ctx.get_api_link("alliance", victim.get_name("alliance"))),
+                    reports::span("Corporation", "", ctx.get_api_link("corporation", victim.get_name("corporation"))),
+                    reports::span("Character", "", ctx.get_api_link("character", victim.get_name("character")))
                 )
             );
             if let Some(ref attackers) = attackers {
@@ -233,10 +230,10 @@ impl Killmail {
                     if attacker.final_blow {
                         reports::table_cell(output, "Victim Faction/Alliance/Corporation/Character", text_style,
                             format!("{}<br/>{}<br/>{}<br/>{}",
-                                ctx.get_api_link("faction", attacker.get_name("faction")),
-                                ctx.get_api_link("alliance", attacker.get_name("alliance")),
-                                ctx.get_api_link("corporation", attacker.get_name("corporation")),
-                                ctx.get_api_link("character", attacker.get_name("character"))
+                                reports::span("Faction", "", ctx.get_api_link("faction", attacker.get_name("faction"))),
+                                reports::span("Alliance", "", ctx.get_api_link("alliance", attacker.get_name("alliance"))),
+                                reports::span("Corporation", "", ctx.get_api_link("corporation", attacker.get_name("corporation"))),
+                                reports::span("Character", "", ctx.get_api_link("character", attacker.get_name("character")))
                             )
                         );
                     }
