@@ -121,18 +121,20 @@ impl System {
         if 0 == src {
             reports::div(&mut output, format!("destination {} was not found in category {}", category, destination));
         }
-        if !vec!["short","safe","unsafe"].contains(&safety.as_ref()) {
-            reports::div(&mut output, format!("unknown flag {} will use 'short'", &safety));
-        }
         let route = if vec!["insecure","unsafe", "u"].contains(&safety.as_ref()) {
             Self::get_route(&src, &dst, "insecure")
         } else if vec!["safe", "secure", "s"].contains(&safety.as_ref()) {
             Self::get_route(&src, &dst, "secure")
         } else {
-            Self::get_route(&src, &dst, "shortest")
+            Self::get_route(&src, &dst, "")
         };
+
+        reports::div(&mut output, format!("departure {} = {}", departure, src));
+        reports::div(&mut output, format!("destination {} = {}", destination, dst));
+
         if let Some(ids) = route {
             for id in &ids {
+                reports::div(&mut output, format!("id {}", id));
                 if let Some(system) = System::load(id, ctx) {
                     use services::{Message, Api};
                     use reports::history::History;
