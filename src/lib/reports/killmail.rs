@@ -167,9 +167,7 @@ impl Killmail {
         reports::table_cell_head(output, "System", head_style, "System");
         reports::table_cell_head(output, "Security status", head_style, "SS");
         reports::table_cell_head(output, "Faction Name", head_style, "Faction");
-        reports::table_cell_head(output, "Alliance Name", head_style, "Alliance");
-        reports::table_cell_head(output, "Corporation Name", head_style, "Corporation");
-        reports::table_cell_head(output, "Character Name", head_style, "Character");
+        reports::table_cell_head(output, "Alliance/Corporation/Character", head_style, "Alliance<br/>Corporation<br/>Character");
         reports::table_row_end(output);
     }
 
@@ -227,9 +225,13 @@ impl Killmail {
             reports::table_cell(output, "System", system_style, ctx.get_api_link("system", killmail.get_name("system")));
             reports::table_cell(output, "Security status", text_style, security_status_span);
             reports::table_cell(output, "Faction Name", text_style, ctx.get_api_link("faction", victim.get_name("faction")));
-            reports::table_cell(output, "Alliance Name", text_style, ctx.get_api_link("alliance", victim.get_name("alliance")));
-            reports::table_cell(output, "Corporation Name", text_style, ctx.get_api_link("corporation", victim.get_name("corporation")));
-            reports::table_cell(output, "Character Name", text_style, ctx.get_api_link("character", victim.get_name("character")));
+            reports::table_cell(output, "Alliance/Corporation/Character", text_style,
+                format!("{}<br/>{}<br/>{}",
+                    ctx.get_api_link("alliance", victim.get_name("alliance")),
+                    ctx.get_api_link("corporation", victim.get_name("corporation")),
+                    ctx.get_api_link("character", victim.get_name("character"))
+                )
+            );
             reports::table_row_end(output);
         }
     }
