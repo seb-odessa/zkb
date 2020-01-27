@@ -2,7 +2,7 @@ use crate::models;
 use crate::services;
 use crate::services::Context;
 use crate::reports;
-
+use crate::separator::Separatable;
 use std::fmt::Write;
 
 #[derive(Debug, PartialEq)]
@@ -159,8 +159,11 @@ impl System {
                 if let Some(system) = System::load(id, ctx) {
                     use services::{Message, Api};
                     use reports::history::History;
-                    use crate::separator::Separatable;
-                    let text_style = &format!("border: 1px solid black; padding: 2px 5px; background-color: {};", Self::kills_color(History::system_count(&id, &10, ctx)));
+
+                    let color = Self::kills_color(History::system_count(&id, &10, ctx));
+                    let text_style = &format!("border: 1px solid black; padding: 2px 5px; background-color: {};", color);
+                    let num_style = &format!("border: 1px solid black; padding: 2px 5px; text-align: right;  background-color: {};", color);
+
                     if system.get_name("system").is_empty() {
                         ctx.resolver.push(Message::Receive(Api::Object(system.get_id("system"))));
                     }
@@ -175,11 +178,11 @@ impl System {
                     reports::table_cell(&mut output, "Region Name", text_style,         ctx.get_api_href("region", *id, system.get_name("region")));
                     reports::table_cell(&mut output, "Constellation Name", text_style,  ctx.get_api_href("constellation", *id, system.get_name("constellation")));
                     reports::table_cell(&mut output, "System Name", text_style,         ctx.get_api_href("system", *id, system.get_name("system")));
-                    reports::table_cell(&mut output, "System Security Status", text_style, format!("{:.2}", system.security_status));
-                    reports::table_cell(&mut output, "10 minutes history", text_style,  History::system_count(&id, &10, ctx).separated_string());
-                    reports::table_cell(&mut output, "1 hour history", text_style,      History::system_count(&id, &60, ctx).separated_string());
-                    reports::table_cell(&mut output, "6 hours history", text_style,     History::system_count(&id, &360, ctx).separated_string());
-                    reports::table_cell(&mut output, "24 hours history", text_style,    History::system_count(&id, &1440, ctx).separated_string());
+                    reports::table_cell(&mut output, "System Security Status", num_style, format!("{:.2}", system.security_status));
+                    reports::table_cell(&mut output, "10 minutes history", num_style,  History::system_count(&id, &10, ctx).separated_string());
+                    reports::table_cell(&mut output, "1 hour history", num_style,      History::system_count(&id, &60, ctx).separated_string());
+                    reports::table_cell(&mut output, "6 hours history", num_style,     History::system_count(&id, &360, ctx).separated_string());
+                    reports::table_cell(&mut output, "24 hours history", num_style,    History::system_count(&id, &1440, ctx).separated_string());
                     reports::table_row_end(&mut output);
                 }
             }
