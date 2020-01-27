@@ -156,18 +156,13 @@ impl Killmail {
     pub fn write_head(output: &mut dyn Write) {
         let head_style = "border: 1px solid black; padding: 2px 5px; text-align: center;";
         reports::table_row_start(output, head_style);
-        reports::table_cell_head(output, "Time", head_style, "Time");
-        reports::table_cell_head(output, "Reference to ZKB", head_style, "ZKB");
-        reports::table_cell_head(output, "Killmail Amount", head_style, "Amount");
+        reports::table_cell_head(output, "API/ZKB", head_style, "Time<br/>ZKB");
+        reports::table_cell_head(output, "Total Amount", head_style, "Amount");
         reports::table_cell_head(output, "Dropped Amount", head_style, "Dropped");
         reports::table_cell_head(output, "Ship Destroyed", head_style, "Ship");
         reports::table_cell_head(output, "Attackers Count", head_style, "Attackers");
-        reports::table_cell_head(output, "Region", head_style, "Region");
-        reports::table_cell_head(output, "Constellation", head_style, "Constellation");
-        reports::table_cell_head(output, "System", head_style, "System");
-        reports::table_cell_head(output, "Security status", head_style, "SS");
-        reports::table_cell_head(output, "Faction Name", head_style, "Faction");
-        reports::table_cell_head(output, "Alliance/Corporation/Character", head_style, "Alliance<br/>Corporation<br/>Character");
+        reports::table_cell_head(output, "Region/Constellation/System (SS)", head_style, "Region<br/>Constellation<br/>System");
+        reports::table_cell_head(output, "Faction/Alliance/Corporation/Character", head_style, "Faction<br/>Alliance<br/>Corporation<br/>Character");
         reports::table_row_end(output);
     }
 
@@ -188,11 +183,6 @@ impl Killmail {
         if let Some(ref attackers) = attackers {
             attackers_count = attackers.len();
         }
-        let security_status_span = reports::span(
-            "System Security Status",
-            format!("color: {};", Self::security_status_color(security)),
-            format!("{:.2}", security),
-        );
 
         let dropped_sum = Self::get_dropped_sum(&items);
         let dropped_span = reports::span(
@@ -208,8 +198,6 @@ impl Killmail {
             format!("{}", total_sum.separated_string())
         );
 
-        let system_style = format!("background-color: {};", Self::security_status_color(security));
-
         if let Some(victim) = victim {
             let row_style = format!("background-color: {};", Self::npc_kill_color(&attackers));
             let timestamp = killmail.killmail_time.time().format("%H:%M:%S").to_string();
@@ -220,13 +208,20 @@ impl Killmail {
             reports::table_cell(output, "Dropped Amount", text_style, dropped_span);
             reports::table_cell(output, "Ship Destroyed", text_style, ctx.get_zkb_href("ship", victim.get_id("ship"), victim.get_name("ship")));
             reports::table_cell(output, "Attackers Count", text_style, attackers_count.separated_string());
-            reports::table_cell(output, "Region", text_style, ctx.get_api_link("region", killmail.get_name("region")));
-            reports::table_cell(output, "Constellation", text_style, ctx.get_api_link("constellation", killmail.get_name("constellation")));
-            reports::table_cell(output, "System", system_style, ctx.get_api_link("system", killmail.get_name("system")));
-            reports::table_cell(output, "Security status", text_style, security_status_span);
-            reports::table_cell(output, "Faction Name", text_style, ctx.get_api_link("faction", victim.get_name("faction")));
-            reports::table_cell(output, "Alliance/Corporation/Character", text_style,
-                format!("{}<br/>{}<br/>{}",
+            reports::table_cell(output, "Region", text_style,
+                format!("{}<br/>{}<br/>{} {}",
+                    ctx.get_api_link("region", killmail.get_name("region")),
+                    ctx.get_api_link("constellation", killmail.get_name("constellation")),
+                    ctx.get_api_link("system", killmail.get_name("system")),
+                    reports::span("System Security Status",
+                        format!("color: {};", Self::security_status_color(security)),
+                        format!("({:.2})", security),
+                    )
+                )
+            );
+            reports::table_cell(output, "Faction/Alliance/Corporation/Character", text_style,
+                format!("{}<br/>{}<br/>{}<br/>{}",
+                    ctx.get_api_link("faction", victim.get_name("faction")),
                     ctx.get_api_link("alliance", victim.get_name("alliance")),
                     ctx.get_api_link("corporation", victim.get_name("corporation")),
                     ctx.get_api_link("character", victim.get_name("character"))
