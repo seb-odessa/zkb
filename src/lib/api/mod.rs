@@ -3,6 +3,9 @@ use serde::{Deserialize, Serialize};
 
 pub mod gw;
 pub mod killmail;
+mod item;
+mod victim;
+mod attacker;
 pub mod zkb;
 pub mod system;
 pub mod character;
@@ -16,9 +19,9 @@ pub mod alliance;
 pub mod corporation;
 
 pub use killmail::Killmail;
-pub use killmail::Victim;
-pub use killmail::Attacker;
-pub use killmail::Item;
+pub use victim::Victim;
+pub use attacker::Attacker;
+pub use item::Item;
 pub use object::Object;
 
 pub type BoolRequired = bool;
@@ -35,6 +38,7 @@ pub type StrOptional = Option<String>;
 pub type PositionOptional = Option<Position>;
 pub type IdsRequired = Vec<i32>;
 pub type IdsOptional = Option<Vec<i32>>;
+pub type ItemsOptional = Option<Vec<Item>>;
 
 // https://esi.evetech.net/latest/swagger.json
 

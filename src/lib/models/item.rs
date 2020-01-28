@@ -15,8 +15,8 @@ pub struct Item {
     pub quantity_dropped: OptInteger,
 }
 
-impl From<&api::killmail::Item> for Item{
-    fn from(src: &api::killmail::Item) -> Self {
+impl From<&api::Item> for Item{
+    fn from(src: &api::Item) -> Self {
         Self {
             killmail_id: 0,
             item_type_id: src.item_type_id,

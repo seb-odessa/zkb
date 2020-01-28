@@ -34,7 +34,7 @@ pub enum Model{
     System(api::system::System),
     Stargate(api::stargate::Stargate),
     Constellation(api::constellation::Constellation),
-    Killmail(api::killmail::Killmail),
+    Killmail(api::Killmail),
     Observatory(i32),
 }
 

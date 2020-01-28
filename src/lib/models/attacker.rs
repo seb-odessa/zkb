@@ -18,8 +18,8 @@ pub struct Attacker {
     pub faction_id: OptInteger,
     pub weapon_type_id: OptInteger,
 }
-impl From<&api::killmail::Attacker> for Attacker{
-    fn from(src: &api::killmail::Attacker) -> Self {
+impl From<&api::Attacker> for Attacker{
+    fn from(src: &api::Attacker) -> Self {
         Self {
             killmail_id: 0,
             security_status: src.security_status,
