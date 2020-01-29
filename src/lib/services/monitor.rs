@@ -18,8 +18,6 @@ pub fn run(context: actix_web::web::Data<AppContext>) {
                     killmail.killmail_time.time().to_string(),
                     killmail.killmail_time.date().to_string(),
                     killmail.href(),
-                    // killmail.get_dropped_sum(),
-                    // killmail.get_total_sum(),
                     killmail.get_system_full_name()
                 );
                 if let Some(allowed) = &context.allowed {

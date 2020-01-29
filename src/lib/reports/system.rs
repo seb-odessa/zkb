@@ -120,6 +120,27 @@ impl System {
         .to_string()
     }
 
+    fn get_concord_reaction(system_security_status: f32) -> u32{
+        /*
+        SS = Security status of system.
+    	RT1 = Standard concord response time.
+    	RT2 = Concord response time if concord has been spawned elsewhere in the system.
+    	(SS)  (RT1)  (RT2)
+    	1.00   7.00  13.00
+    	0.90   7.00  13.00
+    	0.80   8.00  14.00
+    	0.70  11.00  17.00
+    	0.60  15.00  21.00
+    	0.50  20.00  26.00
+	    */
+        if system_security_status > 0.9 { 7 }
+        else if system_security_status > 0.8 { 8 }
+        else if system_security_status > 0.7 { 11 }
+        else if system_security_status > 0.6 { 15 }
+        else if system_security_status > 0.5 { 20 }
+        else { 0 }
+    }
+
     pub fn route_named(safety: String, departure: String, destination: String, ctx: &Context) -> String {
         let category = "solar_system";
         let mut output = String::new();
@@ -152,6 +173,7 @@ impl System {
             reports::table_cell_head(&mut output, "Constellation Name", head_style, "Constellation");
             reports::table_cell_head(&mut output, "System Name", head_style, "System");
             reports::table_cell_head(&mut output, "System Security Status", head_style, "SSS");
+            reports::table_cell_head(&mut output, "CONCORD reaction time", head_style, "CRT");
             reports::table_cell_head(&mut output, "10 minutes history", head_style, "10m");
             reports::table_cell_head(&mut output, "1 hour history", head_style, "1h");
             reports::table_cell_head(&mut output, "6 hours history", head_style, "6h");
@@ -182,6 +204,7 @@ impl System {
                     reports::table_cell(&mut output, "Constellation Name", text_style,  ctx.get_api_href("constellation", system.get_id("constellation"), system.get_name("constellation")));
                     reports::table_cell(&mut output, "System Name", text_style,         ctx.get_api_href("system", *id, system.get_name("system")));
                     reports::table_cell(&mut output, "System Security Status", num_style, format!("{:.2}", system.security_status));
+                    reports::table_cell(&mut output, "CONCORD reaction time", num_style, format!("{}", Self::get_concord_reaction(system.security_status)));
                     reports::table_cell(&mut output, "10 minutes history", num_style,  History::system_count(&id, &10, ctx).separated_string());
                     reports::table_cell(&mut output, "1 hour history", num_style,      History::system_count(&id, &60, ctx).separated_string());
                     reports::table_cell(&mut output, "6 hours history", num_style,     History::system_count(&id, &360, ctx).separated_string());

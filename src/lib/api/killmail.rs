@@ -2,8 +2,6 @@ use std::convert::TryFrom;
 
 use serde::{Deserialize, Serialize};
 use crate::api::*;
-use crate::api::system::System;
-use crate::provider;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Killmail {
@@ -26,56 +24,8 @@ impl Killmail {
         format!("https://zkillboard.com/kill/{}/", self.killmail_id)
     }
 
-    pub fn get_system_name(&self) -> String {
-        get_name(&self.solar_system_id)
-    }
-
     pub fn get_system_full_name(&self) -> String {
-        System::new(&self.solar_system_id).map(|s| s.get_full_name()).unwrap_or_default()
-    }
-
-    fn get_sum<P>(id: &IntOptional, quantity: &IntOptional, get_price: &P) -> FloatRequired
-    where P: Fn(&IntOptional)->FloatOptional {
-        let quantity = quantity.unwrap_or(0);
-        let price = get_price(id).unwrap_or(0.0);
-        return quantity as f32 * price;
-    }
-
-    fn items_sum<Q, P>(items: &ItemsOptional, get_quantity: &Q, get_price: &P) -> FloatRequired
-    where
-        Q: Fn(&Item)->IntOptional,
-        P: Fn(&IntOptional)->FloatOptional
-        {
-            items.as_ref().map_or(0.0, |items|{
-                items.iter().map(|item| {
-                    Killmail::get_sum(&Some(item.item_type_id), &get_quantity(item), get_price)
-                    +
-                    Killmail::items_sum(&item.items, get_quantity, get_price)
-            }).fold(0.0, |acc, x| acc + x)
-        })
-    }
-
-    pub fn get_dropped_sum(&self) -> u64 {
-        Killmail::items_sum(
-            &self.victim.items,
-            &|item: &Item| {item.quantity_dropped},
-            &provider::get_avg_price) as u64
-    }
-
-    pub fn get_destroyed_sum(&self) -> u64 {
-        (
-            Killmail::items_sum(
-                &self.victim.items,
-                &|item: &Item| {item.quantity_destroyed},
-                &provider::get_avg_price)
-            +
-            Killmail::get_sum(&Some(self.victim.ship_type_id), &Some(1), &provider::get_avg_price)
-        )
-        as u64
-    }
-
-    pub fn get_total_sum(&self) -> u64 {
-        self.get_destroyed_sum() + self.get_dropped_sum()
+        system::System::new(&self.solar_system_id).map(|s| s.get_full_name()).unwrap_or_default()
     }
 }
 
