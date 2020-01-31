@@ -52,6 +52,7 @@ pub fn eve_api(cmd: &str) -> Option<String> {
 
 pub fn eve_api_ex(cmd: &str, flag: &str) -> Option<String> {
     let url = format!("{}/{}/{}&{}", EVE_API, cmd, EVE_SRV, flag);
+    println!("{}", url);
     if let Some(response) = get(&url).ok() {
         String::from_utf8(response).ok()
     } else {
