@@ -18,7 +18,8 @@ impl OrdersHolder {
             src_system_id: src_system_id,
             dst_system_id: dst_system_id,
             src_system_orders: Order::load_for_system(&src_system_id, OrderType::SELL, None),
-            dst_system_orders: Order::load_for_system(&dst_system_id, OrderType::BUY, None)
+            dst_system_orders: Vec::new()
+            //Order::load_for_system(&dst_system_id, OrderType::BUY, None)
         }
     }
 
@@ -59,11 +60,11 @@ fn main() {
     let orders = OrdersHolder::new(30000142, 30002187);
 
     for order in &orders.get_best_sells() {
-        println!("{} {} {} {} {:>6} {:>6} {:>2} {}",
+        println!("{:>9} {:>9} {:>6} {} {:>6} {:>6} {:>2} {}",
             order.system_id,
             order.location_id,
             order.type_id,
-             if order.is_buy_order {"B"} else {"S"},
+            if order.is_buy_order {"B"} else {"S"},
             order.volume_remain,
             order.volume_total,
             order.min_volume,

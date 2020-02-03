@@ -11,6 +11,7 @@ use std::convert::TryFrom;
 
 pub const EVE_API: &str = "https://esi.evetech.net/latest";
 pub const EVE_SRV: &str = "?datasource=tranquility";
+pub const ZKB_API: &str = "https://zkillboard.com/api";
 
 fn get(url: &str) -> Result<Vec<u8>, Error> {
     let mut easy = Easy::new();
@@ -71,8 +72,18 @@ pub fn eve_api_post(cmd: &str, request: &str) -> Option<String> {
     }
 }
 
+pub fn get_stats(entity: &str, id: &i32)-> String {
+    let url = format!("{}/stats/{}/{}/", ZKB_API, entity, id);
+    println!("{}", url);
+    if let Some(response) = get(&url).ok() {
+        String::from_utf8_lossy(&response).to_string()
+    } else {
+        String::new()
+    }
+}
+
 pub fn get_history(year: i32, month: u32, day: u32) -> String {
-    let url = format!("https://zkillboard.com/api/history/{}{:02}{:02}.json", year, month, day);
+    let url = format!("{}/history/{}{:02}{:02}.json", ZKB_API, year, month, day);
     if let Some(response) = get(&url).ok() {
         String::from_utf8_lossy(&response).to_string()
     } else {

@@ -51,6 +51,9 @@ impl Order {
                 result.append(&mut records);
                 page = page + 1;
             }
+            if count > 500 {
+                break;
+            }
             if count == 0 || count < API_MAX_ITEMS { // all records received
                 break;
             }

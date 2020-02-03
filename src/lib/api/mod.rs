@@ -18,6 +18,9 @@ pub mod stargate;
 pub mod names;
 pub mod alliance;
 pub mod corporation;
+pub mod group;
+pub mod stats;
+
 
 pub use killmail::Killmail;
 pub use victim::Victim;
