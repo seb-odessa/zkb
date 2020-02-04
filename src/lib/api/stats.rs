@@ -16,9 +16,9 @@ pub enum Entity {
 
 pub type Groups = HashMap<IntRequired, GroupStat>;
 pub type Months = HashMap<IntRequired, MonthStat>;
+pub type HourKills = HashMap<IntRequired, IntRequired>;
 
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct Stats {
     pub id: IntRequired,
@@ -38,83 +38,30 @@ pub struct Stats {
     #[serde(alias = "groups")]          pub groups: Groups,
     #[serde(alias = "months")]          pub months: Months,
     #[serde(alias = "topAllTime")]      pub tops: Vec<TopRecords>,
-    #[serde(alias = "topIskKills")]     pub top_isk_kills: Option<HashMap<u32, IntRequired>>,
+    #[serde(alias = "topIskKills")]     pub top_isk_kills: Option<Vec<IntRequired>>,
 
     #[serde(alias = "allTimeSum")]      pub all_time_sum: IntRequired,
     #[serde(alias = "nextTopRecalc")]   pub next_top_recalculate: IntRequired,
     #[serde(alias = "sequence")]        pub sequence: IntOptional,
     #[serde(alias = "trophies")]        pub trophies: Trophies,
-    #[serde(alias = "activepvp")]       pub active_pvp: Kills,
+    #[serde(alias = "activepvp")]       pub active_pvp: ActivePvp,
     #[serde(alias = "info")]            pub info: Info,
     #[serde(alias = "topIskKillIDs")]   pub top_isk_kill_ids: Vec<IntRequired>,
-
-/*
-    "topLists":[
-        {
-            "type":"character",
-            "title":"Top Characters",
-            "values":[{"kills":2,"characterID":2114350216,"characterName":"Seb Odessa","id":2114350216,"typeID":null,"name":"Seb Odessa"}]
-        },
-        {
-            "type":"corporation",
-            "title":"Top Corporations",
-            "values":[{"kills":2,"corporationID":98095669,"corporationName":"Techno Hive","cticker":"TE-HI","id":98095669,"typeID":null,"name":"Techno Hive"}]
-        },
-        {
-            "type":"alliance",
-            "title":"Top Alliances",
-            "values":[{"kills":2,"allianceID":99009168,"allianceName":"Valkyrie Alliance","aticker":"VLK","id":99009168,"typeID":null,"name":"Valkyrie Alliance"}]
-        },
-        {
-            "type":"shipType",
-            "title":"Top Ships",
-            "values":[{"kills":2,"shipTypeID":34828,"shipName":"Jackdaw","groupID":1305,"groupName":"Tactical Destroyer","id":34828,"typeID":null,"name":"Jackdaw"}]
-        },
-        {
-            "type":"solarSystem",
-            "title":"Top Systems",
-            "values":[{"kills":2,"solarSystemID":30000776,"solarSystemName":"4M-QXK","sunTypeID":3802,"solarSystemSecurity":"-0.1","systemColorCode":"#F30202","regionID":10000009,"regionName":"Insmother","constellationID":20000113,"constellationName":"QA-P7J","id":30000776,"typeID":null,"name":"4M-QXK"}]
-        },
-        {
-            "type":"location",
-            "title":"Top Locations",
-            "values":[{"kills":2,"locationID":40048967,"itemName":null,"locationName":"4M-QXK VI - Moon 10","typeID":null,"id":40048967,"name":"4M-QXK VI - Moon 10"}]
-        }
-    ],
-
-
-    "topIskKillIDs":[81383507,81383490],
-    "activity":{
-        "max":10,
-        "0":{"8":1,"9":1,"10":4,"12":2,"13":5,"15":1,"16":4,"19":8,"20":1},
-        "1":{"18":6,"19":7,"20":1,"22":1},"2":{"16":1,"18":5,"19":9,"20":7},
-        "3":{"17":3,"18":5,"19":2,"20":2,"21":1},
-        "4":{"17":3,"18":4,"19":8,"20":5,"21":6},
-        "5":{"19":2,"20":5},
-        "6":{"13":3,"15":3,"16":5,"17":3,"18":2,"19":10,"20":9},
-        "days":["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]}}
-
-*/
-/*
-    #[serde(skip, default, alias = "topLists")]
-    pub top_lists: String,
-    #[serde(skip, default, alias = "topIskKillIDs")]
-    pub top_isk_kill_ids: String,
-    #[serde(skip, default, alias = "activity")]
-    pub activity: String,
-*/
-    #[serde(alias = "hasSupers")]
-    pub has_supers: BoolOptional,
+    #[serde(alias = "topLists")]        pub topLists: Vec<TopList>,
+    #[serde(alias = "activity")]        pub activity: Activity,
+    #[serde(alias = "hasSupers")]       pub has_supers: BoolOptional,
 /*
     #[serde(skip, default, alias = "supers")]
     pub supers: String,
 */
 
 }
+
+
 impl Stats {
     fn load(entity: &str, id: &i32) -> Option<Self> {
         let json = gw::get_stats(entity, id);
-        Some(serde_json::from_str(&json).expect(""))
+        serde_json::from_str(&json).ok()
     }
 
     pub fn new(entity: Entity) -> Option<Self> {
@@ -179,40 +126,159 @@ pub struct TopStat {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct TopRecords {
-    #[serde(alias = "type")] record_type: String,
+    #[serde(alias = "type")] desc: StrRequired,
     #[serde(alias = "data")] payload: Vec<TopStat>
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[serde(rename = "trophies")]
 pub struct Trophies	{
     pub levels: IntRequired,
     pub max: IntRequired,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
-pub struct Kills {
-    #[serde(alias = "type")] pub record_type: String,
-    #[serde(alias = "type")] pub count: i32,
+pub struct ActivePvp {
+    pub kills: ActivePvpKills,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
-pub struct Info {
-    #[serde(alias = "allianceID")]      pub alliance_id: IntOptional,
-    #[serde(alias = "corporationID")]   pub corporation_id: IntOptional,
-    #[serde(alias = "factionID")]       pub faction_id: IntOptional,
-    #[serde(alias = "id")]              pub character_id: IntOptional,
-    #[serde(alias = "lastApiUpdate")]   pub api_update: TimeOffset,
-    #[serde(alias = "name")]            pub name: String,
-    #[serde(alias = "secStatus")]       pub sec_status: FloatOptional,
-    #[serde(alias = "type")]            pub record_type: String,
+#[serde(rename = "kills")]
+pub struct ActivePvpKills {
+    #[serde(alias = "type")] pub desc: StrRequired,
+    pub count: IntRequired,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
-pub struct TimeOffset {
+pub struct LastApiUpdate {
     pub sec: LongRequired,
     pub usec: LongRequired,
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(untagged)]
+pub enum Info {
+    CharacterInfo {
+        #[serde(alias = "allianceID")]      alliance_id: IntRequired,
+        #[serde(alias = "corporationID")]   corporation_id: IntRequired,
+        #[serde(alias = "factionID")]       faction_id: IntRequired,
+        #[serde(alias = "id")]              character_id: IntRequired,
+        #[serde(alias = "lastApiUpdate")]   last_update: LastApiUpdate,
+        #[serde(alias = "name")]            name: StrRequired,
+        #[serde(alias = "secStatus")]       sec_status: FloatRequired,
+        #[serde(alias = "type")]            desc: StrRequired,
+    },
+
+    CorporationInfo {
+        #[serde(alias = "allianceID")]      alliance_id: IntRequired,
+        #[serde(alias = "ceoID")]           ceo_id: IntRequired,
+        #[serde(alias = "factionID")]       faction_id: IntRequired,
+        #[serde(alias = "id")]              corporation_id: IntRequired,
+        #[serde(alias = "lastApiUpdate")]   last_update: LastApiUpdate,
+        #[serde(alias = "name")]            name: StrRequired,
+        #[serde(alias = "ticker")]          ticker: StrRequired,
+        #[serde(alias = "type")]            desc: StrRequired,
+    },
+}
+
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct TopList {
+    #[serde(alias = "type")]            desc: StrRequired,
+    #[serde(alias = "title")]           title: StrRequired,
+    #[serde(alias = "values")]          values: Vec<TopValue>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(untagged)]
+pub enum TopValue {
+    CharacterTop {
+        #[serde(alias = "kills")]           kills: IntRequired,
+        #[serde(alias = "characterID")]     character_id: IntRequired,
+        #[serde(alias = "characterName")]   character_name: StrRequired,
+        #[serde(alias = "id")]              id: IntRequired,
+        #[serde(alias = "typeID")]          type_id: IntOptional,
+        #[serde(alias = "name")]            name: StrRequired,
+    },
+    CorporationTop {
+        #[serde(alias = "kills")]           kills: IntRequired,
+        #[serde(alias = "corporationID")]   corporation_id: IntRequired,
+        #[serde(alias = "corporationName")] corporation_name: StrRequired,
+        #[serde(alias = "cticker")]         corporation_ticker: StrRequired,
+        #[serde(alias = "id")]              id: IntRequired,
+        #[serde(alias = "typeID")]          type_id: IntOptional,
+        #[serde(alias = "name")]            name: StrRequired,
+    },
+    AllianceTop {
+        #[serde(alias = "kills")]           kills: IntRequired,
+        #[serde(alias = "allianceID")]      alliance_id: IntRequired,
+        #[serde(alias = "allianceName")]    alliance_name: StrRequired,
+        #[serde(alias = "aticker")]         alliance_ticker: StrRequired,
+        #[serde(alias = "id")]              id: IntRequired,
+        #[serde(alias = "typeID")]          type_id: IntOptional,
+        #[serde(alias = "name")]            name: StrRequired,
+    },
+    ShipTop {
+        #[serde(alias = "kills")]           kills: IntRequired,
+        #[serde(alias = "shipTypeID")]      ship_id: IntRequired,
+        #[serde(alias = "shipName")]        ship_name: StrRequired,
+        #[serde(alias = "groupID")]         group_id: IntRequired,
+        #[serde(alias = "groupName")]       group_name: StrRequired,
+        #[serde(alias = "id")]              id: IntRequired,
+        #[serde(alias = "typeID")]          type_id: IntOptional,
+        #[serde(alias = "name")]            name: StrRequired,
+    },
+    SystemTop {
+        #[serde(alias = "kills")]               kills: IntRequired,
+        #[serde(alias = "solarSystemID")]       system_id: IntRequired,
+        #[serde(alias = "solarSystemName")]     system_name: StrRequired,
+        #[serde(alias = "sunTypeID")]           group_id: IntRequired,
+        #[serde(alias = "solarSystemSecurity")] system_security: StrRequired,
+        #[serde(alias = "systemColorCode")]     system_color: StrRequired,
+        #[serde(alias = "regionID")]            region_id: IntRequired,
+        #[serde(alias = "regionName")]          region_name: StrRequired,
+        #[serde(alias = "constellationID")]     constellation_id: IntRequired,
+        #[serde(alias = "constellationName")]   constellation_name: StrRequired,
+        #[serde(alias = "id")]                  id: IntRequired,
+        #[serde(alias = "typeID")]              type_id: IntOptional,
+        #[serde(alias = "name")]                name: StrRequired,
+    },
+    LocationTop {
+        #[serde(alias = "kills")]           kills: IntRequired,
+        #[serde(alias = "locationID")]      location_id: IntRequired,
+        #[serde(alias = "locationName")]    location_name: StrRequired,
+        #[serde(alias = "itemName")]        item_name: StrOptional,
+        #[serde(alias = "id")]              id: IntRequired,
+        #[serde(alias = "typeID")]          type_id: IntOptional,
+        #[serde(alias = "name")]            name: StrRequired,
+    },
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct Activity {
+    pub max: IntRequired,
+    #[serde(alias = "0")]   pub sun: HourKills,
+    #[serde(alias = "1")]   pub mon: HourKills,
+    #[serde(alias = "2")]   pub tue: HourKills,
+    #[serde(alias = "3")]   pub wed: HourKills,
+    #[serde(alias = "4")]   pub thu: HourKills,
+    #[serde(alias = "5")]   pub fri: HourKills,
+    #[serde(alias = "6")]   pub sat: HourKills,
+    pub days: Vec<StrRequired>,
+}
+
+/*
+    "activity":{
+        "max":10,
+        "0":{"8":1,"9":1,"10":4,"12":2,"13":5,"15":1,"16":4,"19":8,"20":1},
+        "1":{"18":6,"19":7,"20":1,"22":1},"2":{"16":1,"18":5,"19":9,"20":7},
+        "3":{"17":3,"18":5,"19":2,"20":2,"21":1},
+        "4":{"17":3,"18":4,"19":8,"20":5,"21":6},
+        "5":{"19":2,"20":5},
+        "6":{"13":3,"15":3,"16":5,"17":3,"18":2,"19":10,"20":9},
+        "days":["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]}}
+
+*/
 
 #[cfg(test)]
 mod tests {
@@ -220,10 +286,77 @@ mod tests {
     use serde_json::json;
 
     #[test]
+    #[allow(unused_variables)]
+    fn info() {
+        #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+        struct Holder {
+            #[serde(alias = "info")] info: Info
+        }
+        { // character
+            let rec = json!({
+                "info":{
+                    "allianceID":99009168,
+                    "corporationID":98095669,
+                    "factionID":0,
+                    "id":2114350216,
+                    "lastApiUpdate":{"sec":1579812891,"usec":0},
+                    "name":"Seb Odessa",
+                    "secStatus":5.0053732177373,
+                    "type":"characterID"
+                }
+            });
+            let json = serde_json::to_string(&rec);
+            assert!(json.is_ok());
+            let val: Result<Holder, serde_json::Error> = serde_json::from_str(&json.unwrap());
+            assert!(val.is_ok());
+            let item = val.unwrap();
+            match item.info {
+                Info::CharacterInfo{ alliance_id, corporation_id, faction_id, character_id, last_update, name, .. } => {
+                    assert_eq!(99009168,        alliance_id);
+                    assert_eq!(98095669,        corporation_id);
+                    assert_eq!(2114350216,      character_id);
+                    assert_eq!("Seb Odessa",   &name);
+                },
+                _ => assert!(false)
+            }
+        }
+        { // corporation
+            let rec = json!({
+                "info":{
+                    "allianceID":99009168,
+                    "ceoID":1383227978,
+                    "factionID":0,
+                    "id":98095669,
+                    "lastApiUpdate":{"sec":1580685054,"usec":0},
+                    "memberCount":63,
+                    "name":"Techno Hive",
+                    "ticker":"TE-HI",
+                    "type":"corporationID"
+                },
+            });
+            let json = serde_json::to_string(&rec);
+            assert!(json.is_ok());
+            let val: Result<Holder, serde_json::Error> = serde_json::from_str(&json.unwrap());
+            assert!(val.is_ok());
+            let item = val.unwrap();
+            match item.info {
+                Info::CorporationInfo{ alliance_id, ceo_id, faction_id, corporation_id, last_update, name, .. } => {
+                    assert_eq!(99009168,        alliance_id);
+                    assert_eq!(98095669,        corporation_id);
+                    assert_eq!(1383227978,      ceo_id);
+                    assert_eq!("Techno Hive",  &name);
+                },
+               _ => assert!(false)
+            }
+        }
+
+    }
+
+    #[test]
     fn tops() {
         #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
         struct Holder {
-            #[serde(alias = "topAllTime")] tops: Vec<TopRecords>
+            #[serde(alias = "topAllTime")] inner: Vec<TopRecords>
         }
 
         let rec = json!({
@@ -241,7 +374,7 @@ mod tests {
         let val: Result<Holder, serde_json::Error> = serde_json::from_str(&json.unwrap());
         assert!(val.is_ok());
         let holder = val.unwrap();
-        assert!(!holder.tops.is_empty());
+        assert!(!holder.inner.is_empty());
 
     }
 
@@ -249,11 +382,11 @@ mod tests {
     fn months() {
         #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
         struct Holder {
-            months: Months
+            inner: Months
         }
 
         let rec = json!({
-            "months":{
+            "inner":{
                 "201810":{"year":2018,"month":10,"shipsLost":1,"pointsLost":1,"iskLost":59516640},
                 "201811":{"year":2018,"month":11,"shipsLost":4,"pointsLost":9,"iskLost":1117539099},
                 "201901":{"year":2019,"month":1,"shipsDestroyed":7,"pointsDestroyed":7,"iskDestroyed":305712147,"shipsLost":2,"pointsLost":9,"iskLost":605249501},
@@ -266,7 +399,7 @@ mod tests {
         let val: Result<Holder, serde_json::Error> = serde_json::from_str(&json.unwrap());
         assert!(val.is_ok());
         let holder = val.unwrap();
-        let maybe_item = holder.months.get(&201810);
+        let maybe_item = holder.inner.get(&201810);
         assert!(maybe_item.is_some());
         let item = maybe_item.unwrap();
         assert_eq!(2018, item.year);
@@ -277,11 +410,11 @@ mod tests {
     fn groups() {
         #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
         struct Holder {
-            groups: Groups
+            inner: Groups
         }
 
         let rec = json!({
-            "groups":{
+            "inner":{
                 "25":{
                     "groupID":25,
                     "shipsLost":10,
@@ -303,10 +436,27 @@ mod tests {
         let val: Result<Holder, serde_json::Error> = serde_json::from_str(&json.unwrap());
         assert!(val.is_ok());
         let holder = val.unwrap();
-        let maybe_item = holder.groups.get(&25);
+        let maybe_item = holder.inner.get(&25);
         assert!(maybe_item.is_some());
         let item = maybe_item.unwrap();
         assert_eq!(25, item.group_id);
+    }
+
+    #[test]
+    fn active_pvp() {
+        #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+        struct Holder {
+            inner: ActivePvp
+        }
+        let rec = json!({"inner":{"kills":{"type":"Total Kills","count":2}}});
+        let json = serde_json::to_string(&rec);
+        assert!(json.is_ok());
+        let val: Result<Holder, serde_json::Error> = serde_json::from_str(&json.unwrap());
+        assert!(val.is_ok());
+        let holder = val.unwrap();
+        let item: ActivePvp = holder.inner;
+        assert_eq!("Total Kills", &item.kills.desc);
+        assert_eq!(2, item.kills.count);
     }
 
 
