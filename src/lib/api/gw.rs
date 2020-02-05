@@ -44,20 +44,17 @@ fn post(url: &str, request: &str) -> Result<Vec<u8>, Error> {
 
 pub fn eve_api(cmd: &str) -> Option<String> {
     let url = format!("{}/{}/{}", EVE_API, cmd, EVE_SRV);
-    if let Some(response) = get(&url).ok() {
-        String::from_utf8(response).ok()
-    } else {
-        None
+    match get(&url) {
+        Ok(response) => String::from_utf8(response).ok(),
+        Err(err) => { warn!("{}", err); None }
     }
 }
 
 pub fn eve_api_ex(cmd: &str, flag: &str) -> Option<String> {
     let url = format!("{}/{}/{}&{}", EVE_API, cmd, EVE_SRV, flag);
-    println!("{}", url);
-    if let Some(response) = get(&url).ok() {
-        String::from_utf8(response).ok()
-    } else {
-        None
+    match get(&url) {
+        Ok(response) => String::from_utf8(response).ok(),
+        Err(err) => { warn!("{}", err); None }
     }
 }
 
@@ -75,10 +72,9 @@ pub fn eve_api_post(cmd: &str, request: &str) -> Option<String> {
 pub fn get_stats(entity: &str, id: &i32)-> String {
     let url = format!("{}/stats/{}/{}/", ZKB_API, entity, id);
     println!("{}", url);
-    if let Some(response) = get(&url).ok() {
-        String::from_utf8_lossy(&response).to_string()
-    } else {
-        String::new()
+    match get(&url) {
+        Ok(response) => String::from_utf8_lossy(&response).to_string(),
+        Err(err) => { warn!("{}", err); String::new() }
     }
 }
 

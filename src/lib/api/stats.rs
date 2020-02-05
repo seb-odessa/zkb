@@ -16,14 +16,13 @@ pub enum Entity {
 
 pub type Groups = HashMap<IntRequired, GroupStat>;
 pub type Months = HashMap<IntRequired, MonthStat>;
-pub type HourKills = HashMap<IntRequired, IntRequired>;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-#[serde(deny_unknown_fields)]
+//#[serde(deny_unknown_fields)]
 pub struct Stats {
     pub id: IntRequired,
 
-    #[serde(alias = "type")]            pub entity: String,
+    #[serde(alias = "type")]            pub record_type: String,
     #[serde(alias = "dangerRatio")]     pub danger_ratio: IntRequired,
     #[serde(alias = "gangRatio")]       pub gang_ratio: IntRequired,
     #[serde(alias = "shipsDestroyed")]  pub ship_destroyed: IntOptional,
@@ -43,25 +42,23 @@ pub struct Stats {
     #[serde(alias = "allTimeSum")]      pub all_time_sum: IntRequired,
     #[serde(alias = "nextTopRecalc")]   pub next_top_recalculate: IntRequired,
     #[serde(alias = "sequence")]        pub sequence: IntOptional,
-    #[serde(alias = "trophies")]        pub trophies: Trophies,
+    #[serde(alias = "trophies")]        pub trophies: Option<Trophies>,
     #[serde(alias = "activepvp")]       pub active_pvp: ActivePvp,
     #[serde(alias = "info")]            pub info: Info,
     #[serde(alias = "topIskKillIDs")]   pub top_isk_kill_ids: Vec<IntRequired>,
-    #[serde(alias = "topLists")]        pub topLists: Vec<TopList>,
+    #[serde(alias = "topLists")]        pub top_lists: Vec<TopList>,
     #[serde(alias = "activity")]        pub activity: Activity,
     #[serde(alias = "hasSupers")]       pub has_supers: BoolOptional,
-/*
-    #[serde(skip, default, alias = "supers")]
-    pub supers: String,
-*/
-
+    #[serde(skip)]          pub supers: Option<SuperValues>, //alias = "supers"
 }
-
 
 impl Stats {
     fn load(entity: &str, id: &i32) -> Option<Self> {
         let json = gw::get_stats(entity, id);
-        serde_json::from_str(&json).ok()
+        match serde_json::from_str(&json) {
+            Ok(object) => Some(object),
+            Err(err) => {println!("{}", err); None}
+        }
     }
 
     pub fn new(entity: Entity) -> Option<Self> {
@@ -126,7 +123,7 @@ pub struct TopStat {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct TopRecords {
-    #[serde(alias = "type")] desc: StrRequired,
+    #[serde(alias = "type")] record_type: StrRequired,
     #[serde(alias = "data")] payload: Vec<TopStat>
 }
 
@@ -145,7 +142,7 @@ pub struct ActivePvp {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 #[serde(rename = "kills")]
 pub struct ActivePvpKills {
-    #[serde(alias = "type")] pub desc: StrRequired,
+    #[serde(alias = "type")] pub record_type: StrRequired,
     pub count: IntRequired,
 }
 
@@ -166,7 +163,7 @@ pub enum Info {
         #[serde(alias = "lastApiUpdate")]   last_update: LastApiUpdate,
         #[serde(alias = "name")]            name: StrRequired,
         #[serde(alias = "secStatus")]       sec_status: FloatRequired,
-        #[serde(alias = "type")]            desc: StrRequired,
+        #[serde(alias = "type")]            record_type: StrRequired,
     },
 
     CorporationInfo {
@@ -177,14 +174,25 @@ pub enum Info {
         #[serde(alias = "lastApiUpdate")]   last_update: LastApiUpdate,
         #[serde(alias = "name")]            name: StrRequired,
         #[serde(alias = "ticker")]          ticker: StrRequired,
-        #[serde(alias = "type")]            desc: StrRequired,
+        #[serde(alias = "type")]            record_type: StrRequired,
+    },
+
+    AllianceInfo {
+        #[serde(alias = "executorCorpID")]  exec_corp_id: IntRequired,
+        #[serde(alias = "factionID")]       faction_id: IntRequired,
+        #[serde(alias = "id")]              alliance_id: IntRequired,
+        #[serde(alias = "lastApiUpdate")]   last_update: LastApiUpdate,
+        #[serde(alias = "memberCount")]     member_count: IntRequired,
+        #[serde(alias = "corpCount")]       corp_count: IntRequired,
+        #[serde(alias = "name")]            name: StrRequired,
+        #[serde(alias = "ticker")]          ticker: StrRequired,
+        #[serde(alias = "type")]            record_type: StrRequired,
     },
 }
 
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct TopList {
-    #[serde(alias = "type")]            desc: StrRequired,
+    #[serde(alias = "type")]            record_type: StrRequired,
     #[serde(alias = "title")]           title: StrRequired,
     #[serde(alias = "values")]          values: Vec<TopValue>,
 }
@@ -255,6 +263,13 @@ pub enum TopValue {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(untagged)]
+pub enum HourKills {
+    AsMap(HashMap<StrRequired, IntRequired>),
+    AsVec(Vec<IntRequired>),
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Activity {
     pub max: IntRequired,
     #[serde(alias = "0")]   pub sun: HourKills,
@@ -267,18 +282,26 @@ pub struct Activity {
     pub days: Vec<StrRequired>,
 }
 
-/*
-    "activity":{
-        "max":10,
-        "0":{"8":1,"9":1,"10":4,"12":2,"13":5,"15":1,"16":4,"19":8,"20":1},
-        "1":{"18":6,"19":7,"20":1,"22":1},"2":{"16":1,"18":5,"19":9,"20":7},
-        "3":{"17":3,"18":5,"19":2,"20":2,"21":1},
-        "4":{"17":3,"18":4,"19":8,"20":5,"21":6},
-        "5":{"19":2,"20":5},
-        "6":{"13":3,"15":3,"16":5,"17":3,"18":2,"19":10,"20":9},
-        "days":["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]}}
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(untagged)]
+pub enum SuperValues {
+    Empty(Vec<String>),
+    Exists(HashMap<String, Super>)
+}
 
-*/
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct Super {
+    data: Vec<SuperStat>,
+    title: StrRequired,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct SuperStat {
+    kills: IntRequired,
+    #[serde(alias = "characterID")]     character_id: IntRequired,
+    #[serde(alias = "characterName")]   character_name: StrRequired,
+}
 
 #[cfg(test)]
 mod tests {
@@ -455,7 +478,7 @@ mod tests {
         assert!(val.is_ok());
         let holder = val.unwrap();
         let item: ActivePvp = holder.inner;
-        assert_eq!("Total Kills", &item.kills.desc);
+        assert_eq!("Total Kills", &item.kills.record_type);
         assert_eq!(2, item.kills.count);
     }
 
@@ -466,5 +489,26 @@ mod tests {
         assert!(response.is_some());
         let object = response.unwrap();
         assert_eq!(object.id, 2114350216);
+        assert_eq!(&object.record_type, "characterID");
+
     }
+
+    #[test]
+    fn from_api_for_corporation() {
+        let response = Stats::new(Entity::Corporation(98095669));
+        assert!(response.is_some());
+        let object = response.unwrap();
+        assert_eq!(object.id, 98095669);
+        assert_eq!(&object.record_type, "corporationID");
+    }
+
+    #[test]
+    fn from_api_for_alliance() {
+        let response = Stats::new(Entity::Alliance(1354830081));
+        assert!(response.is_some());
+        let object = response.unwrap();
+        assert_eq!(object.id, 1354830081);
+        assert_eq!(&object.record_type, "allianceID");
+    }
+
 }
