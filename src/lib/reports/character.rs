@@ -50,7 +50,7 @@ impl Character {
         use api::stats::Entity;
 
         let mut output = String::new();
-        if let Some(stats) = api::stats::Stats::new(Entity::Character(*id)) {
+        if let Some(stats) = Stats::new(Entity::Character(*id)) {
             reports::div(&mut output, format!("Danger: {}%  Ships {:>4}/{:<4}",
                 stats.danger_ratio,
                 stats.ship_lost.unwrap_or_default(),

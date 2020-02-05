@@ -34,22 +34,22 @@ pub struct Stats {
     #[serde(alias = "soloKills")]       pub solo_kills: IntOptional,
     #[serde(alias = "soloLosses")]      pub solo_losses: IntOptional,
 
-    #[serde(alias = "groups")]          pub groups: Groups,
-    #[serde(alias = "months")]          pub months: Months,
+    #[serde(skip, alias = "groups")]          pub groups: Groups,
+    #[serde(skip, alias = "months")]          pub months: Months,
     #[serde(alias = "topAllTime")]      pub tops: Vec<TopRecords>,
     #[serde(alias = "topIskKills")]     pub top_isk_kills: Option<Vec<IntRequired>>,
 
-    #[serde(alias = "allTimeSum")]      pub all_time_sum: IntRequired,
-    #[serde(alias = "nextTopRecalc")]   pub next_top_recalculate: IntRequired,
-    #[serde(alias = "sequence")]        pub sequence: IntOptional,
-    #[serde(alias = "trophies")]        pub trophies: Option<Trophies>,
-    #[serde(alias = "activepvp")]       pub active_pvp: ActivePvp,
-    #[serde(alias = "info")]            pub info: Info,
-    #[serde(alias = "topIskKillIDs")]   pub top_isk_kill_ids: Vec<IntRequired>,
-    #[serde(alias = "topLists")]        pub top_lists: Vec<TopList>,
-    #[serde(alias = "activity")]        pub activity: Activity,
-    #[serde(alias = "hasSupers")]       pub has_supers: BoolOptional,
-    #[serde(skip)]          pub supers: Option<SuperValues>, //alias = "supers"
+    #[serde(skip, alias = "allTimeSum")]      pub all_time_sum: IntRequired,
+    #[serde(skip, alias = "nextTopRecalc")]   pub next_top_recalculate: IntRequired,
+    #[serde(skip, alias = "sequence")]        pub sequence: IntOptional,
+    #[serde(skip, alias = "trophies")]        pub trophies: Option<Trophies>,
+    #[serde(skip, alias = "activepvp")]       pub active_pvp: ActivePvp,
+    #[serde(skip, alias = "info")]            pub info: String, //Info,
+    #[serde(skip, alias = "topIskKillIDs")]   pub top_isk_kill_ids: Vec<IntRequired>,
+    #[serde(skip, alias = "topLists")]        pub top_lists: Vec<TopList>,
+    #[serde(skip, alias = "activity")]        pub activity: String, //Activity,
+    #[serde(skip, alias = "hasSupers")]       pub has_supers: BoolOptional,
+    #[serde(skip)]                      pub supers: Option<SuperValues>, //alias = "supers"
 }
 
 impl Stats {
