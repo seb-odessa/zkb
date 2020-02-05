@@ -86,22 +86,38 @@ fn desc(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
         .body(body)
 }
 
+fn stat(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
+    let (route, id) = info.into_inner();
+    let body = match route.as_ref() {
+//        "alliance" => reports::Alliance::description(&info.1, &ctx),
+//        "corporation" => reports::Corporation::description(&info.1, &ctx),
+        "character" => reports::Character::stat(&id, &ctx),
+        _=> format!("Unknown route {} ", route)
+    };
+
+    HttpResponse::Ok()
+        .content_type("text/html; charset=UTF-8")
+        .header("X-Header", "zkb")
+        .body(body)
+}
+
 fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
-    info!("/api/{}/{}", info.0, info.1);
-    let body = match info.0.as_ref() {
-        "constellation" => reports::Constellation::report(&info.1, &ctx),
-        "constellation_brief" => reports::Constellation::brief(&info.1, &ctx),
-        "region" => reports::Region::report(&info.1, &ctx),
-        "region_brief" => reports::Region::brief(&info.1, &ctx),
-        "system" => reports::System::report(&info.1, &ctx),
-        "system_brief" => reports::System::brief(&info.1, &ctx),
-        "killmail_brief" => reports::Killmail::brief(&info.1, &ctx),
-        "killmail" => reports::Killmail::report(&info.1, &ctx),
-        "character" => reports::Character::report(&info.0, &info.1, &ctx),
-        "corporation" => reports::Corporation::report(&info.0, &info.1, &ctx),
-        "alliance" => reports::Alliance::report(&info.0, &info.1, &ctx),
-        "faction" => reports::Faction::report(&info.0, &info.1, &ctx),
-        _=> format!("Unknown Type {} ", info.0)
+    let (route, id) = info.into_inner();
+    info!("/api/{}/{}", &route, &id);
+    let body = match route.as_ref() {
+        "constellation" => reports::Constellation::report(&id, &ctx),
+        "constellation_brief" => reports::Constellation::brief(&id, &ctx),
+        "region" => reports::Region::report(&id, &ctx),
+        "region_brief" => reports::Region::brief(&id, &ctx),
+        "system" => reports::System::report(&id, &ctx),
+        "system_brief" => reports::System::brief(&id, &ctx),
+        "killmail_brief" => reports::Killmail::brief(&id, &ctx),
+        "killmail" => reports::Killmail::report(&id, &ctx),
+        "character" => reports::Character::report(&route, &id, &ctx),
+        "corporation" => reports::Corporation::report(&route, &id, &ctx),
+        "alliance" => reports::Alliance::report(&route, &id, &ctx),
+        "faction" => reports::Faction::report(&route, &id, &ctx),
+        _=> format!("Unknown Type {} ", route)
     };
 
     HttpResponse::Ok()
@@ -159,6 +175,33 @@ fn hidden(info: web::Path<(String, i32, String)>, ctx: Context) -> HttpResponse 
         .body(body)
 }
 
+pub fn run(context: Context) {
+    let address = context.server.clone();
+    let timeout = context.timeout;
+    info!("address: {}", address);
+    HttpServer::new(move || {
+        App::new()
+            .register_data(context.clone())
+            .route("/navigator/find/{name}", web::get().to(find))
+            .route("/navigator/api/{type}/{id}", web::get().to(api))
+            .route("/navigator/api/{type}/{id}/{cmd}", web::get().to(hidden))
+            .route("/navigator/api/route/{safety}/{src}/{dst}", web::get().to(route))
+            .route("/navigator/desc/{route}/{id}", web::get().to(desc))
+            .route("/navigator/stat/{route}/{id}", web::get().to(stat))
+            .route("/navigator/cmd/{cmd}", web::get().to(cmd))
+            .route("/navigator/services/{type}/{first}/{second}", web::get().to(services))
+            .route("/navigator/history/{route}/{id}/{minutes}", web::get().to(history))
+            .route("/navigator/report/{category}/{class}/{id}/{minutes}", web::get().to(report))
+            .route("/navigator/json/nodes/{id}", web::get().to(nodes))
+            .route("/navigator/json/edges/{id}", web::get().to(edges))
+    })
+    .bind(address)
+    .unwrap()
+    .shutdown_timeout(timeout)
+    .run()
+    .unwrap();
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 struct Node {
     id: i32,
@@ -199,31 +242,4 @@ fn edges(_info: web::Path<String>, _ctx: Context) -> HttpResponse {
         .header("X-Header", "zkb")
         .body(json)
 
-}
-
-
-pub fn run(context: Context) {
-    let address = context.server.clone();
-    let timeout = context.timeout;
-    info!("address: {}", address);
-    HttpServer::new(move || {
-        App::new()
-            .register_data(context.clone())
-            .route("/navigator/find/{name}", web::get().to(find))
-            .route("/navigator/api/{type}/{id}", web::get().to(api))
-            .route("/navigator/api/{type}/{id}/{cmd}", web::get().to(hidden))
-            .route("/navigator/api/route/{safety}/{src}/{dst}", web::get().to(route))
-            .route("/navigator/desc/{area}/{id}", web::get().to(desc))
-            .route("/navigator/cmd/{cmd}", web::get().to(cmd))
-            .route("/navigator/services/{type}/{first}/{second}", web::get().to(services))
-            .route("/navigator/history/{area}/{id}/{minutes}", web::get().to(history))
-            .route("/navigator/report/{category}/{class}/{id}/{minutes}", web::get().to(report))
-            .route("/navigator/json/nodes/{id}", web::get().to(nodes))
-            .route("/navigator/json/edges/{id}", web::get().to(edges))
-    })
-    .bind(address)
-    .unwrap()
-    .shutdown_timeout(timeout)
-    .run()
-    .unwrap();
 }

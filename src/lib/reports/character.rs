@@ -45,11 +45,28 @@ impl Character {
             reports::div(output, span);
         }
     }
+    pub fn stat(id: &i32, _ctx: &Context) -> String {
+        use api::stats::Stats;
+        use api::stats::Entity;
+
+        let mut output = String::new();
+        if let Some(stats) = api::stats::Stats::new(Entity::Character(*id)) {
+            reports::div(&mut output, format!("Danger: {}%  Ships {:>4}/{:<4}",
+                stats.danger_ratio,
+                stats.ship_lost.unwrap_or_default(),
+                stats.ship_destroyed.unwrap_or_default()));
+
+            reports::div(&mut output, format!("Gangs: {}%", stats.gang_ratio));
+
+        }
+        return output;
+    }
 }
 impl reports::Reportable for Character {
     fn report_by_id(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
         Self::info(&mut output, &id, ctx);
+        reports::lazy(&mut output, format!("stat/character/{}", id), &ctx);
         reports::lazy(&mut output, format!("report/character/wins/{}/{}", id, 60), &ctx);
         reports::lazy(&mut output, format!("report/character/losses/{}/{}", id, 60), &ctx);
         return output;
