@@ -58,7 +58,6 @@ impl Character {
             let num_style = &format!("border: 1px solid black; padding: 2px 5px; text-align: right;  background-color: {};", color);
 
             reports::table_start(&mut output, "", table_style, "");
-            reports::caption(&mut output, "Character");
             reports::table_row_start(&mut output, head_style);
             reports::table_cell_head(&mut output, "", head_style, "");
             reports::table_cell_head(&mut output, "", head_style, "Destroyed");
@@ -67,19 +66,14 @@ impl Character {
             reports::table_row_start(&mut output, text_style);
             reports::table_cell(&mut output, "", text_style, "Ships");
             reports::table_cell(&mut output, "", num_style, format!("{}", stats.ship_destroyed.unwrap_or_default()));
-            reports::table_cell(&mut output, "", num_style, format!("{}", stats.ship_destroyed.unwrap_or_default()));
+            reports::table_cell(&mut output, "", num_style, format!("{}", stats.ship_lost.unwrap_or_default()));
             reports::table_row_end(&mut output);
             reports::table_row_start(&mut output, text_style);
             reports::table_cell(&mut output, "", text_style, "Solo");
             reports::table_cell(&mut output, "", num_style, format!("{}", stats.solo_kills.unwrap_or_default()));
             reports::table_cell(&mut output, "", num_style, format!("{}", stats.solo_losses.unwrap_or_default()));
             reports::table_row_end(&mut output);
-            reports::table_row_start(&mut output, text_style);
-            reports::table_cell(&mut output, "", text_style, "Isk");
-            reports::table_cell(&mut output, "", num_style, format!("{}", stats.isk_destroyed.unwrap_or_default()));
-            reports::table_cell(&mut output, "", num_style, format!("{}", stats.isk_destroyed.unwrap_or_default()));
-            reports::table_row_end(&mut output);
-
+            reports::table_end(&mut output);
             reports::div(&mut output, format!("Danger: {}%", stats.danger_ratio));
             reports::div(&mut output, format!("Gangs: {}%", stats.gang_ratio));
 
