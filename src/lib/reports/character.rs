@@ -65,7 +65,7 @@ impl Character {
         let mut output = String::new();
         if let Some(stats) = Stats::new(Entity::Character(*id)) {
             Self::report_win_loses(&mut output, "Ships", stats.ship_destroyed, stats.ship_lost);
-            Self::report_win_loses(&mut output, "Solo ", stats.solo_kills, stats.solo_losses);
+            Self::report_win_loses(&mut output, "Solo", stats.solo_kills, stats.solo_losses);
             reports::div(&mut output, format!("Danger: {}%", stats.danger_ratio));
             reports::div(&mut output, format!("Gangs: {}%", stats.gang_ratio));
 
