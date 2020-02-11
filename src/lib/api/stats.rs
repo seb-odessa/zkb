@@ -192,9 +192,9 @@ pub enum Info {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct TopList {
-    #[serde(alias = "type")]            record_type: StrRequired,
-    #[serde(alias = "title")]           title: StrRequired,
-    #[serde(alias = "values")]          values: Vec<TopValue>,
+    #[serde(alias = "type")]            pub record_type: StrRequired,
+    #[serde(alias = "title")]           pub title: StrRequired,
+    #[serde(alias = "values")]          pub values: Vec<TopValue>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]

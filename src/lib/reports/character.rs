@@ -36,47 +36,42 @@ impl Character {
             let months = (age - 365 * years) / 30;
             let days = age - 365 * years - 30 * months;
             let span = if 0 == months && 0 == years {
-                reports::span("", "background-color: lightgreen;", format!("Character age: {} days", days))
+                reports::span("", "background-color: lightgreen;", format!("Age: {} days", days))
             } else if 0 == years {
-                reports::span("", "background-color: skyblue;", format!("Character age: {} months and {} days", months, days))
+                reports::span("", "background-color: skyblue;", format!("Age: {} months and {} days", months, days))
             } else {
-                reports::span("", "background-color: LightCoral;", format!("Character age: {} years, {} months and {} days", years, months, days))
+                reports::span("", "background-color: LightCoral;", format!("Age: {} years, {} months and {} days", years, months, days))
             };
             reports::div(output, span);
         }
     }
+
+    fn report_win_loses<S: Into<String>>(output: &mut dyn Write, title: S, wins: Option<i32>, losses: Option<i32>) {
+        let wins = wins.unwrap_or_default();
+        let losses = losses.unwrap_or_default();
+        let total = wins + losses;
+        let eff = if total != 0 {
+            100 * wins / total
+        } else {
+            0
+        };
+        reports::div(output, format!("{}: {}/{} eff: {}%", title.into(), wins, total, eff));
+    }
+
     pub fn stat(id: &i32, _ctx: &Context) -> String {
         use api::stats::Stats;
         use api::stats::Entity;
 
         let mut output = String::new();
         if let Some(stats) = Stats::new(Entity::Character(*id)) {
-            let table_style = "border-collapse: collapse;";
-            let head_style = "border: 1px solid black; padding: 2px 5px; text-align: center;";
-            let color = "White";
-            let text_style = &format!("border: 1px solid black; padding: 2px 5px; background-color: {};", color);
-            let num_style = &format!("border: 1px solid black; padding: 2px 5px; text-align: right;  background-color: {};", color);
-
-            reports::table_start(&mut output, "", table_style, "");
-            reports::table_row_start(&mut output, head_style);
-            reports::table_cell_head(&mut output, "", head_style, "");
-            reports::table_cell_head(&mut output, "", head_style, "Destroyed");
-            reports::table_cell_head(&mut output, "", head_style, "Lost");
-            reports::table_row_end(&mut output);
-            reports::table_row_start(&mut output, text_style);
-            reports::table_cell(&mut output, "", text_style, "Ships");
-            reports::table_cell(&mut output, "", num_style, format!("{}", stats.ship_destroyed.unwrap_or_default()));
-            reports::table_cell(&mut output, "", num_style, format!("{}", stats.ship_lost.unwrap_or_default()));
-            reports::table_row_end(&mut output);
-            reports::table_row_start(&mut output, text_style);
-            reports::table_cell(&mut output, "", text_style, "Solo");
-            reports::table_cell(&mut output, "", num_style, format!("{}", stats.solo_kills.unwrap_or_default()));
-            reports::table_cell(&mut output, "", num_style, format!("{}", stats.solo_losses.unwrap_or_default()));
-            reports::table_row_end(&mut output);
-            reports::table_end(&mut output);
+            Self::report_win_loses(&mut output, "Ships", stats.ship_destroyed, stats.ship_lost);
+            Self::report_win_loses(&mut output, "Solo ", stats.solo_kills, stats.solo_losses);
             reports::div(&mut output, format!("Danger: {}%", stats.danger_ratio));
             reports::div(&mut output, format!("Gangs: {}%", stats.gang_ratio));
 
+            for top in &stats.top_lists {
+                reports::div(&mut output, format!("{} {} {:?}", top.record_type, top.title, top.values));
+            }
         }
         return output;
     }
