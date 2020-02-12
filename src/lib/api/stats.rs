@@ -208,10 +208,8 @@ impl TopList {
 
         for top in tops {           
             if allowed.contains(&top.record_type) {
-
                 reports::table_start(output, &top.title, table_style, "");
                 reports::caption(output, &top.title);
-                reports::div(output, &top.title);
                 for value in &top.values {
                     reports::table_row_start(output, "");
                     match value {
