@@ -78,6 +78,18 @@ impl Stats {
             Entity::Region(id)      => Self::load("regionID", &id),
         }
     }
+
+    pub fn report_win_loses<S: Into<String>>(output: &mut dyn Write, title: S, wins: Option<i32>, losses: Option<i32>) {
+        let wins = wins.unwrap_or_default();
+        let losses = losses.unwrap_or_default();
+        let total = wins + losses;
+        let eff = if total != 0 {
+            100 * wins / total
+        } else {
+            0
+        };
+        reports::div(output, format!("{}: {}/{} eff: {}%", title.into(), wins, total, eff));
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -203,9 +215,9 @@ pub struct TopList {
 }
 impl TopList {
     pub fn write(output: &mut dyn Write, tops: &Vec<Self>, allowed: HashSet<String>, ctx: &Context) {
+        reports::div(output, "Last week activity");
         let table_style   = "border-collapse: collapse;";
         let text_style    = "border: 1px solid black; padding: 1px 5px;";
-
         for top in tops {           
             if allowed.contains(&top.record_type) {
                 reports::table_start(output, &top.title, table_style, "");

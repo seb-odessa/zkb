@@ -10,6 +10,7 @@ impl reports::Reportable for Alliance {
     fn report_by_id(id: &i32, ctx: &Context) -> String {
         let mut output = String::new();
         reports::lazy(&mut output, format!("desc/alliance/{}", id), &ctx);
+        reports::lazy(&mut output, format!("stat/alliance/{}", id), &ctx);
         reports::lazy(&mut output, format!("report/alliance/wins/{}/{}", id, 60), &ctx);
         reports::lazy(&mut output, format!("report/alliance/losses/{}/{}", id, 60), &ctx);
         return output;
@@ -42,4 +43,24 @@ impl Alliance {
         }
         return output;
     }
+
+    pub fn stat(id: &i32, ctx: &Context) -> String {
+        use api::stats::Stats;
+        use api::stats::Entity;
+        use api::stats::TopList;
+        use std::collections::HashSet;
+
+        let mut output = String::new();
+        if let Some(stats) = Stats::new(Entity::Character(*id)) {
+            Stats::report_win_loses(&mut output, "Ships", stats.ship_destroyed, stats.ship_lost);
+            Stats::report_win_loses(&mut output, "Solo", stats.solo_kills, stats.solo_losses);
+            reports::div(&mut output, format!("Danger: {} %", stats.danger_ratio));
+            reports::div(&mut output, format!("Gangs: {} %", stats.gang_ratio));
+
+            //character, corporation, alliance, shipType, solarSystem, location
+            let allowed: HashSet<String> = vec!["character", "shipType", "solarSystem", "location"].into_iter().map(|s| String::from(s)).collect();
+            TopList::write(&mut output, &stats.top_lists, allowed, ctx);
+        }
+        return output;
+    }    
 }

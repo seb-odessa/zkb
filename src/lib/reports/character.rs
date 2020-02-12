@@ -2,7 +2,6 @@ use crate::api;
 use crate::services::{Context, Report, Category};
 use crate::reports;
 use chrono::Utc;
-use std::collections::HashSet;
 use std::fmt::Write;
 
 #[derive(Debug, PartialEq)]
@@ -47,27 +46,16 @@ impl Character {
         }
     }
 
-    fn report_win_loses<S: Into<String>>(output: &mut dyn Write, title: S, wins: Option<i32>, losses: Option<i32>) {
-        let wins = wins.unwrap_or_default();
-        let losses = losses.unwrap_or_default();
-        let total = wins + losses;
-        let eff = if total != 0 {
-            100 * wins / total
-        } else {
-            0
-        };
-        reports::div(output, format!("{}: {}/{} eff: {}%", title.into(), wins, total, eff));
-    }
-
     pub fn stat(id: &i32, ctx: &Context) -> String {
         use api::stats::Stats;
         use api::stats::Entity;
         use api::stats::TopList;
+        use std::collections::HashSet;
 
         let mut output = String::new();
         if let Some(stats) = Stats::new(Entity::Character(*id)) {
-            Self::report_win_loses(&mut output, "Ships", stats.ship_destroyed, stats.ship_lost);
-            Self::report_win_loses(&mut output, "Solo", stats.solo_kills, stats.solo_losses);
+            Stats::report_win_loses(&mut output, "Ships", stats.ship_destroyed, stats.ship_lost);
+            Stats::report_win_loses(&mut output, "Solo", stats.solo_kills, stats.solo_losses);
             reports::div(&mut output, format!("Danger: {} %", stats.danger_ratio));
             reports::div(&mut output, format!("Gangs: {} %", stats.gang_ratio));
 

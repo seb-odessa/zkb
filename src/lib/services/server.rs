@@ -89,8 +89,8 @@ fn desc(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
 fn stat(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
     let (route, id) = info.into_inner();
     let body = match route.as_ref() {
-//        "alliance" => reports::Alliance::description(&info.1, &ctx),
-//        "corporation" => reports::Corporation::description(&info.1, &ctx),
+        "alliance" => reports::Alliance::stat(&id, &ctx),
+        "corporation" => reports::Corporation::stat(&id, &ctx),
         "character" => reports::Character::stat(&id, &ctx),
         _=> format!("Unknown route {} ", route)
     };
