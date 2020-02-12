@@ -58,9 +58,10 @@ impl Character {
         reports::div(output, format!("{}: {}/{} eff: {}%", title.into(), wins, total, eff));
     }
 
-    pub fn stat(id: &i32, _ctx: &Context) -> String {
+    pub fn stat(id: &i32, ctx: &Context) -> String {
         use api::stats::Stats;
         use api::stats::Entity;
+        use api::stats::TopValue;
 
         let mut output = String::new();
         if let Some(stats) = Stats::new(Entity::Character(*id)) {
@@ -70,6 +71,19 @@ impl Character {
             reports::div(&mut output, format!("Gangs: {} %", stats.gang_ratio));
 
             for top in &stats.top_lists {
+                if "shipType" == top.record_type.as_str() {
+                    for value in &top.values {
+                        match value {
+                            TopValue::ShipTop {kills, ship_id, ship_name, group_id, group_name, .. } => {
+                                reports::div(&mut output, format!("{:>5} {} {}", 
+                                    kills, 
+                                    ctx.get_zkb_href("ship", *ship_id, ship_name), 
+                                    group_name));
+                            },
+                            _ => {}
+                        }
+                    }
+                }
                 reports::div(&mut output, format!("{} {} {:?}", top.record_type, top.title, top.values));
             }
         }
