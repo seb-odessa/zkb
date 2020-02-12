@@ -203,47 +203,52 @@ pub struct TopList {
 }
 impl TopList {
     pub fn write(output: &mut dyn Write, tops: &Vec<Self>, allowed: HashSet<String>, ctx: &Context) {
-        for top in tops {
+        let table_style   = "border-collapse: collapse;";
+        let text_style    = "border: 1px solid black; padding: 1px 5px;";
+
+        for top in tops {           
             if allowed.contains(&top.record_type) {
+
+                reports::table_start(output, &top.title, table_style, "");
+                reports::caption(output, &top.title);
                 reports::div(output, &top.title);
                 for value in &top.values {
+                    reports::table_row_start(output, "");
                     match value {
                         TopValue::CharacterTop {kills, character_id, character_name, .. } => {
-                            reports::div(output, format!("{:>5} {}", 
-                                kills, 
-                                ctx.get_api_href("character", *character_id, character_name)));
+                            reports::table_cell(output, "Kills", text_style, kills.to_string());
+                            reports::table_cell(output, "character name", text_style, ctx.get_api_href("character", *character_id, character_name));
                         },
                         TopValue::CorporationTop {kills, corporation_id, corporation_name, corporation_ticker, .. } => {
-                            reports::div(output, format!("{:>5} {} [{}]", 
-                                kills, 
-                                ctx.get_api_href("corporation", *corporation_id, corporation_name), 
-                                corporation_ticker));
+                            reports::table_cell(output, "Kills", text_style, kills.to_string());
+                            reports::table_cell(output, "corporation name", text_style, ctx.get_api_href("corporation", *corporation_id, corporation_name));
+                            reports::table_cell(output, "corporation ticker", text_style, corporation_ticker);
                         },
                         TopValue::AllianceTop {kills, alliance_id, alliance_name, alliance_ticker, .. } => {
-                            reports::div(output, format!("{:>5} {} [{}]", 
-                                kills, 
-                                ctx.get_api_href("corporation", *alliance_id, alliance_name), alliance_ticker));
+                            reports::table_cell(output, "Kills", text_style, kills.to_string());
+                            reports::table_cell(output, "alliance name", text_style, ctx.get_api_href("alliance", *alliance_id, alliance_name));
+                            reports::table_cell(output, "alliance ticker", text_style, alliance_ticker);
                         },                        
                         TopValue::ShipTop {kills, ship_id, ship_name, group_id, group_name, .. } => {
-                            reports::div(output, format!("{:>5} {} {}", 
-                                kills, 
-                                ctx.get_zkb_href("ship", *ship_id, ship_name), 
-                                group_name));
+                            reports::table_cell(output, "Kills", text_style, kills.to_string());
+                            reports::table_cell(output, "ship", text_style, ctx.get_zkb_href("ship", *ship_id, ship_name));
+                            reports::table_cell(output, "group", text_style, ctx.get_zkb_href("group", *group_id, group_name));
                         },
                         TopValue::SystemTop {kills, system_id, system_name, sun_type_id, system_security, system_color, region_id, region_name, .. } => {
-                            reports::div(output, format!("{:>5} {} ({}, {}, {}) - {}", 
-                                kills, 
-                                ctx.get_api_href("system", *system_id, system_name), sun_type_id, system_security, system_color,
-                                ctx.get_api_href("region", *region_id, region_name)));
+                            let style = format!("{} background-color: {};", text_style, system_color);
+                            reports::table_cell(output, "Kills", &style, kills.to_string());
+                            reports::table_cell(output, "system", &style, ctx.get_api_href("system", *system_id, system_name));
+                            reports::table_cell(output, "system security", &style, system_security);
+                            reports::table_cell(output, "region", &style, ctx.get_api_href("", *region_id, region_name));
                         }
                         TopValue::LocationTop {kills, location_id, location_name, .. } => {
-                            reports::div(output, format!("{:>5} {} {}", 
-                                kills, 
-                                location_id,
-                                location_name));
+                            reports::table_cell(output, "Kills", text_style, kills.to_string());
+                            reports::table_cell(output, "location", text_style, ctx.get_zkb_href("location", *location_id, location_name));
                         }
                     }
+                    reports::table_row_end(output);
                 }
+                reports::table_end(output);
             }
         }
     }
