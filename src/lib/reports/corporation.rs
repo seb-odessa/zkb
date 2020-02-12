@@ -56,7 +56,7 @@ impl Corporation {
         use std::collections::HashSet;
 
         let mut output = String::new();
-        if let Some(stats) = Stats::new(Entity::Character(*id)) {
+        if let Some(stats) = Stats::new(Entity::Corporation(*id)) {
             Stats::report_win_loses(&mut output, "Ships", stats.ship_destroyed, stats.ship_lost);
             Stats::report_win_loses(&mut output, "Solo", stats.solo_kills, stats.solo_losses);
             reports::div(&mut output, format!("Danger: {} %", stats.danger_ratio));

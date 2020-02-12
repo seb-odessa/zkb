@@ -562,10 +562,10 @@ mod tests {
 
     #[test]
     fn from_api_for_corporation() {
-        let response = Stats::new(Entity::Corporation(98095669));
+        let response = Stats::new(Entity::Corporation(98190062));
         assert!(response.is_some());
         let object = response.unwrap();
-        assert_eq!(object.id, 98095669);
+        assert_eq!(object.id, 98190062);
         assert_eq!(&object.record_type, "corporationID");
     }
 
