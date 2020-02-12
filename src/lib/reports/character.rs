@@ -2,6 +2,7 @@ use crate::api;
 use crate::services::{Context, Report, Category};
 use crate::reports;
 use chrono::Utc;
+use std::collections::HashSet;
 use std::fmt::Write;
 
 #[derive(Debug, PartialEq)]
@@ -61,7 +62,7 @@ impl Character {
     pub fn stat(id: &i32, ctx: &Context) -> String {
         use api::stats::Stats;
         use api::stats::Entity;
-        use api::stats::TopValue;
+        use api::stats::TopList;
 
         let mut output = String::new();
         if let Some(stats) = Stats::new(Entity::Character(*id)) {
@@ -70,22 +71,9 @@ impl Character {
             reports::div(&mut output, format!("Danger: {} %", stats.danger_ratio));
             reports::div(&mut output, format!("Gangs: {} %", stats.gang_ratio));
 
-            for top in &stats.top_lists {
-                if "shipType" == top.record_type.as_str() {
-                    for value in &top.values {
-                        match value {
-                            TopValue::ShipTop {kills, ship_id, ship_name, group_id, group_name, .. } => {
-                                reports::div(&mut output, format!("{:>5} {} {}", 
-                                    kills, 
-                                    ctx.get_zkb_href("ship", *ship_id, ship_name), 
-                                    group_name));
-                            },
-                            _ => {}
-                        }
-                    }
-                }
-                reports::div(&mut output, format!("{} {} {:?}", top.record_type, top.title, top.values));
-            }
+            //character, corporation, alliance, shipType, solarSystem, location
+            let allowed: HashSet<String> = vec!["shipType", "solarSystem", "location"].into_iter().map(|s| String::from(s)).collect();
+            TopList::write(&mut output, &stats.top_lists, allowed, ctx);
         }
         return output;
     }

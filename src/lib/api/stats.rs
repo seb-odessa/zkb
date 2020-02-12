@@ -1,6 +1,11 @@
 use crate::api::*;
+use crate::reports;
+use crate::services::Context;
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::collections::HashSet;
+use std::fmt::Write;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Entity {
@@ -196,6 +201,53 @@ pub struct TopList {
     #[serde(alias = "title")]           pub title: StrRequired,
     #[serde(alias = "values")]          pub values: Vec<TopValue>,
 }
+impl TopList {
+    pub fn write(output: &mut dyn Write, tops: &Vec<Self>, allowed: HashSet<String>, ctx: &Context) {
+        for top in tops {
+            if allowed.contains(&top.record_type) {
+                reports::div(output, &top.title);
+                for value in &top.values {
+                    match value {
+                        TopValue::CharacterTop {kills, character_id, character_name, .. } => {
+                            reports::div(output, format!("{:>5} {}", 
+                                kills, 
+                                ctx.get_api_href("character", *character_id, character_name)));
+                        },
+                        TopValue::CorporationTop {kills, corporation_id, corporation_name, corporation_ticker, .. } => {
+                            reports::div(output, format!("{:>5} {} [{}]", 
+                                kills, 
+                                ctx.get_api_href("corporation", *corporation_id, corporation_name), 
+                                corporation_ticker));
+                        },
+                        TopValue::AllianceTop {kills, alliance_id, alliance_name, alliance_ticker, .. } => {
+                            reports::div(output, format!("{:>5} {} [{}]", 
+                                kills, 
+                                ctx.get_api_href("corporation", *alliance_id, alliance_name), alliance_ticker));
+                        },                        
+                        TopValue::ShipTop {kills, ship_id, ship_name, group_id, group_name, .. } => {
+                            reports::div(output, format!("{:>5} {} {}", 
+                                kills, 
+                                ctx.get_zkb_href("ship", *ship_id, ship_name), 
+                                group_name));
+                        },
+                        TopValue::SystemTop {kills, system_id, system_name, sun_type_id, system_security, system_color, region_id, region_name, .. } => {
+                            reports::div(output, format!("{:>5} {} ({}, {}, {}) - {}", 
+                                kills, 
+                                ctx.get_api_href("system", *system_id, system_name), sun_type_id, system_security, system_color,
+                                ctx.get_api_href("region", *region_id, region_name)));
+                        }
+                        TopValue::LocationTop {kills, location_id, location_name, .. } => {
+                            reports::div(output, format!("{:>5} {} {}", 
+                                kills, 
+                                location_id,
+                                location_name));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(untagged)]
@@ -240,7 +292,7 @@ pub enum TopValue {
         #[serde(alias = "kills")]               kills: IntRequired,
         #[serde(alias = "solarSystemID")]       system_id: IntRequired,
         #[serde(alias = "solarSystemName")]     system_name: StrRequired,
-        #[serde(alias = "sunTypeID")]           group_id: IntRequired,
+        #[serde(alias = "sunTypeID")]           sun_type_id: IntRequired,
         #[serde(alias = "solarSystemSecurity")] system_security: StrRequired,
         #[serde(alias = "systemColorCode")]     system_color: StrRequired,
         #[serde(alias = "regionID")]            region_id: IntRequired,
