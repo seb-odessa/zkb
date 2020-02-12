@@ -46,7 +46,7 @@ pub struct Stats {
     #[serde(skip, alias = "activepvp")]       pub active_pvp: ActivePvp,
     #[serde(skip, alias = "info")]            pub info: String, //Info,
     #[serde(skip, alias = "topIskKillIDs")]   pub top_isk_kill_ids: Vec<IntRequired>,
-    #[serde(skip, alias = "topLists")]        pub top_lists: Vec<TopList>,
+    #[serde(alias = "topLists")]        pub top_lists: Vec<TopList>,
     #[serde(skip, alias = "activity")]        pub activity: String, //Activity,
     #[serde(skip, alias = "hasSupers")]       pub has_supers: BoolOptional,
     #[serde(skip)]                      pub supers: Option<SuperValues>, //alias = "supers"

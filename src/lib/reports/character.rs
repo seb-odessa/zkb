@@ -66,8 +66,8 @@ impl Character {
         if let Some(stats) = Stats::new(Entity::Character(*id)) {
             Self::report_win_loses(&mut output, "Ships", stats.ship_destroyed, stats.ship_lost);
             Self::report_win_loses(&mut output, "Solo", stats.solo_kills, stats.solo_losses);
-            reports::div(&mut output, format!("Danger: {}%", stats.danger_ratio));
-            reports::div(&mut output, format!("Gangs: {}%", stats.gang_ratio));
+            reports::div(&mut output, format!("Danger: {} %", stats.danger_ratio));
+            reports::div(&mut output, format!("Gangs: {} %", stats.gang_ratio));
 
             for top in &stats.top_lists {
                 reports::div(&mut output, format!("{} {} {:?}", top.record_type, top.title, top.values));
