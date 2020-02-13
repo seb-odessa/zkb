@@ -214,6 +214,8 @@ pub struct TopList {
     #[serde(alias = "values")]          pub values: Vec<TopValue>,
 }
 impl TopList {
+
+    #[allow(unused_variables)]
     pub fn write(output: &mut dyn Write, tops: &Vec<Self>, allowed: HashSet<String>, ctx: &Context) {
         reports::div(output, "Last week activity");
         let table_style   = "border-collapse: collapse;";

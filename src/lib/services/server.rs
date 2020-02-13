@@ -22,10 +22,28 @@ fn quit(ctx: &Context) -> String {
 }
 
 fn ping(ctx: &Context) -> String {
+    ctx.notify("navigator/cmd");
     ctx.database.push(Message::Ping);
     ctx.resolver.push(Message::Ping);
     ctx.responses.push(Message::Ping);
     format!("Ping\n")
+}
+
+fn statistic(ctx: &Context) -> String {
+    ctx.notify("navigator/cmd");
+    let mut output = String::new();
+    match ctx.get_visits() {
+        Some(map) => {
+            for (path, count) in &map {
+                reports::div(&mut output, format!("{}: {}", path, count));
+            }
+        },
+        None => {
+            reports::div(&mut output, "Was not able to acquire statustic map");
+
+        }
+    }
+    return output;
 }
 
 fn response<S: Into<String>>(body: S) -> HttpResponse {
@@ -38,18 +56,24 @@ fn response<S: Into<String>>(body: S) -> HttpResponse {
 fn find(info: web::Path<String>, ctx: Context) -> HttpResponse {
     use crate::reports::Names;
     info!("/find/{}", info);
+    ctx.notify("navigator/find");
     response(Names::report(info.as_ref(), &ctx))
 }
 
 fn history(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
     info!("/history/{:?}", info);
+    
+    let route = &info.0;
     let id = info.1;
     let minutes = info.2;
-    let body = match info.0.as_ref() {
+    ctx.notify(format!("navigator/history/{}", route));
+    
+    
+    let body = match route.as_ref() {
         "system" => reports::History::system(&id, &minutes, &ctx),
         "region" => reports::History::region(&id, &minutes, &ctx),
         "constellation" => reports::History::constellation(&id, &minutes, &ctx),
-        _=> format!("Unknown Area Type {} ", info.0)
+        _=> format!("Unknown Area Type {} ", route)
     };
 
     HttpResponse::Ok()
@@ -59,11 +83,12 @@ fn history(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
 }
 
 fn report(info: web::Path<(String, String, i32, i32)>, ctx: Context) -> HttpResponse {
-    info!("/report/{:?}", info);
+    info!("/report/{:?}", info);    
     let category = &info.0;
     let class = &info.1;
     let id = info.2;
     let minutes = info.3;
+    ctx.notify(format!("navigator/report/{}/{}", category, class));
 
     let body = reports::History::report(category, class, &id, &minutes, &ctx);
 
@@ -74,6 +99,7 @@ fn report(info: web::Path<(String, String, i32, i32)>, ctx: Context) -> HttpResp
 }
 
 fn desc(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
+    ctx.notify(format!("navigator/desc/{}", &info.0));
     let body = match info.0.as_ref() {
         "alliance" => reports::Alliance::description(&info.1, &ctx),
         "corporation" => reports::Corporation::description(&info.1, &ctx),
@@ -88,6 +114,7 @@ fn desc(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
 
 fn stat(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
     let (route, id) = info.into_inner();
+    ctx.notify(format!("navigator/stat/{}", route));
     let body = match route.as_ref() {
         "alliance" => reports::Alliance::stat(&id, &ctx),
         "corporation" => reports::Corporation::stat(&id, &ctx),
@@ -104,6 +131,7 @@ fn stat(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
 fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
     let (route, id) = info.into_inner();
     info!("/api/{}/{}", &route, &id);
+    ctx.notify(format!("navigator/api/{}", route));
     let body = match route.as_ref() {
         "constellation" => reports::Constellation::report(&id, &ctx),
         "constellation_brief" => reports::Constellation::brief(&id, &ctx),
@@ -129,7 +157,7 @@ fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
 fn route(info: web::Path<(String, String, String)>, ctx: Context) -> HttpResponse {
     let (route, departure, destination) = info.into_inner();
     let body = reports::System::route_named(route, departure, destination, &ctx);
-
+    ctx.notify("navigator/api/route");
     HttpResponse::Ok()
         .content_type("text/html; charset=UTF-8")
         .header("X-Header", "zkb")
@@ -143,12 +171,14 @@ fn cmd(info: web::Path<String>, ctx: Context) -> String {
     match info.as_ref().as_ref() {
         "ping" => ping(&ctx),
         "quit" => quit(&ctx),
+        "statistic" => statistic(&ctx),
         _ => format!("/cmd/{}", info)
     }
 }
 
 fn services(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
     info!("/services/{}/{}/{}", info.0, info.1, info.2);
+    ctx.notify("navigator/services");
     let body = match info.0.as_ref() {
         "route" => reports::System::route(info.1, info.2, &ctx),
         _ => format!("/services/{}/{}/{}", info.0, info.1, info.2)
@@ -162,7 +192,7 @@ fn services(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
 
 fn hidden(info: web::Path<(String, i32, String)>, ctx: Context) -> HttpResponse {
     let (area, id, cmd) = info.into_inner();
-
+    ctx.notify("navigator/api/hidden");
     let body = match (area.as_ref(), id, cmd.as_ref()){
         ("system", id, "add") => reports::System::observatory_add(&id, &ctx),
         ("system", id, "del") => reports::System::observatory_del(&id, &ctx),

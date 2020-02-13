@@ -6,6 +6,7 @@ pub mod database;
 use crate::api;
 use crate::models;
 use std::sync::{Arc, Mutex, Condvar};
+use std::collections::HashMap;
 use uuid::adapter::Simple as Uid;
 
 use chrono::{DateTime, Utc};
@@ -125,6 +126,7 @@ pub struct AppContext {
     pub database: Queue,
     pub resolver: Queue,
     pub responses: Queue,
+    pub counters: Mutex<HashMap<String, u64>>
 }
 impl AppContext {
 
@@ -137,8 +139,20 @@ impl AppContext {
             commands: Commands::new(Arc::new((Mutex::new(false), Condvar::new()))),
             database: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
             resolver: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
-            responses:Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
+            responses: Queue::new(Arc::new((Mutex::new(false), Condvar::new()))),
+            counters: Mutex::new(HashMap::new())
         }
+    }
+
+    pub fn notify<S: Into<String>>(&self, path: S) {
+        if let Ok(mut counters) = self.counters.try_lock(){
+            let counter = counters.entry(path.into()).or_insert(0);
+            *counter += 1;
+        }
+    }
+
+    pub fn get_visits(&self) -> Option<HashMap<String, u64>> {
+        self.counters.try_lock().map(|map| map.clone()).ok()
     }
 
     pub fn get_root(&self) ->String {

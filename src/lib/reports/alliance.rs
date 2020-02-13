@@ -58,7 +58,7 @@ impl Alliance {
             reports::div(&mut output, format!("Gangs: {} %", stats.gang_ratio));
 
             //character, corporation, alliance, shipType, solarSystem, location
-            let allowed: HashSet<String> = vec!["character", "shipType", "solarSystem", "location"].into_iter().map(|s| String::from(s)).collect();
+            let allowed: HashSet<String> = vec!["character", "corporation", "shipType", "solarSystem", "location"].into_iter().map(|s| String::from(s)).collect();
             TopList::write(&mut output, &stats.top_lists, allowed, ctx);
         }
         return output;
