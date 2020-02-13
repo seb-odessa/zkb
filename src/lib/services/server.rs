@@ -4,10 +4,15 @@ use crate::reports::Reportable;
 use crate::reports::ReportableEx;
 use serde::{Deserialize, Serialize};
 
-
 use actix_rt;
 use actix_web::{web, App, HttpServer, HttpResponse};
 
+fn wrap<S: Into<String>>(content: S) -> HttpResponse {
+    HttpResponse::Ok()
+        .content_type("text/html; charset=UTF-8")
+        .header("X-Header", "zkb")
+        .body(content.into())
+}
 
 fn quit(ctx: &Context) -> String {
     ctx.commands.push(Command::Quit);
@@ -29,7 +34,7 @@ fn ping(ctx: &Context) -> String {
     format!("Ping\n")
 }
 
-fn statistic(ctx: &Context) -> String {
+fn statistic(_info: web::Path<String>, ctx: Context) -> HttpResponse {
     ctx.notify("navigator/cmd");
     let mut output = String::new();
     match ctx.get_visits() {
@@ -43,21 +48,16 @@ fn statistic(ctx: &Context) -> String {
 
         }
     }
-    return output;
+
+    return wrap(output);
 }
 
-fn response<S: Into<String>>(body: S) -> HttpResponse {
-    HttpResponse::Ok()
-        .content_type("text/html; charset=UTF-8")
-        .header("X-Header", "zkb")
-        .body(body.into())
-}
 
 fn find(info: web::Path<String>, ctx: Context) -> HttpResponse {
     use crate::reports::Names;
     info!("/find/{}", info);
     ctx.notify("navigator/find");
-    response(Names::report(info.as_ref(), &ctx))
+    wrap(Names::report(info.as_ref(), &ctx))
 }
 
 fn history(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
@@ -68,7 +68,6 @@ fn history(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
     let minutes = info.2;
     ctx.notify(format!("navigator/history/{}", route));
     
-    
     let body = match route.as_ref() {
         "system" => reports::History::system(&id, &minutes, &ctx),
         "region" => reports::History::region(&id, &minutes, &ctx),
@@ -76,10 +75,7 @@ fn history(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
         _=> format!("Unknown Area Type {} ", route)
     };
 
-    HttpResponse::Ok()
-        .content_type("text/html; charset=UTF-8")
-        .header("X-Header", "zkb")
-        .body(body)
+    wrap(body)
 }
 
 fn report(info: web::Path<(String, String, i32, i32)>, ctx: Context) -> HttpResponse {
@@ -90,12 +86,7 @@ fn report(info: web::Path<(String, String, i32, i32)>, ctx: Context) -> HttpResp
     let minutes = info.3;
     ctx.notify(format!("navigator/report/{}/{}", category, class));
 
-    let body = reports::History::report(category, class, &id, &minutes, &ctx);
-
-    HttpResponse::Ok()
-        .content_type("text/html; charset=UTF-8")
-        .header("X-Header", "zkb")
-        .body(body)
+    wrap(reports::History::report(category, class, &id, &minutes, &ctx))
 }
 
 fn desc(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
@@ -105,11 +96,7 @@ fn desc(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
         "corporation" => reports::Corporation::description(&info.1, &ctx),
         _=> format!("Unknown Type {} ", info.0)
     };
-
-    HttpResponse::Ok()
-        .content_type("text/html; charset=UTF-8")
-        .header("X-Header", "zkb")
-        .body(body)
+    wrap(body)
 }
 
 fn stat(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
@@ -121,11 +108,7 @@ fn stat(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
         "character" => reports::Character::stat(&id, &ctx),
         _=> format!("Unknown route {} ", route)
     };
-
-    HttpResponse::Ok()
-        .content_type("text/html; charset=UTF-8")
-        .header("X-Header", "zkb")
-        .body(body)
+    wrap(body)
 }
 
 fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
@@ -148,20 +131,14 @@ fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
         _=> format!("Unknown Type {} ", route)
     };
 
-    HttpResponse::Ok()
-        .content_type("text/html; charset=UTF-8")
-        .header("X-Header", "zkb")
-        .body(body)
+    wrap(body)
 }
 
 fn route(info: web::Path<(String, String, String)>, ctx: Context) -> HttpResponse {
     let (route, departure, destination) = info.into_inner();
-    let body = reports::System::route_named(route, departure, destination, &ctx);
     ctx.notify("navigator/api/route");
-    HttpResponse::Ok()
-        .content_type("text/html; charset=UTF-8")
-        .header("X-Header", "zkb")
-        .body(body)
+    let body = reports::System::route_named(route, departure, destination, &ctx);    
+    wrap(body)
 }
 
 
@@ -171,7 +148,6 @@ fn cmd(info: web::Path<String>, ctx: Context) -> String {
     match info.as_ref().as_ref() {
         "ping" => ping(&ctx),
         "quit" => quit(&ctx),
-        "statistic" => statistic(&ctx),
         _ => format!("/cmd/{}", info)
     }
 }
@@ -184,10 +160,7 @@ fn services(info: web::Path<(String, i32, i32)>, ctx: Context) -> HttpResponse {
         _ => format!("/services/{}/{}/{}", info.0, info.1, info.2)
     };
 
-    HttpResponse::Ok()
-        .content_type("text/html; charset=UTF-8")
-        .header("X-Header", "zkb")
-        .body(body)
+    wrap(body)
 }
 
 fn hidden(info: web::Path<(String, i32, String)>, ctx: Context) -> HttpResponse {
@@ -199,10 +172,7 @@ fn hidden(info: web::Path<(String, i32, String)>, ctx: Context) -> HttpResponse 
         _ => String::new()
     };
 
-    HttpResponse::Ok()
-        .content_type("text/html; charset=UTF-8")
-        .header("X-Header", "zkb")
-        .body(body)
+    wrap(body)
 }
 
 pub fn run(context: Context) {
@@ -219,6 +189,7 @@ pub fn run(context: Context) {
             .route("/navigator/desc/{route}/{id}", web::get().to(desc))
             .route("/navigator/stat/{route}/{id}", web::get().to(stat))
             .route("/navigator/cmd/{cmd}", web::get().to(cmd))
+            .route("/navigator/cmd/statistic/{arg}", web::get().to(statistic))
             .route("/navigator/services/{type}/{first}/{second}", web::get().to(services))
             .route("/navigator/history/{route}/{id}/{minutes}", web::get().to(history))
             .route("/navigator/report/{category}/{class}/{id}/{minutes}", web::get().to(report))
