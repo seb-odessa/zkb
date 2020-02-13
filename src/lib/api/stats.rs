@@ -22,14 +22,14 @@ pub enum Entity {
 pub type Groups = HashMap<IntRequired, GroupStat>;
 pub type Months = HashMap<IntRequired, MonthStat>;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 //#[serde(deny_unknown_fields)]
 pub struct Stats {
     pub id: IntRequired,
 
     #[serde(alias = "type")]            pub record_type: String,
-    #[serde(alias = "dangerRatio")]     pub danger_ratio: IntRequired,
-    #[serde(alias = "gangRatio")]       pub gang_ratio: IntRequired,
+    #[serde(alias = "dangerRatio")]     pub danger_ratio: IntOptional,
+    #[serde(alias = "gangRatio")]       pub gang_ratio: IntOptional,
     #[serde(alias = "shipsDestroyed")]  pub ship_destroyed: IntOptional,
     #[serde(alias = "pointsDestroyed")] pub points_destroyed: IntOptional,
     #[serde(alias = "iskDestroyed")]    pub isk_destroyed: LongOptional,
@@ -64,6 +64,14 @@ impl Stats {
             Ok(object) => Some(object),
             Err(err) => {println!("{}", err); None}
         }
+    }
+
+    pub fn danger_ratio(&self)-> IntRequired {
+        self.danger_ratio.unwrap_or_default()
+    }
+
+    pub fn gang_ratio(&self)-> IntRequired {
+        self.gang_ratio.unwrap_or_default()
     }
 
     pub fn new(entity: Entity) -> Option<Self> {
@@ -240,7 +248,7 @@ impl TopList {
                             reports::table_cell(output, "Kills", text_style, kills.to_string());
                             reports::table_cell(output, "alliance name", text_style, ctx.get_api_href("alliance", *alliance_id, alliance_name));
                             reports::table_cell(output, "alliance ticker", text_style, alliance_ticker);
-                        },                        
+                        },
                         TopValue::ShipTop {kills, ship_id, ship_name, group_id, group_name, .. } => {
                             reports::table_cell(output, "Kills", text_style, kills.to_string());
                             reports::table_cell(output, "ship", text_style, ctx.get_zkb_href("ship", *ship_id, ship_name));
@@ -551,7 +559,6 @@ mod tests {
         assert_eq!(2, item.kills.count);
     }
 
-
     #[test]
     fn from_api_for_character() {
         let response = Stats::new(Entity::Character(2114350216));
@@ -559,7 +566,6 @@ mod tests {
         let object = response.unwrap();
         assert_eq!(object.id, 2114350216);
         assert_eq!(&object.record_type, "characterID");
-
     }
 
     #[test]
@@ -580,4 +586,21 @@ mod tests {
         assert_eq!(&object.record_type, "allianceID");
     }
 
+    #[test]
+    fn from_api_for_system() {
+        let response = Stats::new(Entity::System(30000142));
+        assert!(response.is_some());
+        let object = response.unwrap();
+        assert_eq!(object.id, 30000142);
+        assert_eq!(&object.record_type, "solarSystemID");
+    }
+    
+    #[test]
+    fn from_api_for_region() {
+        let response = Stats::new(Entity::Region(10000002));
+        assert!(response.is_some());
+        let object = response.unwrap();
+        assert_eq!(object.id, 10000002);
+        assert_eq!(&object.record_type, "regionID");
+    }    
 }

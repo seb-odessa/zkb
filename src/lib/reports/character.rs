@@ -56,8 +56,8 @@ impl Character {
         if let Some(stats) = Stats::new(Entity::Character(*id)) {
             Stats::report_win_loses(&mut output, "Ships", stats.ship_destroyed, stats.ship_lost);
             Stats::report_win_loses(&mut output, "Solo", stats.solo_kills, stats.solo_losses);
-            reports::div(&mut output, format!("Danger: {} %", stats.danger_ratio));
-            reports::div(&mut output, format!("Gangs: {} %", stats.gang_ratio));
+            reports::div(&mut output, format!("Danger: {} %", stats.danger_ratio()));
+            reports::div(&mut output, format!("Gangs: {} %", stats.gang_ratio()));
 
             //character, corporation, alliance, shipType, solarSystem, location
             let allowed: HashSet<String> = vec!["shipType", "solarSystem", "location"].into_iter().map(|s| String::from(s)).collect();
