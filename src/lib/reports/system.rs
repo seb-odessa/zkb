@@ -1,3 +1,4 @@
+use crate::api;
 use crate::models;
 use crate::services;
 use crate::services::Context;
@@ -25,6 +26,7 @@ impl reports::ReportableEx for System {
                 reports::systems(&mut output, &system.get_id("constellation"), &ctx);
                 reports::constellations(&mut output, &system.get_id("region"), &ctx);
                 reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
+                reports::lazy(&mut output, format!("stat/system/{}", id), &ctx);
                 //reports::map(&mut output, "json/nodes/a", "json/edges/a", &ctx);
             }
         }
@@ -85,7 +87,6 @@ impl System {
 
     // todo create api type for route
     fn get_route(departure: &i32, destination: &i32, flag: &str) -> Option<Vec<i32>> {
-        use crate::api;
         let response = if flag.is_empty(){
             api::gw::eve_api(&format!("route/{}/{}", departure, destination)).unwrap_or_default()
         } else {
@@ -310,5 +311,19 @@ impl System {
         String::from("Done")
     }
 
+    pub fn stat(id: &i32, ctx: &Context) -> String {
+        use api::stats::Stats;
+        use api::stats::Entity;
+        use api::stats::TopList;
+        use std::collections::HashSet;
+
+        let mut output = String::new();
+        if let Some(stats) = Stats::new(Entity::System(*id)) {
+            //character, corporation, alliance, shipType, solarSystem, location
+            let allowed: HashSet<String> = vec!["character", "corporation", "alliance", "shipType", "location"].into_iter().map(|s| String::from(s)).collect();
+            TopList::write(&mut output, &stats.top_lists, allowed, ctx);
+        }
+        return output;
+    }
 }
 

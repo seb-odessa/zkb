@@ -1,3 +1,4 @@
+use crate::api;
 use crate::models;
 use crate::services;
 use crate::services::Context;
@@ -22,6 +23,7 @@ impl reports::ReportableEx for Region {
                 Self::neighbors(&mut output, id, ctx);
                 reports::constellations(&mut output, &region.region_id, &ctx);
                 reports::lazy(&mut output, format!("history/region/{}/{}", id, 60), &ctx);
+                reports::lazy(&mut output, format!("stat/region/{}", id), &ctx);
             }
         }
         return output;
@@ -66,5 +68,20 @@ impl Region {
             }
         }
     }
+    
+    pub fn stat(id: &i32, ctx: &Context) -> String {
+        use api::stats::Stats;
+        use api::stats::Entity;
+        use api::stats::TopList;
+        use std::collections::HashSet;
+
+        let mut output = String::new();
+        if let Some(stats) = Stats::new(Entity::Region(*id)) {
+            //character, corporation, alliance, shipType, solarSystem, location
+            let allowed: HashSet<String> = vec!["character", "corporation", "alliance", "shipType", "location"].into_iter().map(|s| String::from(s)).collect();
+            TopList::write(&mut output, &stats.top_lists, allowed, ctx);
+        }
+        return output;
+    }    
 
 }

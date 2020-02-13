@@ -45,7 +45,6 @@ fn statistic(_info: web::Path<String>, ctx: Context) -> HttpResponse {
         },
         None => {
             reports::div(&mut output, "Was not able to acquire statustic map");
-
         }
     }
 
@@ -106,6 +105,9 @@ fn stat(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
         "alliance" => reports::Alliance::stat(&id, &ctx),
         "corporation" => reports::Corporation::stat(&id, &ctx),
         "character" => reports::Character::stat(&id, &ctx),
+        "system" => reports::System::stat(&id, &ctx),
+        "region" => reports::Region::stat(&id, &ctx),
+
         _=> format!("Unknown route {} ", route)
     };
     wrap(body)
