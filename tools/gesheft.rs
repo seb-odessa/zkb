@@ -2,9 +2,9 @@ use lib::api::{Order, Orders, OrderType};
 use separator::Separatable;
 
 
-const DOMAIN_ID: i32 = 10000043;
-const THE_FORGE: i32 = 10000002;
-const ITEM_ID: i32 = 44992;
+// const DOMAIN_ID: i32 = 10000043;
+// const THE_FORGE: i32 = 10000002;
+// const ITEM_ID: i32 = 44992;
 
 struct OrdersHolder {
     pub src_system_id: i32,

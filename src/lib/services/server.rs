@@ -227,11 +227,15 @@ struct Data {
     nodes: Vec<Node>,
     links: Vec<Link>,
 }
+impl Data {
+    pub fn new(nodes: Vec<Node>, links: Vec<Link>) -> Self { Self {nodes, links} }
+}
 
 fn data(_info: web::Path<String>, _ctx: Context) -> HttpResponse {
-    let mut data: Data;
-    data.nodes = vec![Node::new(1, "A"), Node::new(2, "B"), Node::new(3, "C"), Node::new(4, "D"), Node::new(5, "E")];
-    data.links = vec![Link::new(1, 2), Link::new(1, 3), Link::new(1, 4), Link::new(1, 5), Link::new(3, 5)];
+    let nodes = vec![Node::new(1, "A"), Node::new(2, "B"), Node::new(3, "C"), Node::new(4, "D"), Node::new(5, "E")];
+    let links = vec![Link::new(1, 2), Link::new(1, 3), Link::new(1, 4), Link::new(1, 5), Link::new(3, 5)];
+
+    let data = Data::new(nodes, links);
     let json = serde_json::to_string(&data).ok().unwrap_or_default();
     HttpResponse::Ok()
         .content_type("application/json; charset=UTF-8")
