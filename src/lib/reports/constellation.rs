@@ -62,7 +62,7 @@ impl Constellation {
                     reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::constellation_count(&id, &10, ctx))),
                     reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::constellation_count(&id, &60, ctx))),
                     reports::tip("Kills at last 6 hours", format!("{:0>3}", History::constellation_count(&id, &360, ctx))),
-                    ctx.get_api_link("constellation", name)
+                    ctx.get_api_href("constellation", id, name)
                 ));
             }
         }

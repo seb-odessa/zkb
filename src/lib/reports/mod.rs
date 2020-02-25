@@ -37,7 +37,7 @@ pub const FAIL: &'static str = "Error occurred while trying to write in String";
 
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
-struct Node {
+pub struct Node {
     id: i32,
     label: String
 }
@@ -46,7 +46,7 @@ impl Node {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
-struct Edge {
+pub struct Edge {
     from: i32,
     to: i32
 }
