@@ -195,7 +195,8 @@ pub fn run(context: Context) {
             .route("/navigator/services/{type}/{first}/{second}", web::get().to(services))
             .route("/navigator/history/{route}/{id}/{minutes}", web::get().to(history))
             .route("/navigator/report/{category}/{class}/{id}/{minutes}", web::get().to(report))
-            .route("/navigator/json/data/{id}", web::get().to(data))
+            .route("/navigator/json/nodes/{id}", web::get().to(nodes))
+            .route("/navigator/json/edges/{id}", web::get().to(edges))
     })
     .bind(address)
     .unwrap()
@@ -207,38 +208,41 @@ pub fn run(context: Context) {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 struct Node {
     id: i32,
-    name: String
+    label: String
 }
 impl Node {
-    pub fn new<S: Into<String>>(id: i32, name: S) -> Self { Self{id: id, name: name.into()} }
+    pub fn new<S: Into<String>>(id: i32, label: S) -> Self { Self{id: id, label: label.into()} }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
-struct Link {
-    source: i32,
-    target: i32
+struct Edge {
+    from: i32,
+    to: i32
 }
-impl Link {
-    pub fn new(source: i32, target: i32) -> Self { Self{source, target} }
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
-struct Data {
-    nodes: Vec<Node>,
-    links: Vec<Link>,
-}
-impl Data {
-    pub fn new(nodes: Vec<Node>, links: Vec<Link>) -> Self { Self {nodes, links} }
+impl Edge {
+    pub fn new(from: i32, to: i32) -> Self { Self{from, to} }
 }
 
-fn data(_info: web::Path<String>, _ctx: Context) -> HttpResponse {
-    let nodes = vec![Node::new(1, "A"), Node::new(2, "B"), Node::new(3, "C"), Node::new(4, "D"), Node::new(5, "E")];
-    let links = vec![Link::new(1, 2), Link::new(1, 3), Link::new(1, 4), Link::new(1, 5), Link::new(3, 5)];
+fn nodes(_info: web::Path<String>, _ctx: Context) -> HttpResponse {
 
-    let data = Data::new(nodes, links);
-    let json = serde_json::to_string(&data).ok().unwrap_or_default();
+    let nodes = vec![Node::new(1, "Node 1"), Node::new(2, "Node 2"), Node::new(3, "Node 3"), Node::new(4, "Node 4"), Node::new(5, "Node 5")];
+    let json = serde_json::to_string(&nodes).ok().unwrap_or_default();
     HttpResponse::Ok()
         .content_type("application/json; charset=UTF-8")
         .header("X-Header", "zkb")
         .body(json)
+}
+
+fn edges(_info: web::Path<String>, _ctx: Context) -> HttpResponse {
+
+    let edges = vec![
+        Edge::new(1, 3), Edge::new(1, 2),Edge::new(2, 4),Edge::new(2, 5),Edge::new(3, 2),Edge::new(3, 5),Edge::new(5, 1),
+        Edge::new(3, 1), Edge::new(2, 1),Edge::new(4, 2),Edge::new(5, 2),Edge::new(2, 3),Edge::new(5, 3),Edge::new(1, 5),
+        ];
+    let json = serde_json::to_string(&edges).ok().unwrap_or_default();
+    HttpResponse::Ok()
+        .content_type("application/json; charset=UTF-8")
+        .header("X-Header", "zkb")
+        .body(json)
+
 }
