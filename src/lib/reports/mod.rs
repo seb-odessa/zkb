@@ -14,8 +14,9 @@ mod alliance;
 mod faction;
 
 use crate::services::{Context, Category, Message, Report, Area};
+use crate::models;
 use std::fmt::Write;
-
+use serde::{Deserialize, Serialize};
 
 pub use names::Names;
 pub use killmail::Killmail;
@@ -33,6 +34,25 @@ pub use faction::Faction;
 
 
 pub const FAIL: &'static str = "Error occurred while trying to write in String";
+
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+struct Node {
+    id: i32,
+    label: String
+}
+impl Node {
+    pub fn new<S: Into<String>>(id: i32, label: S) -> Self { Self{id: id, label: label.into()} }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+struct Edge {
+    from: i32,
+    to: i32
+}
+impl Edge {
+    pub fn new(from: i32, to: i32) -> Self { Self{from, to} }
+}
 
 #[derive(Debug, PartialEq)]
 pub enum ReportType{
@@ -190,23 +210,39 @@ pub fn constellations(output: &mut dyn Write, region_id: &i32, ctx: &Context) {
     }
 }
 
-pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
-    use crate::models::system::*;
-    use std::collections::BTreeMap;
-    if let Report::Systems(systems) = load(Category::Systems((Area::Constellation(*constellation_id), SystemFilter::Any)), &ctx) {
-        let mut map = BTreeMap::new();
-        for system in &systems {
-            let name = system.get_name("system");
-            let url = span("Solar System", "", ctx.get_api_link("system", &name));
-            map.insert(name, url);
-        }
-        let mut list = String::new();
-        for (_, url) in & map {
-            list += url;
-            list += " ";
-        }
-        div(output, format!("Systems in constellation: {}", list));
+pub fn get_systems(constellation_id: &i32, ctx: &Context) -> Vec<models::system::SystemNamed> {
+    let mut result = Vec::new();
+    if let Report::Systems(systems) = load(Category::Systems((Area::Constellation(*constellation_id), models::system::SystemFilter::Any)), &ctx) {
+        result = systems;
     }
+    return result;
+}
+
+pub fn get_constellation_nodes(constellation_id: &i32, ctx: &Context) -> String {
+
+    let nodes: Vec<Node> = get_systems(constellation_id, ctx)
+                .into_iter()
+                .map(|system| Node::new(system.get_id("system"), system.get_name("system")))
+                .collect();
+
+    serde_json::to_string(&nodes).ok().unwrap_or_default()
+}
+
+pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
+    use std::collections::BTreeMap;
+    let mut map = BTreeMap::new();
+    let systems = get_systems(constellation_id, ctx);
+    for system in &systems {
+        let name = system.get_name("system");
+        let url = span("Solar System", "", ctx.get_api_link("system", &name));
+        map.insert(name, url);
+    }
+    let mut list = String::new();
+    for (_, url) in & map {
+        list += url;
+        list += " ";
+    }
+    div(output, format!("Systems in constellation: {}", list));
 }
 
 pub fn map<S: Into<String>>(output: &mut dyn Write, nodes: S, edges: S, ctx: &Context) {

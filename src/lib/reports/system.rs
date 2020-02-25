@@ -27,7 +27,8 @@ impl reports::ReportableEx for System {
                 reports::constellations(&mut output, &system.get_id("region"), &ctx);
                 reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
                 reports::lazy(&mut output, format!("stat/system/{}", id), &ctx);
-                reports::map(&mut output, "json/nodes/a", "json/edges/a", &ctx);
+                let const_id = system.get_id("constellation");
+                reports::map(&mut output, format!("json/nodes/FAKE/{}", const_id), format!("json/edges/FAKE/{}", const_id), &ctx);
             }
         }
         return output;

@@ -195,8 +195,8 @@ pub fn run(context: Context) {
             .route("/navigator/services/{type}/{first}/{second}", web::get().to(services))
             .route("/navigator/history/{route}/{id}/{minutes}", web::get().to(history))
             .route("/navigator/report/{category}/{class}/{id}/{minutes}", web::get().to(report))
-            .route("/navigator/json/nodes/{id}", web::get().to(nodes))
-            .route("/navigator/json/edges/{id}", web::get().to(edges))
+            .route("/navigator/json/nodes/{area}/{id}", web::get().to(nodes))
+            .route("/navigator/json/edges/{area}/{id}", web::get().to(edges))
     })
     .bind(address)
     .unwrap()
@@ -223,10 +223,17 @@ impl Edge {
     pub fn new(from: i32, to: i32) -> Self { Self{from, to} }
 }
 
-fn nodes(_info: web::Path<String>, _ctx: Context) -> HttpResponse {
+fn nodes(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
+    let (area, id) = info.into_inner();
+    info!("/json/nodes/{}/{}", &area, &id);
+    ctx.notify(format!("navigator/json/nodes/{}", area));
 
     let nodes = vec![Node::new(1, "Node 1"), Node::new(2, "Node 2"), Node::new(3, "Node 3"), Node::new(4, "Node 4"), Node::new(5, "Node 5")];
-    let json = serde_json::to_string(&nodes).ok().unwrap_or_default();
+    let json = match area.as_ref() {
+        "constellation" => reports::get_constellation_nodes(&id, &ctx),
+        _=> serde_json::to_string(&nodes).ok().unwrap_or_default()
+    };
+
     HttpResponse::Ok()
         .content_type("application/json; charset=UTF-8")
         .header("X-Header", "zkb")
