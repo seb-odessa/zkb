@@ -218,15 +218,38 @@ pub fn get_systems(constellation_id: &i32, ctx: &Context) -> Vec<models::system:
     return result;
 }
 
-pub fn get_constellation_nodes(constellation_id: &i32, ctx: &Context) -> String {
-
-    let nodes: Vec<Node> = get_systems(constellation_id, ctx)
-                .into_iter()
-                .map(|system| Node::new(system.get_id("system"), system.get_name("system")))
-                .collect();
-
-    serde_json::to_string(&nodes).ok().unwrap_or_default()
+pub fn get_constellation_nodes(constellation_id: &i32, ctx: &Context) -> Vec<Node> {
+    get_systems(constellation_id, ctx)
+        .into_iter()
+        .map(|system| Node::new(system.get_id("system"), system.get_name("system")))
+        .collect()
 }
+
+pub fn get_system_neighbors(id: &i32, ctx: &Context) -> Vec<Node> {
+    use crate::services::Report::SystemNeighbors;
+    match load(Category::Neighbors(Area::System(*id)), &ctx) {
+        SystemNeighbors(neighbors) => neighbors
+                                        .into_iter()
+                                        .map(|system| Node::new(system.get_id("own"), system.get_name("own")))
+                                        .collect(),
+        _ => Vec::new()
+    }
+}
+
+pub fn get_constellation_edges(constellation_id: &i32, ctx: &Context) -> Vec<Edge> {
+    let nodes = get_constellation_nodes(constellation_id, ctx);
+    let mut edges: Vec<Edge> = Vec::new();
+    for node in &nodes {
+        let neighbors = get_system_neighbors(&node.id, ctx);
+        for neighbor in &neighbors {
+            if let Some(item) = nodes.iter().find(|&x| x.id == neighbor.id) {
+                edges.push(Edge::new(item.id, neighbor.id));
+            }
+        }
+    }
+    return edges;
+}
+
 
 pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
     use std::collections::BTreeMap;

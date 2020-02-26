@@ -36,27 +36,27 @@ fn main() {
     info!("Application context constructed");
     scope(|scope| {
         scope.builder()
-             .name("API Server".to_string())
+             .name("Web Server".to_string())
              .spawn(|_| server::run(context.clone()))
              .expect("Failed to create API Server");
         scope.builder()
-             .name("Monitor".to_string())
+             .name("ZKB Monitor".to_string())
              .spawn(|_| monitor::run(context.clone()))
              .expect("Failed to create Monitor");
         scope.builder()
-             .name("Name Resolver".to_string())
+             .name("API Name Resolver".to_string())
              .spawn(|_| resolver::run(context.clone()))
              .expect("Failed to create Name Resolver");
         scope.builder()
-             .name("Name Resolver".to_string())
+             .name("API Name Resolver".to_string())
              .spawn(|_| resolver::run(context.clone()))
              .expect("Failed to create Name Resolver");
         scope.builder()
-             .name("Name Resolver".to_string())
+             .name("API Name Resolver".to_string())
              .spawn(|_| resolver::run(context.clone()))
              .expect("Failed to create Name Resolver");
         scope.builder()
-             .name("Name Resolver".to_string())
+             .name("API Name Resolver".to_string())
              .spawn(|_| resolver::run(context.clone()))
              .expect("Failed to create Name Resolver");
         scope.builder()

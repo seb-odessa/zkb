@@ -1,6 +1,6 @@
 [package]
 name = "zkb"
-version = "0.5.8"
+version = "0.6.2"
 authors = ["seb<seb@ukr.net>"]
 edition = "2018"
 
@@ -24,9 +24,9 @@ path = "src/lib/lib.rs"
 #name = "navigator"
 #path = "tools/navigator.rs"
 
-[[bin]]
-name = "gesheft"
-path = "tools/gesheft.rs"
+#[[bin]]
+#name = "gesheft"
+#path = "tools/gesheft.rs"
 
 [dependencies]
     serde = { version = "1.0", features = ["derive"]}

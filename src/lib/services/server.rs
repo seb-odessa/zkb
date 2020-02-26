@@ -210,29 +210,34 @@ fn nodes(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
     ctx.notify(format!("navigator/json/nodes/{}", area));
 
     use reports::Node;
-    let nodes = vec![Node::new(1, "Node 1"), Node::new(2, "Node 2"), Node::new(3, "Node 3"), Node::new(4, "Node 4"), Node::new(5, "Node 5")];
-    let json = match area.as_ref() {
+    let nodes = match area.as_ref() {
         "constellation" => reports::get_constellation_nodes(&id, &ctx),
-        _=> serde_json::to_string(&nodes).ok().unwrap_or_default()
+        _ => vec![Node::new(1, "Node 1"), Node::new(2, "Node 2"), Node::new(3, "Node 3"), Node::new(4, "Node 4"), Node::new(5, "Node 5")]
     };
 
     HttpResponse::Ok()
         .content_type("application/json; charset=UTF-8")
         .header("X-Header", "zkb")
-        .body(json)
+        .body(serde_json::to_string(&nodes).ok().unwrap_or_default())
 }
 
-fn edges(_info: web::Path<String>, _ctx: Context) -> HttpResponse {
+fn edges(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
+    let (area, id) = info.into_inner();
+    info!("/json/edges/{}/{}", &area, &id);
+    ctx.notify(format!("navigator/json/edges/{}", area));
 
     use reports::Edge;
-    let edges = vec![
-        Edge::new(1, 3), Edge::new(1, 2),Edge::new(2, 4),Edge::new(2, 5),Edge::new(3, 2),Edge::new(3, 5),Edge::new(5, 1),
-        Edge::new(3, 1), Edge::new(2, 1),Edge::new(4, 2),Edge::new(5, 2),Edge::new(2, 3),Edge::new(5, 3),Edge::new(1, 5),
-        ];
-    let json = serde_json::to_string(&edges).ok().unwrap_or_default();
+    let edges = match area.as_ref() {
+        "constellation" => reports::get_constellation_edges(&id, &ctx),
+        _ => vec![
+            Edge::new(1, 3), Edge::new(1, 2),Edge::new(2, 4),Edge::new(2, 5),Edge::new(3, 2),Edge::new(3, 5),Edge::new(5, 1),
+            Edge::new(3, 1), Edge::new(2, 1),Edge::new(4, 2),Edge::new(5, 2),Edge::new(2, 3),Edge::new(5, 3),Edge::new(1, 5),
+            ]
+    };
+
     HttpResponse::Ok()
         .content_type("application/json; charset=UTF-8")
         .header("X-Header", "zkb")
-        .body(json)
+        .body(serde_json::to_string(&edges).ok().unwrap_or_default())
 
 }
