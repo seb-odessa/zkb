@@ -242,9 +242,9 @@ pub fn get_constellation_edges(constellation_id: &i32, ctx: &Context) -> Vec<Edg
     for node in &nodes {
         let neighbors = get_system_neighbors(&node.id, ctx);
         for neighbor in &neighbors {
-            if edges.iter().find(|e| e.from == neighbor.id && e.to == node.id).is_none() {
+//            if edges.iter().find(|e| e.from == neighbor.id && e.to == node.id).is_none() {
                 edges.push(Edge::new(node.id, neighbor.id));
-            }
+//            }
         }
     }
     return edges;
