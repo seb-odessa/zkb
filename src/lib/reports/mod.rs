@@ -219,10 +219,18 @@ pub fn get_systems(constellation_id: &i32, ctx: &Context) -> Vec<models::system:
 }
 
 pub fn get_constellation_nodes(constellation_id: &i32, ctx: &Context) -> Vec<Node> {
-    get_systems(constellation_id, ctx)
+    let mut all = Vec::new();
+    let nodes: Vec<Node> = get_systems(constellation_id, ctx)
         .into_iter()
         .map(|system| Node::new(system.get_id("system"), system.get_name("system")))
-        .collect()
+        .collect();
+    for node in nodes.iter() {
+        all.push(node.clone());
+        let mut neighbors = get_system_neighbors(&node.id, ctx);
+        all.append(&mut neighbors);
+    }
+
+    return all;
 }
 
 pub fn get_system_neighbors(id: &i32, ctx: &Context) -> Vec<Node> {
@@ -242,9 +250,9 @@ pub fn get_constellation_edges(constellation_id: &i32, ctx: &Context) -> Vec<Edg
     for node in &nodes {
         let neighbors = get_system_neighbors(&node.id, ctx);
         for neighbor in &neighbors {
-//            if edges.iter().find(|e| e.from == neighbor.id && e.to == node.id).is_none() {
+            if edges.iter().find(|e| e.from == neighbor.id && e.to == node.id).is_none() {
                 edges.push(Edge::new(node.id, neighbor.id));
-//            }
+            }
         }
     }
     return edges;
