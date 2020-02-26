@@ -23,12 +23,13 @@ impl reports::ReportableEx for System {
                 reports::lazy(&mut output, format!("api/region_brief/{}", system.get_id("region")), &ctx);
                 Self::neighbors(&mut output, &id, &ctx);
                 Self::observatory_report(&mut output, &system, &ctx);
-                reports::systems(&mut output, &system.get_id("constellation"), &ctx);
-                reports::constellations(&mut output, &system.get_id("region"), &ctx);
                 reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
                 reports::lazy(&mut output, format!("stat/system/{}", id), &ctx);
                 let const_id = system.get_id("constellation");
                 reports::map(&mut output, format!("json/nodes/constellation/{}", const_id), format!("json/edges/constellation/{}", const_id), &ctx);
+                reports::systems(&mut output, &system.get_id("constellation"), &ctx);
+                reports::constellations(&mut output, &system.get_id("region"), &ctx);
+                reports::div(&mut output, "");
             }
         }
         return output;

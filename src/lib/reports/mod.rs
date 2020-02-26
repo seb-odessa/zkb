@@ -284,7 +284,9 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, nodes: S, edges: S, ctx: &Co
         format_args!(r##"
             <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
             <style type="text/css"> #map {{ width: 1200px; height: 800px; border: 1px solid lightgray; }} </style>
+            <div />
             <div id = "map">...</div>
+            <div />
             <script type="text/javascript">
 
                 const start = async function() {{
