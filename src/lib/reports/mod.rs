@@ -224,7 +224,8 @@ pub fn get_constellation_nodes(constellation_id: &i32, ctx: &Context) -> Vec<Nod
 
     for system in &get_systems(constellation_id, ctx) {
         let id = system.get_id("system");
-        let name = system.get_name("system");
+        let name = format!("{} ({})", system.get_name("system"), system.get_security_status());
+
         nodes.insert(id, name);
         for node in &get_system_neighbors(&id, ctx) {
             nodes.insert(node.id, node.label.clone());
