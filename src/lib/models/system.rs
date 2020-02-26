@@ -118,6 +118,10 @@ impl SystemNamed {
         }.unwrap_or_default()
     }
 
+    pub fn get_security_status(&self) -> String {
+        format!("{:02}", self.security_status)
+    }
+
     pub fn has_observatory(&self) -> bool {
         self.observatory.is_some()
     }

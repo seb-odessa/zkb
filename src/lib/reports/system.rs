@@ -39,10 +39,11 @@ impl System {
     pub fn write(output: &mut dyn Write, system: &models::system::SystemNamed, ctx: &Context) {
         let id = system.get_id("system");
         let name = system.get_name("system");
+        let status = system.get_security_status();
         let content = format!(r#"<span id="{id}" data-name="{name}">System: {desc} [{map}]</span>"#,
             id = system.system_id,
             name = &name,
-            desc = ctx.get_place_desc("system", id, &name),
+            desc = ctx.get_place_desc("system", id, &format!("{} ({})",name, status)),
             map = ctx.get_dotlan_href(system.get_name("region"), &name, "dotlan")
         );
         reports::div(output, content);
