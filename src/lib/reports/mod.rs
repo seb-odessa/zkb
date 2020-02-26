@@ -39,10 +39,17 @@ pub const FAIL: &'static str = "Error occurred while trying to write in String";
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct Node {
     id: i32,
-    label: String
+    label: String,
+    color: Option<String>,
 }
 impl Node {
-    pub fn new<S: Into<String>>(id: i32, label: S) -> Self { Self{id: id, label: label.into()} }
+    pub fn new<S: Into<String>>(id: i32, label: S) -> Self {
+        Self {
+            id: id,
+            label: label.into(),
+            color: None,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
