@@ -230,7 +230,7 @@ pub fn get_system_neighbors(id: &i32, ctx: &Context) -> Vec<Node> {
     match load(Category::Neighbors(Area::System(*id)), &ctx) {
         SystemNeighbors(neighbors) => neighbors
                                         .into_iter()
-                                        .map(|system| Node::new(system.get_id("own"), system.get_name("own")))
+                                        .map(|system| Node::new(system.get_id("neighbor"), system.get_name("neighbor")))
                                         .collect(),
         _ => Vec::new()
     }
