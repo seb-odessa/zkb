@@ -16,7 +16,7 @@ pub struct Node {
     mass: u32,
     #[serde(rename = "borderWidth")]
     border_width: i32,
-//    #[serde(skip)]
+    #[serde(skip)]
     neighbors: Vec<i32>,
 
 }
@@ -97,8 +97,8 @@ pub fn get_system_network_edges(id: &i32, deep: u32, ctx: &Context) -> Vec<Edge>
     for (from, node) in &nodes {
         for to in &node.neighbors {
             let edge = Edge::new(*from, *to);
-            let exists = edges.iter().find(|&e| *e == edge).is_some();
-            if !exists {
+            let unknown = edges.iter().find(|&e| *e == edge).is_none();
+            if unknown && nodes.contains_key(from) && nodes.contains_key(to) {
                 edges.push(edge);
             }
         }
