@@ -293,10 +293,10 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, nodes: S, edges: S, ctx: &Co
                     var container = document.getElementById('map');
                     var data = {{ nodes: nodes_ds, edges: edges_ds }};
                     var options = {{clickToUse: true }};
-                    var map = new vis.Network(container, data, options);
+                    var network = new vis.Network(container, data, options);
                     map.on("click"), function(params) {{
                         params.event = "[original event]";
-                        console.log("click: " + params.nodes[0]);
+                        console.log("click: " + JSON.stringify(params, null, 4));
                     }}
                 }}
 
