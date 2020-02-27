@@ -292,7 +292,7 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, nodes: S, edges: S, ctx: &Co
                     console.log("Edges DS" + edges_ds);
                     var container = document.getElementById('map');
                     var data = {{ nodes: nodes_ds, edges: edges_ds }};
-                    var options = {{}};
+                    var options = { clickToUse: true };
                     var map = new vis.Network(container, data, options);
                 }}
 
