@@ -23,9 +23,9 @@ impl reports::ReportableEx for System {
                 reports::lazy(&mut output, format!("api/region_brief/{}", system.get_id("region")), &ctx);
                 Self::neighbors(&mut output, &id, &ctx);
                 Self::observatory_report(&mut output, &system, &ctx);
+                reports::map(&mut output, id, 4, "api/system", &ctx);
                 reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
                 reports::lazy(&mut output, format!("stat/system/{}", id), &ctx);
-                reports::map(&mut output, id, 4, "system", &ctx);
                 reports::systems(&mut output, &system.get_id("constellation"), &ctx);
                 reports::constellations(&mut output, &system.get_id("region"), &ctx);
                 reports::div(&mut output, "");
