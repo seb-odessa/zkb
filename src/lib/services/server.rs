@@ -1,5 +1,6 @@
 use crate::services::{Context, Command, Message};
 use crate::reports;
+use crate::reports::network;
 use crate::reports::Reportable;
 use crate::reports::ReportableEx;
 
@@ -211,6 +212,7 @@ fn nodes(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
 
     use reports::Node;
     let nodes = match area.as_ref() {
+        "system" => network::get_system_network_nodes(&id, 3, &ctx),
         "constellation" => reports::get_constellation_nodes(&id, &ctx),
         _ => vec![Node::new(1, "Node 1"), Node::new(2, "Node 2"), Node::new(3, "Node 3"), Node::new(4, "Node 4"), Node::new(5, "Node 5")]
     };

@@ -7,6 +7,8 @@ pub mod system;
 pub mod region;
 pub mod stargate;
 pub mod constellation;
+pub mod network;
+
 mod item;
 mod character;
 mod corporation;
@@ -16,7 +18,7 @@ mod faction;
 use crate::services::{Context, Category, Message, Report, Area};
 use crate::models;
 use std::fmt::Write;
-use serde::{Deserialize, Serialize};
+
 
 pub use names::Names;
 pub use killmail::Killmail;
@@ -31,35 +33,11 @@ pub use character::Character;
 pub use corporation::Corporation;
 pub use alliance::Alliance;
 pub use faction::Faction;
+pub use network::{Node, Edge};
 
 
 pub const FAIL: &'static str = "Error occurred while trying to write in String";
 
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
-pub struct Node {
-    id: i32,
-    label: String,
-    color: Option<String>,
-}
-impl Node {
-    pub fn new<S: Into<String>>(id: i32, label: S) -> Self {
-        Self {
-            id: id,
-            label: label.into(),
-            color: Some(String::from("red")),
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
-pub struct Edge {
-    from: i32,
-    to: i32
-}
-impl Edge {
-    pub fn new(from: i32, to: i32) -> Self { Self{from, to} }
-}
 
 #[derive(Debug, PartialEq)]
 pub enum ReportType{
@@ -268,7 +246,6 @@ pub fn get_constellation_edges(constellation_id: &i32, ctx: &Context) -> Vec<Edg
     return edges;
 }
 
-
 pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
     use std::collections::BTreeMap;
     let mut map = BTreeMap::new();
@@ -284,6 +261,14 @@ pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
         list += " ";
     }
     div(output, format!("Systems in constellation: {}", list));
+}
+
+pub fn get_security_status_color(status: f32) -> String {
+        if status <= 0.0 {"Crimson"}
+        else if status < 0.5 {"Red"}
+        else if status < 0.8 {"YellowGreen"}
+        else {"SkyBlue"}
+        .to_string()
 }
 
 pub fn map<S: Into<String>>(output: &mut dyn Write, nodes: S, edges: S, ctx: &Context) {

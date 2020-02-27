@@ -55,14 +55,6 @@ impl Killmail {
         return result;
     }
 
-    fn security_status_color(status: f32) -> String {
-        if status <= 0.0 {"Crimson"}
-        else if status < 0.5 {"Red"}
-        else if status < 0.8 {"YellowGreen"}
-        else {"SkyBlue"}
-        .to_string()
-    }
-
     fn volume_color(value: &u64) -> String {
         if *value > 1_000_000_000 {"Red"}
         else if *value > 500_000_000 {"OrangeRed"}
@@ -110,7 +102,7 @@ impl Killmail {
         }
         let security_status = reports::span(
             "System Security Status",
-            format!("color: {};", Self::security_status_color(security)),
+            format!("color: {};", reports::get_security_status_color(security)),
             format!("{:.1}", security),
         );
 
@@ -213,7 +205,7 @@ impl Killmail {
                     reports::span("Region", "", ctx.get_api_link("region", killmail.get_name("region"))),
                     reports::span("Constellation", "", ctx.get_api_link("constellation", killmail.get_name("constellation"))),
                     reports::span("System", "", ctx.get_api_link("system", killmail.get_name("system"))),
-                    reports::span("System Security Status",format!("color: {};", Self::security_status_color(security)),format!("({:.2})", security))
+                    reports::span("System Security Status",format!("color: {};", reports::get_security_status_color(security)),format!("({:.2})", security))
                 )
             );
             reports::table_cell(output, "Victim Faction/Alliance/Corporation/Character", text_style,

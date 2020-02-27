@@ -60,23 +60,30 @@ impl System {
         return None;
     }
 
+    pub fn get_neighbors(id: &i32, ctx: &Context) -> Vec<models::system::SystemNeighbors> {
+        use services::{Category, Report, Area};
+        match reports::load(Category::Neighbors(Area::System(*id)), &ctx) {
+            Report::SystemNeighbors(neighbors) => neighbors,
+            _ => Vec::new()
+        }
+    }
+
     fn neighbors(output: &mut dyn Write, id: &i32, ctx: &Context) {
-        use services::{Category, Report, Area, Message, Api};
+        use services::{Message, Api};
         use reports::history::History;
-        if let Report::SystemNeighbors(neighbors) = reports::load(Category::Neighbors(Area::System(*id)), &ctx) {
-            for neighbor in &neighbors {
-                let id = neighbor.get_id("neighbor");
-                let name = neighbor.get_name("neighbor");
-                if name.is_empty() {
-                    ctx.resolver.push(Message::Receive(Api::Object(id)));
-                }
-                reports::div(output, format!("neighbor: [ {} : {} : {} ] {}",
-                    reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &10, ctx))),
-                    reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &60, ctx))),
-                    reports::tip("Kills at last 6 hours", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &360, ctx))),
-                    ctx.get_place_desc("system", id, name)
-                ));
+        let neighbors = Self::get_neighbors(id, ctx);
+        for neighbor in &neighbors {
+            let id = neighbor.get_id("neighbor");
+            let name = neighbor.get_name("neighbor");
+            if name.is_empty() {
+                ctx.resolver.push(Message::Receive(Api::Object(id)));
             }
+            reports::div(output, format!("neighbor: [ {} : {} : {} ] {}",
+                reports::tip("Kills at last 10 minutes", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &10, ctx))),
+                reports::tip("Kills at last 60 minutes", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &60, ctx))),
+                reports::tip("Kills at last 6 hours", format!("{:0>3}", History::system_count(&neighbor.neighbor_id, &360, ctx))),
+                ctx.get_place_desc("system", id, name)
+            ));
         }
     }
 
@@ -114,7 +121,6 @@ impl System {
         }
         return path;
     }
-
 
     fn kills_color(count: i32) -> String {
         if count > 10 {"#FF0000"}
