@@ -294,7 +294,7 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, nodes: S, edges: S, ctx: &Co
                     var data = {{ nodes: nodes_ds, edges: edges_ds }};
                     var options = {{clickToUse: true }};
                     var network = new vis.Network(container, data, options);
-                    map.on("click"), function(params) {{
+                    network.on("click"), function(params) {{
                         params.event = "[original event]";
                         console.log("click: " + JSON.stringify(params, null, 4));
                     }}
