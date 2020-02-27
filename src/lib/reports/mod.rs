@@ -271,7 +271,7 @@ pub fn get_security_status_color(status: f32) -> String {
         .to_string()
 }
 
-pub fn map<S: Into<String>>(output: &mut dyn Write, nodes: S, edges: S, ctx: &Context) {
+pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S, ctx: &Context) {
     std::fmt::write(
         output,
         format_args!(r##"
@@ -285,7 +285,6 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, nodes: S, edges: S, ctx: &Co
                 const start = async function() {{
                     var nodes = await fetch("{root}/{nodes}").then(response => response.json());
                     var edges = await fetch("{root}/{edges}").then(response => response.json());
-
                     var nodes_ds = new vis.DataSet(nodes);
                     var edges_ds = new vis.DataSet(edges);
                     console.log("Nodes DS" + nodes_ds);
@@ -294,17 +293,16 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, nodes: S, edges: S, ctx: &Co
                     var data = {{ nodes: nodes_ds, edges: edges_ds }};
                     var options = {{clickToUse: true }};
                     var network = new vis.Network(container, data, options);
-                    network.on("click"), function(params) {{
-                        params.event = "[original event]";
-                        console.log("click: " + JSON.stringify(params, null, 4));
-                    }}
+
+                    network.on("doubleClick"), function(params) {{ window.open("{root}/{uri}/" + params.nodes[0], "_self"); }}
                 }}
 
                 start();
             </script>
         "##,
         root=ctx.get_root(),
-        nodes=nodes.into(),
-        edges=edges.into(),
+        nodes=format!("json/nodes/system/{}/{}", id, deep),
+        edges=format!("json/edges/system/{}/{}", id, deep),
+        uri=uri.into(),
     )).expect(FAIL);
 }
