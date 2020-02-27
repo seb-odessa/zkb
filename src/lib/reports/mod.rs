@@ -287,14 +287,16 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S,
                     var edges = await fetch("{root}/{edges}").then(response => response.json());
                     var nodes_ds = new vis.DataSet(nodes);
                     var edges_ds = new vis.DataSet(edges);
-                    console.log("Nodes DS" + nodes_ds);
-                    console.log("Edges DS" + edges_ds);
                     var container = document.getElementById('map');
                     var data = {{ nodes: nodes_ds, edges: edges_ds }};
                     var options = {{clickToUse: true }};
                     var network = new vis.Network(container, data, options);
 
-                    network.on("doubleClick"), function(params) {{ window.open("{root}/{uri}/" + params.nodes[0], "_self"); }}
+                    network.on("doubleClick", function(params) {{
+                        var url = "{root}/{uri}/" + params.nodes;
+                        console.log("url: " + url);
+                        window.open(url, "_self");
+                    }} );
                 }}
 
                 start();
