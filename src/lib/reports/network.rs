@@ -14,7 +14,6 @@ pub struct Node {
     pub label: String,
     color: Option<String>,
     mass: u32,
-    hidden: bool,
     #[serde(rename = "borderWidth")]
     border_width: i32,
     #[serde(skip)]
@@ -28,7 +27,6 @@ impl Node {
             label: label.into(),
             color: Some(String::from("red")),
             mass: 1,
-            hidden: false,
             border_width: 1,
             neighbors: Vec::new(),
         }
@@ -44,7 +42,6 @@ impl From<models::system::SystemNamed> for Node {
             label: label,
             color: Some(color),
             mass: 1,
-            hidden: false,
             border_width: 1,
             neighbors: Vec::new(),
         }
@@ -85,8 +82,6 @@ fn make_system_network(id: &i32, ctx: &Context, nodes: &mut HashMap<i32, Node>, 
                 for id in &neighbors {
                     make_system_network(id, ctx, nodes, deep - 1);
                 }
-            } else {
-                node.hidden = true;
             }
         }
     }
