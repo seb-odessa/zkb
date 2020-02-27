@@ -14,8 +14,10 @@ pub struct Node {
     pub label: String,
     color: Option<String>,
     mass: u32,
-    #[serde(rename = "borderWidth")]    border_width: i32,
-    #[serde(rename = "skip")]           neighbors: Vec<i32>,
+    #[serde(rename = "borderWidth")]
+    border_width: i32,
+//    #[serde(skip)]
+    neighbors: Vec<i32>,
 
 }
 impl Node {
@@ -46,7 +48,7 @@ impl From<models::system::SystemNamed> for Node {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default, Eq)]
 pub struct Edge {
     pub from: i32,
     pub to: i32
@@ -54,6 +56,12 @@ pub struct Edge {
 impl Edge {
     pub fn new(from: i32, to: i32) -> Self { Self{from, to} }
 }
+impl PartialEq for Edge {
+    fn eq(&self, other: &Self) -> bool {
+        (self.from == other.from && self.to == other.to) || (self.from == other.to && self.to == other.from)
+    }
+}
+
 
 fn create_node(id: &i32, ctx: &Context) -> Option<Node> {
     if let Some(system) = system::System::load(id, ctx) {
@@ -65,7 +73,7 @@ fn create_node(id: &i32, ctx: &Context) -> Option<Node> {
 }
 
 fn make_system_network(id: &i32, ctx: &Context, nodes: &mut HashMap<i32, Node>, deep: u32) {
-    if deep > 0 {
+    if deep > 0 && !nodes.contains_key(id) {
         if let Some(mut node) = create_node(id, ctx) {
             node.mass = deep;
             let neighbors = node.neighbors.clone();
@@ -77,8 +85,24 @@ fn make_system_network(id: &i32, ctx: &Context, nodes: &mut HashMap<i32, Node>, 
     }
 }
 
-pub fn get_system_network_nodes(id: &i32, deep: u32, ctx: &Context) -> Vec<Node> {
+pub fn get_system_network_nodes(id: &i32, deep: u32, ctx: &Context) -> HashMap<i32, Node> {
     let mut nodes:  HashMap<i32, Node> = HashMap::new();
     make_system_network(id, ctx, &mut nodes, deep);
-    return nodes.values().into_iter().cloned().collect();
+    return nodes;
 }
+
+pub fn get_system_network_edges(id: &i32, deep: u32, ctx: &Context) -> Vec<Edge> {
+    let nodes = get_system_network_nodes(id, deep, ctx);
+    let mut edges = Vec::new();
+    for (from, node) in &nodes {
+        for to in &node.neighbors {
+            let edge = Edge::new(*from, *to);
+            let exists = edges.iter().find(|&e| *e == edge).is_some();
+            if !exists {
+                edges.push(edge);
+            }
+        }
+    }
+    return edges;
+}
+

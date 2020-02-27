@@ -212,7 +212,7 @@ fn nodes(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
 
     use reports::Node;
     let nodes = match area.as_ref() {
-        "system" => network::get_system_network_nodes(&id, 3, &ctx),
+        "system" => network::get_system_network_nodes(&id, 2, &ctx).values().into_iter().cloned().collect(),
         "constellation" => reports::get_constellation_nodes(&id, &ctx),
         _ => vec![Node::new(1, "Node 1"), Node::new(2, "Node 2"), Node::new(3, "Node 3"), Node::new(4, "Node 4"), Node::new(5, "Node 5")]
     };
@@ -230,6 +230,7 @@ fn edges(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
 
     use reports::Edge;
     let edges = match area.as_ref() {
+        "system" => network::get_system_network_edges(&id, 2, &ctx),
         "constellation" => reports::get_constellation_edges(&id, &ctx),
         _ => vec![
             Edge::new(1, 3), Edge::new(1, 2),Edge::new(2, 4),Edge::new(2, 5),Edge::new(3, 2),Edge::new(3, 5),Edge::new(5, 1),
