@@ -47,7 +47,7 @@ impl Node {
         Self {
             id: id,
             label: label.into(),
-            color: None,
+            color: Some(String::from("red")),
         }
     }
 }
