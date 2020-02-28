@@ -49,7 +49,7 @@ impl From<models::system::SystemNamed> for Node {
         let title = format!("Constellation: {}<br/>Region: {}<br/>{}",
                             &constellation,
                             &region,
-                            system.observatory.map(|_| String::from("Jovian Observatory exist")).unwrap_or_default()
+                            system.observatory.map(|_| String::from("Jovian Observatory")).unwrap_or_default()
                             );
         Self {
             id: id,

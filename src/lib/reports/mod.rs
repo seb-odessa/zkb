@@ -223,17 +223,17 @@ pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
 pub fn get_security_status_color(rew_status: f32) -> String {
     let status = (10.0 * rew_status).round() / 10.0;
     // http://web.archive.org/web/20120219150840/http://blog.evepanel.net/eve-online/igb/colors-of-the-security-status.html
-    if status >= 1.0      {"#2FEFEF;"}
-    else if status >= 0.9 {"#48F0C0;"}
-    else if status >= 0.8 {"#00EF47;"}
-    else if status >= 0.7 {"#00F000;"}
-    else if status >= 0.6 {"#8FEF2F;"}
-    else if status >= 0.5 {"#EFEF00;"}
-    else if status >= 0.4 {"#D77700;"}
-    else if status >= 0.3 {"#F06000;"}
-    else if status >= 0.2 {"#F04800;"}
-    else if status >= 0.1 {"#D73000;"}
-    else                  {"#F00000;"}
+    if status >= 1.0      {"#2FEFEF"}
+    else if status >= 0.9 {"#48F0C0"}
+    else if status >= 0.8 {"#00EF47"}
+    else if status >= 0.7 {"#00F000"}
+    else if status >= 0.6 {"#8FEF2F"}
+    else if status >= 0.5 {"#EFEF00"}
+    else if status >= 0.4 {"#D77700"}
+    else if status >= 0.3 {"#F06000"}
+    else if status >= 0.2 {"#F04800"}
+    else if status >= 0.1 {"#D73000"}
+    else                  {"#F00000"}
     .to_string()
 }
 
@@ -256,12 +256,9 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S,
                     var container = document.getElementById('map');
                     var data = {{ nodes: nodes_ds, edges: edges_ds }};
                     var options = {{ clickToUse: false }};
-
                     var network = new vis.Network(container, data, options);
-
                     network.on("doubleClick", function(params) {{
                         var url = "{root}/{uri}/" + params.nodes;
-                        console.log("url: " + url);
                         window.open(url, "_self");
                     }} );
                 }}
