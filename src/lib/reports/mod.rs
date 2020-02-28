@@ -242,7 +242,7 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S,
         output,
         format_args!(r##"
             <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-            <style type="text/css"> #map {{ width: 100%; height: 80%; border: 1px solid lightgray; }} </style>
+            <style type="text/css"> #map {{ width: 90%; height: 70%; border: 1px solid lightgray; }} </style>
             <div><span><br/></span></div>
             <div id = "map">...</div>
             <div><span><br/></span></div>
@@ -255,7 +255,7 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S,
                     var edges_ds = new vis.DataSet(edges);
                     var container = document.getElementById('map');
                     var data = {{ nodes: nodes_ds, edges: edges_ds }};
-                    var options = {{ clickToUse: false }};
+                    var options = {{ clickToUse: true }};
                     var network = new vis.Network(container, data, options);
                     network.on("doubleClick", function(params) {{
                         var url = "{root}/{uri}/" + params.nodes;
