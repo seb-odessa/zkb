@@ -220,12 +220,21 @@ pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
     div(output, format!("Systems in constellation: {}", list));
 }
 
-pub fn get_security_status_color(status: f32) -> String {
-        if status <= 0.0 {"Crimson"}
-        else if status < 0.45 {"Red"}
-        else if status < 0.8 {"YellowGreen"}
-        else {"SkyBlue"}
-        .to_string()
+pub fn get_security_status_color(rew_status: f32) -> String {
+    let status = (10.0 * rew_status).round() / 10.0;
+    // http://web.archive.org/web/20120219150840/http://blog.evepanel.net/eve-online/igb/colors-of-the-security-status.html
+    if status >= 1.0      {"#2FEFEF;"}
+    else if status >= 0.9 {"#48F0C0;"}
+    else if status >= 0.8 {"#00EF47;"}
+    else if status >= 0.7 {"#00F000;"}
+    else if status >= 0.6 {"#8FEF2F;"}
+    else if status >= 0.5 {"#EFEF00;"}
+    else if status >= 0.4 {"#D77700;"}
+    else if status >= 0.3 {"#F06000;"}
+    else if status >= 0.2 {"#F04800;"}
+    else if status >= 0.1 {"#D73000;"}
+    else                  {"#F00000;"}
+    .to_string()
 }
 
 pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S, ctx: &Context) {

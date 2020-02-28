@@ -12,10 +12,11 @@ use std::convert::From;
 pub struct Node {
     pub id: i32,
     pub label: String,
-    color: Option<String>,
+    color: String,
     mass: u32,
     group: Option<String>,
     title: Option<String>,
+    shape: String,
     #[serde(rename = "borderWidth")]
     border_width: i32,
     #[serde(skip)]
@@ -27,10 +28,11 @@ impl Node {
         Self {
             id: id,
             label: label.into(),
-            color: Some(String::from("red")),
+            color: String::from("#D2E5FF"),
             mass: 1,
             group: None,
             title: None,
+            shape: String::from("ellipse"),
             border_width: 1,
             neighbors: Vec::new(),
         }
@@ -43,6 +45,7 @@ impl From<models::system::SystemNamed> for Node {
         let color = reports::get_security_status_color(system.security_status);
         let constellation = system.get_name("constellation");
         let region = system.get_name("region");
+        let shape = String::from(if system.observatory.is_none() {"ellipse"} else {"box"});
         let title = format!("Constellation: {}<br/>Region: {}<br/>{}",
                             &constellation,
                             &region,
@@ -51,10 +54,11 @@ impl From<models::system::SystemNamed> for Node {
         Self {
             id: id,
             label: label,
-            color: Some(color),
+            color: color,
             mass: 1,
             group: Some(constellation),
             title: Some(title),
+            shape: shape,
             border_width: 1,
             neighbors: Vec::new(),
         }
