@@ -203,49 +203,6 @@ pub fn get_systems(constellation_id: &i32, ctx: &Context) -> Vec<models::system:
     return result;
 }
 
-pub fn get_constellation_nodes(constellation_id: &i32, ctx: &Context) -> Vec<Node> {
-    use std::collections::HashMap;
-    let mut nodes: HashMap<i32, String> = HashMap::new();
-
-    for system in &get_systems(constellation_id, ctx) {
-        let id = system.get_id("system");
-        let name = format!("{} ({})", system.get_name("system"), system.get_security_status());
-
-        nodes.insert(id, name);
-        for node in &get_system_neighbors(&id, ctx) {
-            nodes.insert(node.id, node.label.clone());
-        }
-    }
-    nodes.into_iter().map(|node| Node::new(node.0, node.1)).collect()
-}
-
-pub fn get_system_neighbors(id: &i32, ctx: &Context) -> Vec<Node> {
-    use crate::services::Report::SystemNeighbors;
-    match load(Category::Neighbors(Area::System(*id)), &ctx) {
-        SystemNeighbors(neighbors) => neighbors
-                                        .into_iter()
-                                        .map(|system| Node::new(system.get_id("neighbor"), system.get_name("neighbor")))
-                                        .collect(),
-        _ => Vec::new()
-    }
-}
-
-pub fn get_constellation_edges(constellation_id: &i32, ctx: &Context) -> Vec<Edge> {
-    let nodes = get_constellation_nodes(constellation_id, ctx);
-    let mut edges: Vec<Edge> = Vec::new();
-    for node in &nodes {
-        let neighbors = get_system_neighbors(&node.id, ctx);
-        for neighbor in &neighbors {
-            if nodes.iter().find(|node| node.id == neighbor.id).is_some() {
-                if edges.iter().find(|e| e.from == neighbor.id && e.to == node.id).is_none() {
-                    edges.push(Edge::new(node.id, neighbor.id));
-                }
-            }
-        }
-    }
-    return edges;
-}
-
 pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
     use std::collections::BTreeMap;
     let mut map = BTreeMap::new();
@@ -265,7 +222,7 @@ pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
 
 pub fn get_security_status_color(status: f32) -> String {
         if status <= 0.0 {"Crimson"}
-        else if status < 0.5 {"Red"}
+        else if status < 0.45 {"Red"}
         else if status < 0.8 {"YellowGreen"}
         else {"SkyBlue"}
         .to_string()
@@ -276,10 +233,10 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S,
         output,
         format_args!(r##"
             <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-            <style type="text/css"> #map {{ width: 1200px; height: 800px; border: 1px solid lightgray; }} </style>
-            <div />
+            <style type="text/css"> #map {{ width: 100%; height: 80%; border: 1px solid lightgray; }} </style>
+            <div><span><br/></span></div>
             <div id = "map">...</div>
-            <div />
+            <div><span><br/></span></div>
             <script type="text/javascript">
 
                 const start = async function() {{
@@ -289,7 +246,8 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S,
                     var edges_ds = new vis.DataSet(edges);
                     var container = document.getElementById('map');
                     var data = {{ nodes: nodes_ds, edges: edges_ds }};
-                    var options = {{clickToUse: true }};
+                    var options = {{ clickToUse: false }};
+
                     var network = new vis.Network(container, data, options);
 
                     network.on("doubleClick", function(params) {{

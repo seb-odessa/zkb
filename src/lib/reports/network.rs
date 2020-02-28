@@ -14,6 +14,8 @@ pub struct Node {
     pub label: String,
     color: Option<String>,
     mass: u32,
+    group: Option<String>,
+    title: Option<String>,
     #[serde(rename = "borderWidth")]
     border_width: i32,
     #[serde(skip)]
@@ -27,6 +29,8 @@ impl Node {
             label: label.into(),
             color: Some(String::from("red")),
             mass: 1,
+            group: None,
+            title: None,
             border_width: 1,
             neighbors: Vec::new(),
         }
@@ -37,11 +41,20 @@ impl From<models::system::SystemNamed> for Node {
         let id = system.system_id;
         let label = format!("{} ({})", system.get_name("system"), system.get_security_status());
         let color = reports::get_security_status_color(system.security_status);
+        let constellation = system.get_name("constellation");
+        let region = system.get_name("region");
+        let title = format!("Constellation: {}<br/>Region: {}<br/>{}",
+                            &constellation,
+                            &region,
+                            system.observatory.map(|_| String::from("Jovian Observatory exist")).unwrap_or_default()
+                            );
         Self {
             id: id,
             label: label,
             color: Some(color),
             mass: 1,
+            group: Some(constellation),
+            title: Some(title),
             border_width: 1,
             neighbors: Vec::new(),
         }
