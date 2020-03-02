@@ -37,30 +37,34 @@ impl Node {
             neighbors: Vec::new(),
         }
     }
-}
-impl From<models::system::SystemNamed> for Node {
-    fn from(system: models::system::SystemNamed) -> Self {
-        let id = system.system_id;
-        let label = format!("{} ({})", system.get_name("system"), system.get_security_status());
-        let color = reports::get_security_status_color(system.security_status);
-        let constellation = system.get_name("constellation");
-        let region = system.get_name("region");
-        let shape = String::from(if system.observatory.is_none() {"ellipse"} else {"box"});
-        let title = format!("Constellation: {}<br/>Region: {}<br/>{}",
-                            &constellation,
-                            &region,
-                            system.observatory.map(|_| String::from("Jovian Observatory")).unwrap_or_default()
-                            );
+
+    fn create(model: models::system::SystemNamed, mass: u32, ctx: &Context) -> Self {
+        let mut output = String::new();
+        let id = model.system_id;
+        let system = model.get_name("system");
+        let status = model.get_security_status();
+        let label = format!("{} ({})", system, status);
+        let color = reports::get_security_status_color(model.security_status);
+        let constellation = model.get_name("constellation");
+        let region = model.get_name("region");
+        let shape = String::from(if model.observatory.is_none() {"ellipse"} else {"box"});
+        let sys_row = reports::span("", format!("color:{}; display: inline-block; width=100%", color), system);
+        reports::div(&mut output, sys_row);
+        reports::div(&mut output, format!("Constellation: {}", &constellation));
+        reports::div(&mut output, format!("Region: {}", &region));
+        reports::div(&mut output, format!("{}", model.observatory.map(|_| String::from("Jovian Observatory")).unwrap_or_default()));
+        reports::lazy(&mut output, format!("api/system_brief/{}", id), &ctx);
+        let title = format!("{}", output);
         Self {
             id: id,
             label: label,
             color: color,
-            mass: 1,
+            mass: mass,
             group: Some(constellation),
             title: Some(title),
             shape: shape,
             border_width: 1,
-            neighbors: Vec::new(),
+            neighbors: system::System::get_neighbors(&id, ctx).iter().map(|x| x.neighbor_id).collect(),
         }
     }
 }
@@ -79,26 +83,14 @@ impl PartialEq for Edge {
     }
 }
 
-
-fn create_node(id: &i32, ctx: &Context) -> Option<Node> {
-    if let Some(system) = system::System::load(id, ctx) {
-        let mut node = Node::from(system);
-        node.neighbors = system::System::get_neighbors(id, ctx).iter().map(|x| x.neighbor_id).collect();
-        return Some(node);
-    }
-    return None;
-}
-
 fn make_system_network(id: &i32, ctx: &Context, nodes: &mut HashMap<i32, Node>, deep: u32) {
-    if !nodes.contains_key(id) {
-        if let Some(mut node) = create_node(id, ctx) {
-            if deep > 0 {
-                node.mass = deep;
-                let neighbors = node.neighbors.clone();
-                nodes.insert(*id, node);
-                for id in &neighbors {
-                    make_system_network(id, ctx, nodes, deep - 1);
-                }
+    if deep > 0 && !nodes.contains_key(id) {
+        if let Some(system) = system::System::load(id, ctx) {
+            let node = Node::create(system, deep, ctx);
+            let neighbors = node.neighbors.clone();
+            nodes.insert(*id, node);
+            for id in &neighbors {
+                make_system_network(id, ctx, nodes, deep - 1);
             }
         }
     }
