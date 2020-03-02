@@ -43,7 +43,9 @@ impl Node {
         let id = model.system_id;
         let system = model.get_name("system");
         let status = model.get_security_status();
-        let label = format!("{} ({})", system, status);
+        let c5 = reports::History::system_count(&id, &5, ctx);
+        let c30 = reports::History::system_count(&id, &30, ctx);
+        let label = format!("{} ({}) <br/> [{}:{}]", system, status, c5, c30);
         let color = reports::get_security_status_color(model.security_status);
         let constellation = model.get_name("constellation");
         let region = model.get_name("region");
@@ -54,9 +56,6 @@ impl Node {
         reports::div(&mut output, format!("Constellation: {}", &constellation));
         reports::div(&mut output, format!("Region: {}", &region));
         reports::div(&mut output, format!("{}", model.observatory.map(|_| String::from("Jovian Observatory")).unwrap_or_default()));
-        reports::div(&mut output, format!("Kills (5m/30m) {}/{}",
-                        reports::History::system_count(&id, &5, ctx),
-                        reports::History::system_count(&id, &30, ctx)));
 
         let title = format!("{}", output);
         Self {
