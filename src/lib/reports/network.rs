@@ -48,12 +48,13 @@ impl Node {
         let constellation = model.get_name("constellation");
         let region = model.get_name("region");
         let shape = String::from(if model.observatory.is_none() {"ellipse"} else {"box"});
-        let sys_row = reports::span("", format!("color:{}; display: inline-block; width=100%", color), system);
-        reports::div(&mut output, sys_row);
+        let style = format!("background-color: {}; display: inline-block; width=100%", color);
+        let colored = reports::span("", style, &label);
+        reports::div(&mut output, format!("System: {}", colored));
         reports::div(&mut output, format!("Constellation: {}", &constellation));
         reports::div(&mut output, format!("Region: {}", &region));
         reports::div(&mut output, format!("{}", model.observatory.map(|_| String::from("Jovian Observatory")).unwrap_or_default()));
-        reports::lazy(&mut output, format!("api/system_brief/{}", id), &ctx);
+
         let title = format!("{}", output);
         Self {
             id: id,
