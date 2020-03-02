@@ -45,7 +45,7 @@ impl Node {
         let status = model.get_security_status();
         let c10 = reports::History::system_count(&id, &10, ctx);
         let c60 = reports::History::system_count(&id, &60, ctx);
-        let label = format!("{} ({}) [{}:{}]", system, status, c5, c30);
+        let label = format!("{} ({}) [{}:{}]", system, status, c10, c60);
         let color = reports::get_security_status_color(model.security_status);
         let constellation = model.get_name("constellation");
         let region = model.get_name("region");
