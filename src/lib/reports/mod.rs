@@ -242,9 +242,10 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S,
         output,
         format_args!(r##"
             <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-            <style type="text/css"> #map {{ width: 90%; height: 70%; border: 1px solid lightgray; }} </style>
+            <style type="text/css"> #network {{ width: 90%; height: 70%; border: 1px solid lightgray; }} </style>
             <div><span><br/></span></div>
-            <div id = "map">...</div>
+            <div id = "network">...</div>
+            <pre id = "extinfo">...</pre>
             <div><span><br/></span></div>
             <script type="text/javascript">
 
@@ -253,13 +254,20 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S,
                     var edges = await fetch("{root}/{edges}").then(response => response.json());
                     var nodes_ds = new vis.DataSet(nodes);
                     var edges_ds = new vis.DataSet(edges);
-                    var container = document.getElementById('map');
+                    var container = document.getElementById('network');
                     var data = {{ nodes: nodes_ds, edges: edges_ds }};
                     var options = {{ clickToUse: true }};
                     var network = new vis.Network(container, data, options);
                     network.on("doubleClick", function(params) {{
                         var url = "{root}/{uri}/" + params.nodes;
                         window.open(url, "_self");
+                    }} );
+                    network.on("select", function(params) {{
+                        var url = "{root}/{uri}_brief/" + params.nodes;
+                        fetch(url)
+                            .then(response => response.text())
+                            .then(html => document.getElementById("extinfo").innerHTML = html)
+                            .catch((err) => console.log("Can’t access " + url + ": " + err));
                     }} );
                 }}
 
