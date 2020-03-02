@@ -268,7 +268,7 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S,
                         window.open(url, "_self");
                     }} );
                     network.on("select", function(params) {{
-                        var url = "{root}/{uri}_brief/" + params.nodes;
+                        var url = "{root}/{uri}_hint/" + params.nodes;
                         fetch(url)
                             .then(response => response.text())
                             .then(html => document.getElementById("extinfo").innerHTML = html)
