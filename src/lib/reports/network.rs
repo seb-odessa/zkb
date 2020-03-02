@@ -43,8 +43,8 @@ impl Node {
         let id = model.system_id;
         let system = model.get_name("system");
         let status = model.get_security_status();
-        let c5 = reports::History::system_count(&id, &5, ctx);
-        let c30 = reports::History::system_count(&id, &30, ctx);
+        let c10 = reports::History::system_count(&id, &10, ctx);
+        let c60 = reports::History::system_count(&id, &60, ctx);
         let label = format!("{} ({}) [{}:{}]", system, status, c5, c30);
         let color = reports::get_security_status_color(model.security_status);
         let constellation = model.get_name("constellation");
