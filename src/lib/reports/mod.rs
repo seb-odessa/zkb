@@ -43,6 +43,7 @@ pub const FAIL: &'static str = "Error occurred while trying to write in String";
 pub enum ReportType{
     Full,
     Brief,
+    Hint,
 }
 
 pub trait Reportable {
@@ -68,6 +69,10 @@ pub trait ReportableEx {
 
     fn report(arg: &String, ctx: &Context) -> String {
         Self::perform_report(arg, ctx, ReportType::Full)
+    }
+
+    fn hint(arg: &String, ctx: &Context) -> String {
+        Self::perform_report(arg, ctx, ReportType::Hint)
     }
 
     fn perform_report(arg: &String, ctx: &Context, report_type: ReportType) -> String {
@@ -245,8 +250,8 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S,
             <style type="text/css"> #network {{ width: 90%; height: 70%; border: 1px solid lightgray; }} </style>
             <div><span><br/></span></div>
             <div id = "network">...</div>
-            <pre id = "extinfo">...</pre>
-            <div><span><br/></span></div>
+            <div id = "extinfo"></div>
+            <br/>
             <script type="text/javascript">
 
                 const start = async function() {{

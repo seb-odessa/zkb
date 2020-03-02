@@ -17,18 +17,28 @@ impl reports::ReportableEx for System {
     fn report_by_id(id: &i32, ctx: &Context, report_type: reports::ReportType) -> String {
         let mut output = String::new();
         if let Some(system) = Self::load(id, ctx) {
-            Self::write(&mut output, &system, ctx);
-            if report_type == reports::ReportType::Full {
-                reports::lazy(&mut output, format!("api/constellation_brief/{}", system.get_id("constellation")), &ctx);
-                reports::lazy(&mut output, format!("api/region_brief/{}", system.get_id("region")), &ctx);
-                Self::neighbors(&mut output, &id, &ctx);
-                Self::observatory_report(&mut output, &system, &ctx);
-                reports::systems(&mut output, &system.get_id("constellation"), &ctx);
-                reports::constellations(&mut output, &system.get_id("region"), &ctx);
-                reports::map(&mut output, id, 4, "api/system", &ctx);
-                reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
-                reports::lazy(&mut output, format!("stat/system/{}", id), &ctx);
-                reports::div(&mut output, "");
+            match report_type {
+                reports::ReportType::Brief => {
+                    Self::write(&mut output, &system, ctx);
+                },
+                reports::ReportType::Full => {
+                    Self::write(&mut output, &system, ctx);
+                    reports::lazy(&mut output, format!("api/constellation_brief/{}", system.get_id("constellation")), &ctx);
+                    reports::lazy(&mut output, format!("api/region_brief/{}", system.get_id("region")), &ctx);
+                    Self::neighbors(&mut output, &id, &ctx);
+                    Self::observatory_report(&mut output, &system, &ctx);
+                    reports::systems(&mut output, &system.get_id("constellation"), &ctx);
+                    reports::constellations(&mut output, &system.get_id("region"), &ctx);
+                    reports::map(&mut output, id, 4, "api/system", &ctx);
+                    reports::lazy(&mut output, format!("history/system/{}/{}", id, 60), &ctx);
+                    reports::lazy(&mut output, format!("stat/system/{}", id), &ctx);
+                    reports::div(&mut output, "");
+                },
+                reports::ReportType::Hint => {
+                    let content = System::get_name(&system, ctx);
+
+                    reports::div(&mut output, content);
+                },
             }
         }
         return output;
@@ -36,17 +46,21 @@ impl reports::ReportableEx for System {
 }
 impl System {
 
-    pub fn write(output: &mut dyn Write, system: &models::system::SystemNamed, ctx: &Context) {
+    pub fn get_name(system: &models::system::SystemNamed, ctx: &Context) -> String {
         let id = system.get_id("system");
         let name = system.get_name("system");
         let status = system.get_security_status();
-        let content = format!(r#"<span id="{id}" data-name="{name}">System: {desc} [{map}]</span>"#,
-            id = system.system_id,
-            name = &name,
-            desc = ctx.get_place_desc("system", id, &format!("{} ({})",name, status)),
-            map = ctx.get_dotlan_href(system.get_name("region"), &name, "dotlan")
+        let label = format!("{} ({})", &name, &status);
+        let region = system.get_name("region");
+        let content = format!("System: {desc} [{map}]",
+            desc = ctx.get_place_desc("system", id, label),
+            map = ctx.get_dotlan_href(region, &name, "dotlan")
         );
-        reports::div(output, content);
+        reports::span("","", content)
+    }
+
+    pub fn write(output: &mut dyn Write, system: &models::system::SystemNamed, ctx: &Context) {
+        reports::div(output, System::get_name(system, ctx));
     }
 
     pub fn load(id: &i32, ctx: &Context) -> Option<models::system::SystemNamed> {

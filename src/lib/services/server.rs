@@ -124,6 +124,7 @@ fn api(info: web::Path<(String, String)>, ctx: Context) -> HttpResponse {
         "region_brief" => reports::Region::brief(&id, &ctx),
         "system" => reports::System::report(&id, &ctx),
         "system_brief" => reports::System::brief(&id, &ctx),
+        "system_hint" => reports::System::hint(&id, &ctx),
         "killmail_brief" => reports::Killmail::brief(&id, &ctx),
         "killmail" => reports::Killmail::report(&id, &ctx),
         "character" => reports::Character::report(&route, &id, &ctx),
