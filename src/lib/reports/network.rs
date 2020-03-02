@@ -54,6 +54,10 @@ impl Node {
         reports::div(&mut output, format!("Constellation: {}", &constellation));
         reports::div(&mut output, format!("Region: {}", &region));
         reports::div(&mut output, format!("{}", model.observatory.map(|_| String::from("Jovian Observatory")).unwrap_or_default()));
+        reports::div(&mut output, format!("Kills (5m/30m) {}/{}",
+                        reports::History::system_count(&id, &5, ctx),
+                        reports::History::system_count(&id, &30, ctx)));
+
         let title = format!("{}", output);
         Self {
             id: id,
