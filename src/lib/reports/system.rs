@@ -36,8 +36,10 @@ impl reports::ReportableEx for System {
                 },
                 reports::ReportType::Hint => {
                     let content = System::get_name(&system, ctx);
+                    let kill_5m = reports::History::system_count(id, &5, ctx);
+                    let kill_30m = reports::History::system_count(id, &30, ctx);
 
-                    reports::div(&mut output, content);
+                    reports::div(&mut output, format!("{} last kills {} (5 minutes) {} (30 minutes)", content, kill_5m, kill_30m));
                 },
             }
         }
