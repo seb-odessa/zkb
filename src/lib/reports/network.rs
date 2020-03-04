@@ -107,7 +107,7 @@ pub fn get_system_network_nodes(id: &i32, deep: u32, ctx: &Context) -> HashMap<i
     if deep > 0 {
         if let Some(system) = system::System::load(id, ctx) {
             let mut node = Node::create(system, deep, ctx);
-            node.border_width = 5;
+            node.border_width = 3;
             let neighbors = node.neighbors.clone();
             nodes.insert(*id, node);
             make_system_network(&neighbors, ctx, &mut nodes, deep-1);
