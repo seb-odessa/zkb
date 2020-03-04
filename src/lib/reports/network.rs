@@ -24,21 +24,7 @@ pub struct Node {
 
 }
 impl Node {
-    pub fn new<S: Into<String>>(id: i32, label: S) -> Self {
-        Self {
-            id: id,
-            label: label.into(),
-            color: String::from("#D2E5FF"),
-            mass: 1,
-            group: None,
-            title: None,
-            shape: String::from("ellipse"),
-            border_width: 1,
-            neighbors: Vec::new(),
-        }
-    }
-
-    fn create(model: models::system::SystemNamed, mass: u32, ctx: &Context) -> Self {
+    fn new(model: models::system::SystemNamed, mass: u32, ctx: &Context) -> Self {
         let mut output = String::new();
         let id = model.system_id;
         let system = model.get_name("system");
@@ -92,7 +78,7 @@ fn make_system_network(ids: &Vec<i32>, ctx: &Context, nodes: &mut HashMap<i32, N
         for id in ids {
             if !nodes.contains_key(id) {
                 if let Some(system) = system::System::load(id, ctx) {
-                    let node = Node::create(system, deep, ctx);
+                    let node = Node::new(system, 1, ctx);
                     neighbors.append(&mut node.neighbors.clone());
                     nodes.insert(*id, node);
                 }
@@ -106,7 +92,7 @@ pub fn get_system_network_nodes(id: &i32, deep: u32, ctx: &Context) -> HashMap<i
     let mut nodes:  HashMap<i32, Node> = HashMap::new();
     if deep > 0 {
         if let Some(system) = system::System::load(id, ctx) {
-            let mut node = Node::create(system, deep, ctx);
+            let mut node = Node::new(system, 3, ctx);
             node.border_width = 3;
             let neighbors = node.neighbors.clone();
             nodes.insert(*id, node);
