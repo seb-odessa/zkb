@@ -44,7 +44,7 @@ fn statistic(_info: web::Path<String>, ctx: Context) -> HttpResponse {
             }
         },
         None => {
-            reports::div(&mut output, "Was not able to acquire statustic map");
+            reports::div(&mut output, "Was not able to acquire statistic map");
         }
     }
 

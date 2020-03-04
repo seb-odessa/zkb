@@ -228,7 +228,7 @@ impl TopList {
         reports::div(output, "Last week activity");
         let table_style   = "border-collapse: collapse;";
         let text_style    = "border: 1px solid black; padding: 1px 5px;";
-        for top in tops {           
+        for top in tops {
             if allowed.contains(&top.record_type) {
                 reports::table_start(output, &top.title, table_style, "");
                 if !top.values.is_empty() {
@@ -261,7 +261,7 @@ impl TopList {
                             reports::table_cell(output, "Kills", &style, kills.to_string());
                             reports::table_cell(output, "system", &style, ctx.get_api_href("system", *system_id, system_name));
                             reports::table_cell(output, "system security", &style, system_security);
-                            reports::table_cell(output, "region", &style, ctx.get_api_href("", *region_id, region_name));
+                            reports::table_cell(output, "region", &style, ctx.get_api_href("region", *region_id, region_name));
                         }
                         TopValue::LocationTop {kills, location_id, location_name, .. } => {
                             reports::table_cell(output, "Kills", text_style, kills.to_string());
@@ -596,7 +596,7 @@ mod tests {
         assert_eq!(object.id, 30000142);
         assert_eq!(&object.record_type, "solarSystemID");
     }
-    
+
     #[test]
     fn from_api_for_region() {
         let response = Stats::new(Entity::Region(10000002));
@@ -604,5 +604,5 @@ mod tests {
         let object = response.unwrap();
         assert_eq!(object.id, 10000002);
         assert_eq!(&object.record_type, "regionID");
-    }    
+    }
 }

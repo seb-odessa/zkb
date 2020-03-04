@@ -104,12 +104,14 @@ fn make_system_network(ids: &Vec<i32>, ctx: &Context, nodes: &mut HashMap<i32, N
 
 pub fn get_system_network_nodes(id: &i32, deep: u32, ctx: &Context) -> HashMap<i32, Node> {
     let mut nodes:  HashMap<i32, Node> = HashMap::new();
-    if let Some(system) = system::System::load(id, ctx) {
-        let mut node = Node::create(system, deep, ctx);
-        node.border_width = 2;
-        let neighbors = node.neighbors.clone();
-        nodes.insert(*id, node);
-        make_system_network(&neighbors, ctx, &mut nodes, deep);
+    if deep > 0 {
+        if let Some(system) = system::System::load(id, ctx) {
+            let mut node = Node::create(system, deep, ctx);
+            node.border_width = 5;
+            let neighbors = node.neighbors.clone();
+            nodes.insert(*id, node);
+            make_system_network(&neighbors, ctx, &mut nodes, deep-1);
+        }
     }
     return nodes;
 }
