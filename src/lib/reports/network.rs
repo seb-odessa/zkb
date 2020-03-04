@@ -86,22 +86,31 @@ impl PartialEq for Edge {
     }
 }
 
-fn make_system_network(id: &i32, ctx: &Context, nodes: &mut HashMap<i32, Node>, deep: u32) {
-    if deep > 0 && !nodes.contains_key(id) {
-        if let Some(system) = system::System::load(id, ctx) {
-            let node = Node::create(system, deep, ctx);
-            let neighbors = node.neighbors.clone();
-            nodes.insert(*id, node);
-            for id in &neighbors {
-                make_system_network(id, ctx, nodes, deep - 1);
+fn make_system_network(ids: &Vec<i32>, ctx: &Context, nodes: &mut HashMap<i32, Node>, deep: u32) {
+    if deep > 0 {
+        let mut neighbors = Vec::new();
+        for id in ids {
+            if !nodes.contains_key(id) {
+                if let Some(system) = system::System::load(id, ctx) {
+                    let node = Node::create(system, deep, ctx);
+                    neighbors.append(&mut node.neighbors.clone());
+                    nodes.insert(*id, node);
+                }
             }
         }
+        make_system_network(&neighbors, ctx, nodes, deep - 1);
     }
 }
 
 pub fn get_system_network_nodes(id: &i32, deep: u32, ctx: &Context) -> HashMap<i32, Node> {
     let mut nodes:  HashMap<i32, Node> = HashMap::new();
-    make_system_network(id, ctx, &mut nodes, deep);
+    if let Some(system) = system::System::load(id, ctx) {
+        let mut node = Node::create(system, deep, ctx);
+        node.border_width = 2;
+        let neighbors = node.neighbors.clone();
+        nodes.insert(*id, node);
+        make_system_network(&neighbors, ctx, &mut nodes, deep);
+    }
     return nodes;
 }
 
