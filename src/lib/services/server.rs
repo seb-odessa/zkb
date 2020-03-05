@@ -209,7 +209,7 @@ pub fn run(context: Context) {
 
 fn script(info: web::Path<String>, ctx: Context) -> HttpResponse {
     use std::fs;
-    let filename = info.into_inner().replace(".", "").replace("//", "/");
+    let filename = info.into_inner().replace("..", "").replace("//", "/");
     let path = ctx.storage.clone() + &filename;
     if let Ok(content) = fs::read_to_string(path) {
         let content_type = if filename.ends_with(".js") {
