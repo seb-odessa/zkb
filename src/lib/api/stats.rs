@@ -399,8 +399,8 @@ impl Activity {
             </script>\n"#, id=id, day=day);
             reports::write(output, script);
         }
+        reports::write(output, "</div>");
     }
-    reports::write(output, "</div>");
 }
 
 
