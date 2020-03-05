@@ -100,6 +100,19 @@ pub fn span<S0: Into<String>, S1: Into<String>, S2: Into<String>>(title: S0, sty
     format!(r#"<span title="{}" style = "{}">{}</span>"#, title.into(), style.into(), content.into())
 }
 
+pub fn canvas<S: Into<String>>(output: &mut dyn Write, id: S) {
+    std::fmt::write(output, format_args!(r#"<canvas id="{}"></canvas>"#, id.into())).expect(FAIL);
+}
+
+pub fn script<S: Into<String>>(output: &mut dyn Write, src: S) {
+    std::fmt::write(output, format_args!(r#"<script src="{}"></script>"#, src.into())).expect(FAIL);
+}
+
+pub fn write<S: Into<String>>(output: &mut dyn Write, content: S) {
+    std::fmt::write(output, format_args!("{}", content.into())).expect(FAIL);
+}
+
+
 pub fn table_start<S0: Into<String>, S1: Into<String>, S2: Into<String>>(output: &mut dyn Write, title: S0, style: S1, caption: S2) {
     std::fmt::write(output,format_args!(r#"<table title="{}" style = "{}">"#, title.into(), style.into())).expect(FAIL);
     let caption_content = caption.into();
