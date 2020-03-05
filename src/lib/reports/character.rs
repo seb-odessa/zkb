@@ -59,9 +59,10 @@ impl Character {
             Stats::report_win_loses(&mut output, "Solo", stats.solo_kills, stats.solo_losses);
             reports::div(&mut output, format!("Danger: {} %", stats.danger_ratio()));
             reports::div(&mut output, format!("Gangs: {} %", stats.gang_ratio()));
-            if let Some(ref activity) = stats.activity {
-                Activity::write(&mut output, activity, ctx);
-            }
+            // if let Some(ref activity) = stats.activity {
+            //     Activity::write(&mut output, activity, ctx);
+            // }
+
             //character, corporation, alliance, shipType, solarSystem, location
             let allowed: HashSet<String> = vec!["shipType", "solarSystem", "location"].into_iter().map(|s| String::from(s)).collect();
             TopList::write(&mut output, &stats.top_lists, allowed, ctx);

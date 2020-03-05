@@ -89,7 +89,7 @@ pub trait ReportableEx {
 }
 
 pub fn href<S: Into<String>>(url: S, name: S) -> String{
-    format!(r#"<a href="{url}">{name}</a>\n"#, url = url.into(), name = name.into())
+    format!(r#"<a href="{url}">{name}</a>"#, url = url.into(), name = name.into())
 }
 
 pub fn div<S: Into<String>>(output: &mut dyn Write, content: S) {
@@ -97,19 +97,22 @@ pub fn div<S: Into<String>>(output: &mut dyn Write, content: S) {
 }
 
 pub fn span<S0: Into<String>, S1: Into<String>, S2: Into<String>>(title: S0, style: S1, content: S2) -> String{
-    format!(r#"<span title="{}" style = "{}">{}</span>\n"#, title.into(), style.into(), content.into())
+    format!(r#"<span title="{}" style = "{}">{}</span>"#, title.into(), style.into(), content.into())
 }
 
-pub fn canvas<S: Into<String>>(output: &mut dyn Write, id: S) {
-    std::fmt::write(output, format_args!(r#"<canvas id="{}"></canvas>\n"#, id.into())).expect(FAIL);
+pub fn canvas<S: Into<String>>(output: &mut dyn Write, id: S, width: u32, height: u32) {
+    std::fmt::write(output, format_args!(r#"<canvas id="{}" width="{}%" height="{}%"></canvas>"#
+    , id.into()
+    , width
+    , height)).expect(FAIL);
 }
 
 pub fn script<S: Into<String>>(output: &mut dyn Write, src: S) {
-    std::fmt::write(output, format_args!(r#"<script src="{}"></script>\n"#, src.into())).expect(FAIL);
+    std::fmt::write(output, format_args!(r#"<script src="{}"></script>"#, src.into())).expect(FAIL);
 }
 
 pub fn write<S: Into<String>>(output: &mut dyn Write, content: S) {
-    std::fmt::write(output, format_args!("{}\n", content.into())).expect(FAIL);
+    std::fmt::write(output, format_args!("{}", content.into())).expect(FAIL);
 }
 
 

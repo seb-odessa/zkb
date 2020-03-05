@@ -366,17 +366,17 @@ impl Activity {
     pub fn write(output: &mut dyn Write, activity: &Activity, ctx: &Context) {
         reports::script(output, ctx.get_js_url("Chart.bundle.min.js"));
         for day in &activity.days {
-            let id = format!("{}_{}", day, crate::create_id());
-            reports::canvas(output, &id);
+            let id = format!("{}_{}", &day, crate::create_id());
+            reports::canvas(output, &id, 20, 20);
             let script = format!(r#"
             <script>
-                var ctx = document.getElementById("{}").getContext('2d');
+                var ctx = document.getElementById("{id}").getContext('2d');
                 var myChart = new Chart(ctx, {{
-                type: 'bar',
+                type: 'radar',
                 data: {{
                     labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
                     datasets: [{{
-                        label: '# of Votes',
+                        label: '{day}',
                         data: [12, 19, 3, 5, 2, 3],
                         backgroundColor: [
                             'rgba(255, 99, 132, 0.2)',
@@ -407,7 +407,7 @@ impl Activity {
                     }}
                 }}
             }});
-            </script>"#, id);
+            </script>"#, id=id, day=day);
             reports::write(output, script);
         }
     }
