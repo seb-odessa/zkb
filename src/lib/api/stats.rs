@@ -52,7 +52,7 @@ pub struct Stats {
     #[serde(skip, alias = "info")]            pub info: String, //Info,
     #[serde(skip, alias = "topIskKillIDs")]   pub top_isk_kill_ids: Vec<IntRequired>,
     #[serde(alias = "topLists")]        pub top_lists: Vec<TopList>,
-    #[serde(skip, alias = "activity")]        pub activity: String, //Activity,
+    #[serde(alias = "activity")]        pub activity: Option<Activity>,
     #[serde(skip, alias = "hasSupers")]       pub has_supers: BoolOptional,
     #[serde(skip)]                      pub supers: Option<SuperValues>, //alias = "supers"
 }
@@ -568,6 +568,30 @@ mod tests {
         let object = response.unwrap();
         assert_eq!(object.id, 2114350216);
         assert_eq!(&object.record_type, "characterID");
+    }
+
+    #[test]
+    fn character_activity() {
+        let response = Stats::new(Entity::Character(2114350216));
+        assert!(response.is_some());
+        let object = response.unwrap();
+        assert_eq!(object.id, 2114350216);
+        assert_eq!(&object.record_type, "characterID");
+        assert!(object.activity.is_some());
+        let activity: Activity = object.activity.unwrap();
+        assert_eq!(activity.max, 32);
+        assert_eq!(&activity.days[0], "Sun");
+        assert_eq!(&activity.days[1], "Mon");
+        assert_eq!(&activity.days[2], "Tue");
+        assert_eq!(&activity.days[3], "Wed");
+        assert_eq!(&activity.days[4], "Thu");
+        assert_eq!(&activity.days[5], "Fri");
+        assert_eq!(&activity.days[6], "Sat");
+        if let HourKills::AsMap(kill_map) = activity.sun {
+            assert_eq!(kill_map.get(&String::from("8")), Some(&1));
+        } else {
+            assert!(false);
+        }
     }
 
     #[test]
