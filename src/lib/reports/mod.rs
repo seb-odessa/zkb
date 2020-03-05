@@ -101,7 +101,7 @@ pub fn span<S0: Into<String>, S1: Into<String>, S2: Into<String>>(title: S0, sty
 }
 
 pub fn canvas<S: Into<String>>(output: &mut dyn Write, id: S, width: u32, height: u32) {
-    std::fmt::write(output, format_args!(r#"<canvas id="{}" width="{}%" height="{}%"></canvas>"#
+    std::fmt::write(output, format_args!(r#"<canvas id="{}" width="{}" height="{}"></canvas>"#
     , id.into()
     , width
     , height)).expect(FAIL);

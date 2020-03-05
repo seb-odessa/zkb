@@ -368,7 +368,7 @@ impl Activity {
         reports::write(output, "<div>");
         for day in &activity.days {
             let id = format!("{}_{}", &day, crate::create_id());
-            reports::canvas(output, &id, 20, 20);
+            reports::canvas(output, &id, 100, 100);
             let script = format!(r#"
             <script>
                 document.addEventListener(
