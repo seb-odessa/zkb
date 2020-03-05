@@ -198,12 +198,32 @@ pub fn run(context: Context) {
             .route("/navigator/report/{category}/{class}/{id}/{minutes}", web::get().to(report))
             .route("/navigator/json/nodes/{area}/{id}/{deep}", web::get().to(nodes))
             .route("/navigator/json/edges/{area}/{id}/{deep}", web::get().to(edges))
+            .route("/navigator/js/{script}", web::get().to(script))
     })
     .bind(address)
     .unwrap()
     .shutdown_timeout(timeout)
     .run()
     .unwrap();
+}
+
+fn script(info: web::Path<String>, ctx: Context) -> HttpResponse {
+    use std::fs;
+    let filename = info.into_inner().replace(".", "").replace("//", "/");
+    let path = ctx.storage.clone() + &filename;
+    if let Ok(content) = fs::read_to_string(path) {
+        let content_type = if filename.ends_with(".js") {
+            "text/javascript; charset=UTF-8"
+        } else if filename.ends_with(".css") {
+            "text/css; charset=UTF-8"
+        } else {
+            "text/plain; charset=UTF-8"
+        };
+        HttpResponse::Ok().content_type(content_type).header("X-Header", "zkb").body(content)
+    } else {
+        let content = format!("Failed to open {}", filename);
+        HttpResponse::Ok().content_type("text/plain; charset=UTF-8").body(content)
+    }
 }
 
 fn nodes(info: web::Path<(String, i32, u32)>, ctx: Context) -> HttpResponse {

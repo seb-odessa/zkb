@@ -120,6 +120,7 @@ type Guard = Arc<(Mutex<bool>, Condvar)>;
 pub struct AppContext {
     pub server: String,
     pub client: String,
+    pub storage: String,
     pub timeout: u64,
     pub allowed: Option<DateTime<Utc>>,
     pub commands: Commands,
@@ -130,10 +131,11 @@ pub struct AppContext {
 }
 impl AppContext {
 
-    pub fn new<S: Into<String>>(address: S, client: S, timeout: u64, allowed: Option<DateTime<Utc>>) -> Self {
+    pub fn new<S: Into<String>>(address: S, client: S, storage: S, timeout: u64, allowed: Option<DateTime<Utc>>) -> Self {
         Self {
             server: address.into(),
             client: client.into(),
+            storage: storage.into(),
             timeout: timeout,
             allowed: allowed,
             commands: Commands::new(Arc::new((Mutex::new(false), Condvar::new()))),

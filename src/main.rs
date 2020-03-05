@@ -27,12 +27,13 @@ fn main() {
     let api_id = format!("{}", dns_lookup::get_hostname().unwrap_or(String::from("seb_odessa")));
     info!("ZKB API ID: {}", api_id);
 
+    let storage = format!("js/chartjs/dist/");
+
     let utc = Utc::now() - Duration::weeks(32);
     let allowed = DateTime::from(utc);
     info!("Minimal allowed date: {}", allowed.to_string());
 
-
-    let context = web::Data::new(AppContext::new(&iface, &api_id, 15, Some(allowed)));
+    let context = web::Data::new(AppContext::new(&iface, &api_id, &storage, 15, Some(allowed)));
     info!("Application context constructed");
     scope(|scope| {
         scope.builder()
