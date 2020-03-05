@@ -366,26 +366,49 @@ impl Activity {
     pub fn write(output: &mut dyn Write, activity: &Activity, ctx: &Context) {
         reports::script(output, ctx.get_js_url("Chart.bundle.min.js"));
         reports::write(output, "<div>");
-        for day in &activity.days {
+        for (index, day) in activity.days.iter().enumerate() {
             let id = format!("{}_{}", &day, crate::create_id());
-            reports::canvas(output, &id, 100, 100);
+            let labels: Vec<String> = (0..24).map(|x| format!("'{}'", x)).collect();
+            let data = match index {
+                0 => &activity.sun,
+                1 => &activity.mon,
+                2 => &activity.tue,
+                3 => &activity.wed,
+                4 => &activity.thu,
+                5 => &activity.fri,
+                6 => &activity.sat,
+                _ => &activity.sun,
+            };
+
+            let values: Vec<String> = (0..24).map(|x| {
+                format!("{}", match data {
+                    HourKills::AsMap(m) => m.get(&format!("{}", x)).cloned().unwrap_or(0),
+                    HourKills::AsVec(_) => 0
+                })
+            }).collect();
+
+            reports::canvas(output, &id, 150, 150);
             let script = format!(r#"
             <script>
-                document.addEventListener(
-                    "DOMContentLoaded",
-                    function(event) {{
-                        var ctx = document.getElementById("{id}").getContext('2d');
-                        var myChart = new Chart(ctx, {{
+                window.addEventListener("load", function(event) {{
+                    var ctx = document.getElementById("{id}").getContext('2d');
+                    new Chart(ctx, {{
                         type: 'radar',
-                        data: {{
-                            labels: [ '0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',  '8',  '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-                            datasets: [{{
-                                label: '{day}',
-                                data: [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6],
-                                borderWidth: 1
-                            }}]
-                        }},
-                        options: {{
+                        data: {{ labels:[{labels}], datasets: [{values}] }},
+                        options: {{ }}
+                    }});
+                }});
+            </script>"#,
+            id = id,
+            labels = labels.join(","),
+            values = values.join(","));
+
+            reports::write(output, script);
+        }
+        reports::write(output, "</div>");
+    }
+}
+/*
                             scales: {{
                                 yAxes: [{{
                                     ticks: {{
@@ -394,15 +417,7 @@ impl Activity {
                                 }}]
                             }}
                         }}
-                    }});
-                }});
-            </script>\n"#, id=id, day=day);
-            reports::write(output, script);
-        }
-        reports::write(output, "</div>");
-    }
-}
-
+*/
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(untagged)]
