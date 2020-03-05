@@ -365,6 +365,7 @@ impl Activity {
     #[allow(unused_variables)]
     pub fn write(output: &mut dyn Write, activity: &Activity, ctx: &Context) {
         reports::script(output, ctx.get_js_url("Chart.bundle.min.js"));
+        reports::write(output, "<div>");
         for day in &activity.days {
             let id = format!("{}_{}", &day, crate::create_id());
             reports::canvas(output, &id, 20, 20);
@@ -377,8 +378,7 @@ impl Activity {
                         var myChart = new Chart(ctx, {{
                         type: 'radar',
                         data: {{
-                            labels: [ '0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',  '8',  '9', '10', '11',
-                                    '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                            labels: [ '0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',  '8',  '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
                             datasets: [{{
                                 label: '{day}',
                                 data: [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6],
@@ -400,6 +400,7 @@ impl Activity {
             reports::write(output, script);
         }
     }
+    reports::write(output, "</div>");
 }
 
 
