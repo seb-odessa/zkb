@@ -392,14 +392,22 @@ impl Activity {
             <script>
                 window.addEventListener("load", function(event) {{
                     var ctx = document.getElementById("{id}").getContext('2d');
-                    new Chart(ctx, {{
+                    var chart = new Chart(ctx, {{
                         type: 'radar',
+                        label: '{day}',
                         data: {{ labels:[{labels}], datasets: [{values}] }},
-                        options: {{ }}
+                        options: {{
+                            scale: {{
+                                ticks: {{
+                                    suggestMin: 0,
+                                }},
+                            }},
+                        }},
                     }});
                 }});
             </script>"#,
             id = id,
+            day = day,
             labels = labels.join(","),
             values = values.join(","));
 
@@ -408,16 +416,6 @@ impl Activity {
         reports::write(output, "</div>");
     }
 }
-/*
-                            scales: {{
-                                yAxes: [{{
-                                    ticks: {{
-                                        beginAtZero: true
-                                    }}
-                                }}]
-                            }}
-                        }}
-*/
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(untagged)]
