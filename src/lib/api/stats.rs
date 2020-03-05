@@ -370,29 +370,33 @@ impl Activity {
             reports::canvas(output, &id, 20, 20);
             let script = format!(r#"
             <script>
-                var ctx = document.getElementById("{id}").getContext('2d');
-                var myChart = new Chart(ctx, {{
-                type: 'radar',
-                data: {{
-                    labels: [ '0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',  '8',  '9', '10', '11',
-                             '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
-                    datasets: [{{
-                        label: '{day}',
-                        data: [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6],
-                        borderWidth: 1
-                    }}]
-                }},
-                options: {{
-                    scales: {{
-                        yAxes: [{{
-                            ticks: {{
-                                beginAtZero: false
+                document.addEventListener(
+                    "DOMContentLoaded",
+                    function(event) {{
+                        var ctx = document.getElementById("{id}").getContext('2d');
+                        var myChart = new Chart(ctx, {{
+                        type: 'radar',
+                        data: {{
+                            labels: [ '0',  '1',  '2',  '3',  '4',  '5',  '6',  '7',  '8',  '9', '10', '11',
+                                    '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'],
+                            datasets: [{{
+                                label: '{day}',
+                                data: [1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 6],
+                                borderWidth: 1
+                            }}]
+                        }},
+                        options: {{
+                            scales: {{
+                                yAxes: [{{
+                                    ticks: {{
+                                        beginAtZero: false
+                                    }}
+                                }}]
                             }}
-                        }}]
-                    }}
-                }}
-            }});
-            </script>"#, id=id, day=day);
+                        }}
+                    }});
+                }});
+            </script>\n"#, id=id, day=day);
             reports::write(output, script);
         }
     }
