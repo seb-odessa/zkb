@@ -389,7 +389,7 @@ impl Activity {
                             scales: {{
                                 yAxes: [{{
                                     ticks: {{
-                                        beginAtZero: false
+                                        beginAtZero: true
                                     }}
                                 }}]
                             }}
