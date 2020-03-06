@@ -55,6 +55,7 @@ impl Corporation {
         use api::stats::Stats;
         use api::stats::Entity;
         use api::stats::TopList;
+        use api::stats::Activity;
         use std::collections::HashSet;
 
         let mut output = String::new();
