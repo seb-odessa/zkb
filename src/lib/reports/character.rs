@@ -77,6 +77,8 @@ impl reports::Reportable for Character {
         reports::lazy(&mut output, format!("stat/character/{}", id), &ctx);
         reports::lazy(&mut output, format!("report/character/wins/{}/{}", id, 60), &ctx);
         reports::lazy(&mut output, format!("report/character/losses/{}/{}", id, 60), &ctx);
+        reports::radar(&mut output, &ctx);
+        reports::observer(&mut output, vec!["'Sun'", "'Mon'", "'Tue'", "'Wed'", "'Thu'", "'Fri'", "'Sat'"]);
         return output;
     }
 }

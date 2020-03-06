@@ -93,18 +93,23 @@ pub fn href<S: Into<String>>(url: S, name: S) -> String{
 }
 
 pub fn div<S: Into<String>>(output: &mut dyn Write, content: S) {
-    std::fmt::write(output, format_args!("<div>{}</div>\n", content.into())).expect(FAIL);
+    let element = format!("<div>{}</div>\n", content.into());
+    std::fmt::write(output, format_args!("{}", element)).expect(FAIL);
 }
 
 pub fn span<S0: Into<String>, S1: Into<String>, S2: Into<String>>(title: S0, style: S1, content: S2) -> String{
     format!(r#"<span title="{}" style = "{}">{}</span>"#, title.into(), style.into(), content.into())
 }
 
-pub fn canvas<S: Into<String>>(output: &mut dyn Write, id: S, width: u32, height: u32) {
-    std::fmt::write(output, format_args!(r#"<canvas id="{}" width="{}" height="{}"></canvas>"#
-    , id.into()
-    , width
-    , height)).expect(FAIL);
+pub fn hidden<S0: Into<String>, S1: Into<String>>(output: &mut dyn Write, id: S0, value: S1) {
+    let content = format!("<div hidden id=\"{}\" data-values=\"{}\"></div>\n", id.into(), value.into());
+    std::fmt::write(output, format_args!("{}", content)).expect(FAIL);
+}
+
+pub fn canvas<S: Into<String>>(output: &mut dyn Write, id: S) {
+    std::fmt::write(output,
+        format_args!("<div style='display: inline-block;'><canvas id=\"{}\" width='200' height='200'></canvas></div>\n", id.into())
+    ).expect(FAIL);
 }
 
 pub fn script<S: Into<String>>(output: &mut dyn Write, src: S) {
@@ -112,7 +117,7 @@ pub fn script<S: Into<String>>(output: &mut dyn Write, src: S) {
 }
 
 pub fn write<S: Into<String>>(output: &mut dyn Write, content: S) {
-    std::fmt::write(output, format_args!("{}", content.into())).expect(FAIL);
+    std::fmt::write(output, format_args!("{}\n", content.into())).expect(FAIL);
 }
 
 
@@ -300,4 +305,59 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S,
         edges=format!("json/edges/system/{}/{}", id, deep),
         uri=uri.into(),
     )).expect(FAIL);
+}
+
+pub fn radar(output: &mut dyn Write, ctx: &Context) {
+    script(output, ctx.get_js_url("Chart.bundle.min.js"));
+    let labels: Vec<String> = (0..24).map(|x| format!("'{}'", x)).collect();
+    let script = format!(r#"
+        <script>
+            function drawRadar(day) {{
+                var id = day + "_Radar";
+                var id_data = id + "_Values";
+                var canvas = document.getElementById(id);
+                var values = document.getElementById(id_data).getAttribute('data-values').split(',');
+                console.log("id: " + id+ " values: " + values);
+                var max = Math.max(...values) + 1;
+                var chart = new Chart(canvas.getContext('2d'), {{
+                    type: 'radar',
+                    data: {{ labels: [{}], datasets: [{{ label: day, data: values }}] }},
+                    options: {{ scale: {{ ticks: {{ suggestedMin: 0, suggestedMax: max }} }} }},
+                }});
+//                chart.canvas.parentNode.style.width = 400;
+//                chart.canvas.parentNode.style.height = 400;
+            }}
+
+        </script>"#, labels.join(","));
+    std::fmt::write(output, format_args!("{}", script)).expect(FAIL);
+}
+
+pub fn observer(output: &mut dyn Write, ids: Vec<&str>) {
+    let script = format!(r#"
+    <script>
+        var ids = [{ids}];
+        var observer = new MutationObserver(function(mutationsList, me) {{
+            mutationsList.forEach((mutation) => {{
+                if (mutation.type = 'childList') {{
+                    var id = ids.shift();
+                    var canvas_id = id + '_Radar';
+                    var canvas = window.document.getElementById(canvas_id);
+                    if (canvas) {{
+                        drawRadar(id);
+                    }} else {{
+                        ids.push(id);
+                    }}
+                    console.log("mutation.type:" + mutation.type + " ids: " + ids.toString());
+                }}
+            }});
+            if (0 == ids.length) {{
+                me.disconnect();
+                return;
+            }}
+        }});
+
+        observer.observe( document, {{ childList: true, subtree: true }});
+
+    </script>"#, ids = ids.join(","));
+    std::fmt::write(output, format_args!("{}", script)).expect(FAIL);
 }

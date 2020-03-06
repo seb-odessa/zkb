@@ -364,11 +364,7 @@ impl Activity {
 
     #[allow(unused_variables)]
     pub fn write(output: &mut dyn Write, activity: &Activity, ctx: &Context) {
-        reports::script(output, ctx.get_js_url("Chart.bundle.min.js"));
-        reports::write(output, "<div>");
         for (index, day) in activity.days.iter().enumerate() {
-            let id = format!("{}_{}", &day, crate::create_id());
-            let labels: Vec<String> = (0..24).map(|x| format!("'{}'", x)).collect();
             let data = match index {
                 0 => &activity.sun,
                 1 => &activity.mon,
@@ -387,33 +383,11 @@ impl Activity {
                 })
             }).collect();
 
-            reports::canvas(output, &id, 150, 150);
-            let script = format!(r#"
-            <script>
-                window.addEventListener("load", function(event) {{
-                    var ctx = document.getElementById("{id}").getContext('2d');
-                    var chart = new Chart(ctx, {{
-                        type: 'radar',
-                        label: '{day}',
-                        data: {{ labels:[{labels}], datasets: [{values}] }},
-                        options: {{
-                            scale: {{
-                                ticks: {{
-                                    suggestMin: 0,
-                                }},
-                            }},
-                        }},
-                    }});
-                }});
-            </script>"#,
-            id = id,
-            day = day,
-            labels = labels.join(","),
-            values = values.join(","));
-
-            reports::write(output, script);
+            let id = format!("{}_Radar", &day);
+            reports::canvas(output, &id);
+            let id_data = format!("{}_Values", &id);
+            reports::hidden(output, id_data, values.clone().join(","));
         }
-        reports::write(output, "</div>");
     }
 }
 
