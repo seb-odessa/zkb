@@ -376,12 +376,10 @@ impl Activity {
                 _ => &activity.sun,
             };
 
-            let values: Vec<String> = (0..24).map(|x| {
-                format!("{}", match data {
-                    HourKills::AsMap(m) => m.get(&format!("{}", x)).cloned().unwrap_or(0),
-                    HourKills::AsVec(_) => 0
-                })
-            }).collect();
+            let values: Vec<String> = match data {
+                HourKills::AsMap(m) => (0..24).map(|x| { m.get(&format!("{}", x)).cloned().unwrap_or(0) } ).collect::<Vec<i32>>(),
+                HourKills::AsVec(v) => v.clone()
+            }.into_iter().map(|x| format!("{}", x)).collect();
 
             let id = format!("{}_Radar", &day);
             reports::canvas(output, &id);
@@ -640,6 +638,7 @@ mod tests {
         let object = response.unwrap();
         assert_eq!(object.id, 1354830081);
         assert_eq!(&object.record_type, "allianceID");
+        assert!(object.activity.is_some());
     }
 
     #[test]
