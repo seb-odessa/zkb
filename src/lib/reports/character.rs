@@ -62,7 +62,6 @@ impl Character {
             if let Some(ref activity) = stats.activity {
                 Activity::write(&mut output, activity, ctx);
             }
-
             //character, corporation, alliance, shipType, solarSystem, location
             let allowed: HashSet<String> = vec!["shipType", "solarSystem", "location"].into_iter().map(|s| String::from(s)).collect();
             TopList::write(&mut output, &stats.top_lists, allowed, ctx);
