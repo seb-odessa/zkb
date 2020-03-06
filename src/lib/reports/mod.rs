@@ -308,7 +308,7 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S,
 }
 
 pub fn radar(output: &mut dyn Write, ctx: &Context) {
-    script(output, ctx.get_js_url("Chart.bundle.min.js"));
+    script(output, ctx.get_js_url("Chart.bundle.min.js")); // https://www.chartjs.org/
     let labels: Vec<String> = (0..24).map(|x| format!("'{}'", x)).collect();
     let script = format!(r#"
         <script>

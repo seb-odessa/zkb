@@ -13,6 +13,8 @@ impl reports::Reportable for Corporation {
         reports::lazy(&mut output, format!("stat/corporation/{}", id), &ctx);
         reports::lazy(&mut output, format!("report/corporation/wins/{}/{}", id, 60), &ctx);
         reports::lazy(&mut output, format!("report/corporation/losses/{}/{}", id, 60), &ctx);
+        reports::radar(&mut output, &ctx);
+        reports::observer(&mut output, vec!["'Sun'", "'Mon'", "'Tue'", "'Wed'", "'Thu'", "'Fri'", "'Sat'"]);
         return output;
     }
 }

@@ -13,6 +13,8 @@ impl reports::Reportable for Alliance {
         reports::lazy(&mut output, format!("stat/alliance/{}", id), &ctx);
         reports::lazy(&mut output, format!("report/alliance/wins/{}/{}", id, 60), &ctx);
         reports::lazy(&mut output, format!("report/alliance/losses/{}/{}", id, 60), &ctx);
+        reports::radar(&mut output, &ctx);
+        reports::observer(&mut output, vec!["'Sun'", "'Mon'", "'Tue'", "'Wed'", "'Thu'", "'Fri'", "'Sat'"]);
         return output;
     }
 }
@@ -62,5 +64,5 @@ impl Alliance {
             TopList::write(&mut output, &stats.top_lists, allowed, ctx);
         }
         return output;
-    }    
+    }
 }
