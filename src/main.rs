@@ -40,10 +40,10 @@ fn main() {
              .name("Web Server".to_string())
              .spawn(|_| server::run(context.clone()))
              .expect("Failed to create API Server");
-     //    scope.builder()
-     //         .name("ZKB Monitor".to_string())
-     //         .spawn(|_| monitor::run(context.clone()))
-     //         .expect("Failed to create Monitor");
+        scope.builder()
+             .name("ZKB Monitor".to_string())
+             .spawn(|_| monitor::run(context.clone()))
+             .expect("Failed to create Monitor");
         scope.builder()
              .name("API Name Resolver".to_string())
              .spawn(|_| resolver::run(context.clone()))
