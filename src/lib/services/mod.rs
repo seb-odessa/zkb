@@ -165,6 +165,10 @@ impl AppContext {
         format!("{}/js/{}", self.get_root(), url.into())
     }
 
+    pub fn get_backup_file<S: Into<String>>(&self, file: S) ->String {
+        format!("{}/backup/{}", self.get_root(), file.into())
+    }
+
     pub fn get_api_link<S1: Into<String>, S2: Into<String>>(&self, class: S1, name: S2) -> String {
         format!(r#"<a href="{root}/api/{class}/{name}">{name}</a>"#,
             root = self.get_root(),

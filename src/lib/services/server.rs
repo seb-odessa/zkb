@@ -199,6 +199,7 @@ pub fn run(context: Context) {
             .route("/navigator/json/nodes/{area}/{id}/{deep}", web::get().to(nodes))
             .route("/navigator/json/edges/{area}/{id}/{deep}", web::get().to(edges))
             .route("/navigator/js/{script}", web::get().to(script))
+            .route("/navigator/backup/{file}", web::get().to(backup))
     })
     .bind(address)
     .unwrap()
@@ -224,6 +225,14 @@ fn script(info: web::Path<String>, ctx: Context) -> HttpResponse {
         let content = format!("Failed to open {}", filename);
         HttpResponse::Ok().content_type("text/plain; charset=UTF-8").body(content)
     }
+}
+
+fn backup(info: web::Path<String>, ctx: Context) -> HttpResponse {
+    use std::fs;
+    let filename = info.into_inner().replace("..", "").replace("//", "/");
+    let path = ctx.get_backup_file(filename);
+
+    HttpResponse::Ok().content_type("text/plain; charset=UTF-8").body(path)
 }
 
 fn nodes(info: web::Path<(String, i32, u32)>, ctx: Context) -> HttpResponse {
