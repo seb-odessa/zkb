@@ -231,7 +231,7 @@ fn script(info: web::Path<String>, ctx: Context) -> HttpResponse {
 
 fn backup(info: web::Path<String>, ctx: Context) -> Result<NamedFile> {
     let filename = info.into_inner().replace("..", "").replace("//", "/");
-    Ok(NamedFile::open(filename)?)
+    Ok(NamedFile::open(ctx.backup.clone() + &filename)?)
 }
 
 fn nodes(info: web::Path<(String, i32, u32)>, ctx: Context) -> HttpResponse {
