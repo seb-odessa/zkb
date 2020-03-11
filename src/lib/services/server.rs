@@ -5,7 +5,8 @@ use crate::reports::Reportable;
 use crate::reports::ReportableEx;
 
 use actix_rt;
-use actix_web::{web, App, HttpServer, HttpResponse};
+use actix_files::NamedFile;
+use actix_web::{web, App, HttpServer, HttpResponse, middleware, Result};
 
 fn wrap<S: Into<String>>(content: S) -> HttpResponse {
     HttpResponse::Ok()
@@ -184,6 +185,7 @@ pub fn run(context: Context) {
     info!("address: {}", address);
     HttpServer::new(move || {
         App::new()
+            .wrap(middleware::Compress::default())
             .register_data(context.clone())
             .route("/navigator/find/{name}", web::get().to(find))
             .route("/navigator/api/{type}/{id}", web::get().to(api))
@@ -227,12 +229,9 @@ fn script(info: web::Path<String>, ctx: Context) -> HttpResponse {
     }
 }
 
-fn backup(info: web::Path<String>, ctx: Context) -> HttpResponse {
-    use std::fs;
+fn backup(info: web::Path<String>, ctx: Context) -> Result<NamedFile> {
     let filename = info.into_inner().replace("..", "").replace("//", "/");
-    let path = ctx.get_backup_file(filename);
-
-    HttpResponse::Ok().content_type("text/plain; charset=UTF-8").body(path)
+    Ok(NamedFile::open(filename)?)
 }
 
 fn nodes(info: web::Path<(String, i32, u32)>, ctx: Context) -> HttpResponse {
