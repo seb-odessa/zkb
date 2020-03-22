@@ -8,11 +8,15 @@ use actix_rt;
 use actix_files::NamedFile;
 use actix_web::{web, App, HttpServer, HttpResponse, middleware, Result};
 
+fn style() -> &'static str {
+    "<style> body { background-color: SlateGray; } </style>"
+}
+
 fn wrap<S: Into<String>>(content: S) -> HttpResponse {
     HttpResponse::Ok()
         .content_type("text/html; charset=UTF-8")
         .header("X-Header", "zkb")
-        .body(content.into())
+        .body(content.into() + style())
 }
 
 fn quit(ctx: &Context) -> String {
