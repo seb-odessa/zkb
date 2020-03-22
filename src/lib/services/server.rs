@@ -9,7 +9,7 @@ use actix_files::NamedFile;
 use actix_web::{web, App, HttpServer, HttpResponse, middleware, Result};
 
 fn style() -> &'static str {
-    "<style> body { background-color: Gray; } </style>"
+    "<style> body { background-color: LightSeaGreen; } </style>"
 }
 
 fn wrap<S: Into<String>>(content: S) -> HttpResponse {
