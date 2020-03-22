@@ -66,22 +66,22 @@ impl Killmail {
         .to_string()
     }
 
-    fn npc_attacker_color(attacker: &models::attacker::AttackerNamed) -> String {
+    fn npc_attacker_style(attacker: &models::attacker::AttackerNamed) -> String {
         if 500024 == attacker.get_id("faction") {
-            return String::from("#ff00ff");
+            return String::from("background-color: #ff00ff;");
         }
-        return String::from("WhiteSmoke");
+        return String::new();
     }
 
-    fn npc_kill_color(attackers: &Option<Vec<models::attacker::AttackerNamed>>) -> String {
+    fn npc_kill_style(attackers: &Option<Vec<models::attacker::AttackerNamed>>) -> String {
         if let Some(attackers) = attackers {
             for attacker in attackers {
                 if 500024 == attacker.get_id("faction") {
-                    return String::from("#ff00ff");
+                    return String::from("background-color: #ff00ff;");
                 }
             }
         }
-        return String::from("WhiteSmoke");
+        return String::new();
     }
 
     pub fn write(output: &mut dyn Write, killmail: &killmail::KillmailNamed, ctx: &Context) {
@@ -188,7 +188,7 @@ impl Killmail {
         );
 
         if let Some(victim) = victim {
-            let row_style = format!("background-color: {};", Self::npc_kill_color(&attackers));
+            let row_style = Self::npc_kill_style(&attackers);
             let timestamp = killmail.killmail_time.time().format("%H:%M:%S").to_string();
             reports::table_row_start(output, row_style);
             reports::table_cell(output, "API/ZKB", text_style,
@@ -307,7 +307,7 @@ impl Killmail {
 
             reports::table_row_end(output);
             for attacker in attackers {
-                reports::table_row_start(output, format!("background-color: {};", Self::npc_attacker_color(&attacker)));
+                reports::table_row_start(output, Self::npc_attacker_style(&attacker));
                 reports::table_cell(output, "Security Status", text_style, attacker.security_status.separated_string());
                 reports::table_cell(output, "Final Blow", text_style, attacker.final_blow.to_string());
                 reports::table_cell(output, "Damage Done", numeric_style, attacker.damage_done.separated_string());
