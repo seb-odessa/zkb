@@ -40,7 +40,7 @@ fn ping(ctx: &Context) -> String {
 }
 
 fn statistic(_info: web::Path<String>, ctx: Context) -> HttpResponse {
-    ctx.notify("navigator/cmd");
+    ctx.notify("navigator/cmd/statistic");
     let mut output = String::new();
     match ctx.get_visits() {
         Some(map) => {
