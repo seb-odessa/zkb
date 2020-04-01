@@ -29,18 +29,18 @@ impl Node {
         let id = model.system_id;
         let system = model.get_name("system");
         let status = model.get_security_status();
-        let c10 = reports::History::system_count(&id, &10, ctx);
-        let c60 = reports::History::system_count(&id, &60, ctx);
-        let label = format!("{} ({}) [{}:{}]", system, status, c10, c60);
         let color = reports::get_security_status_color(model.security_status);
         let constellation = model.get_name("constellation");
         let region = model.get_name("region");
         let shape = String::from(if model.observatory.is_none() {"ellipse"} else {"box"});
         let style = format!("background-color: {}; display: inline-block; width=100%", color);
+        let label = format!("{} ({})", system, status);
         let colored = reports::span("", style, &label);
         reports::div(&mut output, format!("System: {}", colored));
         reports::div(&mut output, format!("Constellation: {}", &constellation));
         reports::div(&mut output, format!("Region: {}", &region));
+        reports::div(&mut output, format!("Kills last 10 minutes: {}", reports::History::system_count(&id, &10, ctx)));
+        reports::div(&mut output, format!("Kills last 60 minutes: {}", reports::History::system_count(&id, &60, ctx)));
         reports::div(&mut output, format!("{}", model.observatory.map(|_| String::from("Jovian Observatory")).unwrap_or_default()));
 
         let title = format!("{}", output);
