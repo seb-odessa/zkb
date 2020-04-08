@@ -31,7 +31,7 @@ impl Node {
         let color = reports::get_security_status_color(model.security_status);
         let constellation = model.get_name("constellation");
         let region = model.get_name("region");
-        let shape = String::from(if model.observatory.is_none() {"circle"} else {"square"});
+        let shape = String::from(if model.observatory.is_none() {"circle"} else {"box"});
         let style = format!("background-color: {}; display: inline-block; width=100%", color);
         let label = format!("{} ({})", system, status);
         let colored = reports::span("", style, &label);
