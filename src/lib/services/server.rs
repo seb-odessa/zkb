@@ -244,8 +244,8 @@ fn nodes(info: web::Path<(String, i32, u32)>, ctx: Context) -> HttpResponse {
     ctx.notify(format!("navigator/json/nodes/{}", area));
 
     let nodes = match area.as_ref() {
-        "system" => network::get_system_network_nodes(&id, deep, &ctx).values().into_iter().cloned().collect(),
-//        "constellation" => reports::get_constellation_nodes(&id, &ctx),
+        "system" => network::get_system_nodes(&id, deep, &ctx).values().into_iter().cloned().collect(),
+        "constellation" => network::get_constellations_nodes(&id, &ctx).values().into_iter().cloned().collect(),
         _ => Vec::new()
     };
 
@@ -261,8 +261,8 @@ fn edges(info: web::Path<(String, i32, u32)>, ctx: Context) -> HttpResponse {
     ctx.notify(format!("navigator/json/edges/{}", area));
 
     let edges = match area.as_ref() {
-        "system" => network::get_system_network_edges(&id, deep, &ctx),
-//        "constellation" => reports::get_constellation_edges(&id, &ctx),
+        "system" => network::get_system_edges(&id, deep, &ctx),
+        "constellation" => network::get_constellations_edges(&id, &ctx),
         _ => Vec::new()
     };
 

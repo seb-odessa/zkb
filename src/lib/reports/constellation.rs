@@ -14,15 +14,15 @@ impl reports::ReportableEx for Constellation {
     }
 
     fn report_by_id(id: &i32, ctx: &Context, report_type: reports::ReportType) -> String {
-        use services::{Category, Report};
         let mut output = String::new();
-        if let Report::Constellation(constellation) = reports::load(Category::Constellation(*id), &ctx) {
+        if let Some(constellation) = Self::load(id, &ctx) {
             Self::write(&mut output, &constellation, &ctx);
             if report_type == reports::ReportType::Full {
                 reports::lazy(&mut output, format!("api/region_brief/{}", constellation.region_id), &ctx);
-                Self::neighbors(&mut output, &constellation.constellation_id, &ctx);
-                reports::systems(&mut output, &constellation.constellation_id, &ctx);
-                reports::constellations(&mut output, &constellation.region_id, &ctx);
+                Self::neighbors(&mut output, id, &ctx);
+                Self::systems(&mut output, id, &ctx);
+                reports::map(&mut output, id, 0, "constellation", &ctx);
+                reports::Region::constellations(&mut output, &constellation.region_id, &ctx);
                 reports::lazy(&mut output, format!("history/constellation/{}/{}", id, 60), &ctx);
             }
         }
@@ -66,6 +66,45 @@ impl Constellation {
                     ctx.get_api_href("constellation", id, name)
                 ));
             }
+        }
+    }
+
+    pub fn load(id: &i32, ctx: &Context) -> Option<models::constellation::ConstellationNamed> {
+        use services::{Category, Report};
+        match reports::load(Category::Constellation(*id), &ctx) {
+            Report::Constellation(constellation) => return Some(constellation),
+            Report::NotFoundId(id) => warn!("{} was not found", id),
+            report => warn!("Unexpected report {:?}", report)
+        }
+        return None;
+    }
+
+    pub fn get_systems(constellation_id: &i32, ctx: &Context) -> Option<Vec<models::system::SystemNamed>> {
+        use services::{Category, Report, Area};
+        let area = Area::Constellation(*constellation_id);
+        let any = models::system::SystemFilter::Any;
+        match reports::load(Category::Systems((area, any)), &ctx) {
+            Report::Systems(systems) => return Some(systems),
+            Report::NotFoundId(id) => warn!("{} was not found", id),
+            report => warn!("Unexpected report {:?}", report)
+        }
+        return None;
+    }
+
+    pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
+        use std::collections::BTreeSet;
+        let mut set = BTreeSet::new();
+        if let Some(systems) = Self::get_systems(constellation_id, ctx) {
+            for system in &systems {
+                let url = reports::span("Solar System", "", ctx.get_api_link("system", &system.get_name("system")));
+                set.insert(url);
+            }
+            let mut list = String::new();
+            for url in &set {
+                list += url;
+                list += " ";
+            }
+            reports::div(output, format!("Systems in constellation: {}", list));    
         }
     }
 

@@ -2,7 +2,6 @@
 use crate::services::Context;
 use crate::models;
 use crate::reports;
-use reports::system;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -53,7 +52,7 @@ impl Node {
             title: Some(title),
             shape: shape,
             border_width: 1,
-            neighbors: system::System::get_neighbors(&id, ctx).iter().map(|x| x.neighbor_id).collect(),
+            neighbors: reports::system::System::get_neighbors(&id, ctx).iter().map(|x| x.neighbor_id).collect(),
         }
     }
 }
@@ -77,7 +76,7 @@ fn make_system_network(ids: &Vec<i32>, ctx: &Context, nodes: &mut HashMap<i32, N
         let mut neighbors = Vec::new();
         for id in ids {
             if !nodes.contains_key(id) {
-                if let Some(system) = system::System::load(id, ctx) {
+                if let Some(system) = reports::system::System::load(id, ctx) {
                     let node = Node::new(system, 1, ctx);
                     neighbors.append(&mut node.neighbors.clone());
                     nodes.insert(*id, node);
@@ -88,10 +87,10 @@ fn make_system_network(ids: &Vec<i32>, ctx: &Context, nodes: &mut HashMap<i32, N
     }
 }
 
-pub fn get_system_network_nodes(id: &i32, deep: u32, ctx: &Context) -> HashMap<i32, Node> {
+pub fn get_system_nodes(id: &i32, deep: u32, ctx: &Context) -> HashMap<i32, Node> {
     let mut nodes:  HashMap<i32, Node> = HashMap::new();
     if deep > 0 {
-        if let Some(system) = system::System::load(id, ctx) {
+        if let Some(system) = reports::system::System::load(id, ctx) {
             let mut node = Node::new(system, 3, ctx);
             node.border_width = 3;
             let neighbors = node.neighbors.clone();
@@ -102,10 +101,9 @@ pub fn get_system_network_nodes(id: &i32, deep: u32, ctx: &Context) -> HashMap<i
     return nodes;
 }
 
-pub fn get_system_network_edges(id: &i32, deep: u32, ctx: &Context) -> Vec<Edge> {
-    let nodes = get_system_network_nodes(id, deep, ctx);
+pub fn build_edges(nodes: &HashMap<i32, Node>) -> Vec<Edge> {
     let mut edges = Vec::new();
-    for (from, node) in &nodes {
+    for (from, node) in nodes {
         for to in &node.neighbors {
             let edge = Edge::new(*from, *to);
             let unknown = edges.iter().find(|&e| *e == edge).is_none();
@@ -115,5 +113,31 @@ pub fn get_system_network_edges(id: &i32, deep: u32, ctx: &Context) -> Vec<Edge>
         }
     }
     return edges;
+}
+
+pub fn get_system_edges(id: &i32, deep: u32, ctx: &Context) -> Vec<Edge> {
+    return build_edges(&get_system_nodes(id, deep, ctx));
+}
+
+pub fn get_constellations_nodes(id: &i32, ctx: &Context) -> HashMap<i32, Node> {
+    let mut nodes:  HashMap<i32, Node> = HashMap::new();
+
+    if let Some(systems) = reports::constellation::Constellation::get_systems(id, ctx) {
+        for system in systems.into_iter() {
+            let mut node = Node::new(system, 3, ctx);
+            node.border_width = 3;
+            nodes.insert(*id, node);    
+        }
+
+// @todo add nearest systems from other constellation
+//        let neighbors = node.neighbors.clone();
+//        make_system_network(&neighbors, ctx, &mut nodes, deep-1);
+
+    }
+    return nodes;
+}
+
+pub fn get_constellations_edges(id: &i32, ctx: &Context) -> Vec<Edge> {
+    return build_edges(&get_constellations_nodes(id, ctx));
 }
 

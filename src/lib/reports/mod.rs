@@ -15,8 +15,7 @@ mod corporation;
 mod alliance;
 mod faction;
 
-use crate::services::{Context, Category, Message, Report, Area};
-use crate::models;
+use crate::services::{Context, Category, Message, Report};
 use std::fmt::Write;
 
 
@@ -203,49 +202,6 @@ pub fn load(category: Category, ctx: &Context) -> Report {
     }
 }
 
-pub fn constellations(output: &mut dyn Write, region_id: &i32, ctx: &Context) {
-    use std::collections::BTreeMap;
-    if let Report::Constellations(constellations) = load(Category::Constellations(Area::Region(*region_id)), &ctx) {
-        let mut map = BTreeMap::new();
-        for constellation in &constellations {
-            let name = constellation.get_name("constellation");
-            let url = span("Constellation", "", ctx.get_api_link("constellation", &name));
-            map.insert(name, url);
-        }
-        let mut list = String::new();
-        for (_, url) in &map {
-            list += url;
-            list += " ";
-        }
-        div(output, format!("Constellation in Region: {}", list));
-    }
-}
-
-pub fn get_systems(constellation_id: &i32, ctx: &Context) -> Vec<models::system::SystemNamed> {
-    let mut result = Vec::new();
-    if let Report::Systems(systems) = load(Category::Systems((Area::Constellation(*constellation_id), models::system::SystemFilter::Any)), &ctx) {
-        result = systems;
-    }
-    return result;
-}
-
-pub fn systems(output: &mut dyn Write, constellation_id: &i32, ctx: &Context) {
-    use std::collections::BTreeMap;
-    let mut map = BTreeMap::new();
-    let systems = get_systems(constellation_id, ctx);
-    for system in &systems {
-        let name = system.get_name("system");
-        let url = span("Solar System", "", ctx.get_api_link("system", &name));
-        map.insert(name, url);
-    }
-    let mut list = String::new();
-    for (_, url) in & map {
-        list += url;
-        list += " ";
-    }
-    div(output, format!("Systems in constellation: {}", list));
-}
-
 pub fn get_security_status_color(rew_status: f32) -> String {
     let status = (10.0 * rew_status).round() / 10.0;
     // http://web.archive.org/web/20120219150840/http://blog.evepanel.net/eve-online/igb/colors-of-the-security-status.html
@@ -263,7 +219,8 @@ pub fn get_security_status_color(rew_status: f32) -> String {
     .to_string()
 }
 
-pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S, ctx: &Context) {
+pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, target: S, ctx: &Context) {
+    let owned = target.into();
     std::fmt::write(
         output,
         format_args!(r##"
@@ -301,9 +258,9 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, uri: S,
             </script>
         "##,
         root=ctx.get_root(),
-        nodes=format!("json/nodes/system/{}/{}", id, deep),
-        edges=format!("json/edges/system/{}/{}", id, deep),
-        uri=uri.into(),
+        nodes=format!("json/nodes/{}/{}/{}", &owned, id, deep),
+        edges=format!("json/edges/{}/{}/{}", &owned, id, deep),
+        uri=format!("api/{}", &owned),
     )).expect(FAIL);
 }
 

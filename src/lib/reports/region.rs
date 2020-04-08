@@ -21,7 +21,7 @@ impl reports::ReportableEx for Region {
             Self::write(&mut output, &region, ctx);
             if report_type == reports::ReportType::Full {
                 Self::neighbors(&mut output, id, ctx);
-                reports::constellations(&mut output, &region.region_id, &ctx);
+                Self::constellations(&mut output, &region.region_id, &ctx);
                 reports::lazy(&mut output, format!("history/region/{}/{}", id, 60), &ctx);
                 reports::lazy(&mut output, format!("stat/region/{}", id), &ctx);
             }
@@ -84,4 +84,30 @@ impl Region {
         return output;
     }    
 
+    pub fn get_constellation(region_id: &i32, ctx: &Context) -> Option<Vec<models::constellation::ConstellationNamed>> {
+        use services::{Category, Report, Area};
+        match reports::load(Category::Constellations(Area::Region(*region_id)), &ctx) {
+            Report::Constellations(constellations) => return Some(constellations),
+            Report::NotFoundId(id) => warn!("{} was not found", id),
+            report => warn!("Unexpected report {:?}", report)
+        }
+        return None;
+    }
+
+    pub fn constellations(output: &mut dyn Write, region_id: &i32, ctx: &Context) {
+        use std::collections::BTreeSet;
+        let mut set = BTreeSet::new();
+        if let Some(constellations) = Self::get_constellation(region_id, ctx) {
+            for constellation in &constellations {
+                let url = reports::span("Constellation", "", ctx.get_api_link("constellation", &constellation.get_name("constellation")));
+                set.insert(url);
+            }
+            let mut list = String::new();
+            for url in &set {
+                list += url;
+                list += " ";
+            }
+            reports::div(output, format!("Constellation in Region: {}", list));    
+        }
+    }
 }
