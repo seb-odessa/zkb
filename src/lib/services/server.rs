@@ -242,7 +242,6 @@ fn nodes(info: web::Path<(String, i32, u32)>, ctx: Context) -> HttpResponse {
     let (area, id, deep) = info.into_inner();
     info!("/json/nodes/{}/{}", &area, &id);
     ctx.notify(format!("navigator/json/nodes/{}", area));
-
     let nodes = match area.as_ref() {
         "system" => network::get_system_nodes(&id, deep, &ctx).values().into_iter().cloned().collect(),
         "constellation" => network::get_constellations_nodes(&id, &ctx).values().into_iter().cloned().collect(),

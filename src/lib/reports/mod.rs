@@ -242,11 +242,11 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, target:
                     var options = {{ clickToUse: true }};
                     var network = new vis.Network(container, data, options);
                     network.on("doubleClick", function(params) {{
-                        var url = "{root}/{uri}/" + params.nodes;
+                        var url = "{root}/api/system/" + params.nodes;
                         window.open(url, "_self");
                     }} );
                     network.on("select", function(params) {{
-                        var url = "{root}/{uri}_hint/" + params.nodes;
+                        var url = "{root}/api/system_hint/" + params.nodes;
                         fetch(url)
                             .then(response => response.text())
                             .then(html => document.getElementById("extinfo").innerHTML = html)
@@ -260,7 +260,6 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, target:
         root=ctx.get_root(),
         nodes=format!("json/nodes/{}/{}/{}", &owned, id, deep),
         edges=format!("json/edges/{}/{}/{}", &owned, id, deep),
-        uri=format!("api/{}", &owned),
     )).expect(FAIL);
 }
 

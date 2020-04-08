@@ -126,7 +126,7 @@ pub fn get_constellations_nodes(id: &i32, ctx: &Context) -> HashMap<i32, Node> {
         for system in systems.into_iter() {
             let mut node = Node::new(system, 3, ctx);
             node.border_width = 3;
-            nodes.insert(*id, node);    
+            nodes.insert(node.id, node);    
         }
 
 // @todo add nearest systems from other constellation
