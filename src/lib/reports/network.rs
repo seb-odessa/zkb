@@ -132,16 +132,13 @@ pub fn get_constellations_nodes(id: &i32, ctx: &Context) -> HashMap<i32, Node> {
         for id in &neighbors {
             if !nodes.contains_key(id) {
                 if let Some(system) = reports::system::System::load(id, ctx) {
-                let mut node = Node::new(system, 1, ctx);
-                node.border_width = 1;
-                nodes.insert(node.id, node);
+                    let mut node = Node::new(system, 1, ctx);
+                    node.border_width = 1;
+                    node.shape = String::from("circle");
+                    nodes.insert(node.id, node);
                 }
             }
         }
-// @todo add nearest systems from other constellation
-//        let neighbors = node.neighbors.clone();
-//        make_system_network(&neighbors, ctx, &mut nodes, deep-1);
-
     }
     return nodes;
 }
