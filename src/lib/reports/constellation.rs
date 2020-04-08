@@ -36,10 +36,11 @@ impl Constellation {
         let name = constellation.get_name("constellation");
         let region_name = constellation.get_name("region");
         format!(
-            r#"<span id="{id}" data-name="{name}">Constellation: {api}  [{map}]</span>"#,
+            r#"<span id="{id}" data-name="{name}">Constellation: {api}  [{zkb}] [{map}]</span>"#,
             id = id,
             name = &name,
             api = ctx.get_api_link("constellation", &name),
+            zkb = ctx.get_zkb_href("constellation", id, "zkb"),
             map = ctx.get_dotlan_href(region_name, &name, "dotlan")
         )
     }
