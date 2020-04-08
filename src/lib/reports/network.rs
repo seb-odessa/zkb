@@ -31,7 +31,7 @@ impl Node {
         let color = reports::get_security_status_color(model.security_status);
         let constellation = model.get_name("constellation");
         let region = model.get_name("region");
-        let shape = String::from(if model.observatory.is_none() {"ellipse"} else {"box"});
+        let shape = String::from(if model.observatory.is_none() {"circle"} else {"square"});
         let style = format!("background-color: {}; display: inline-block; width=100%", color);
         let label = format!("{} ({})", system, status);
         let colored = reports::span("", style, &label);
@@ -134,7 +134,7 @@ pub fn get_constellations_nodes(id: &i32, ctx: &Context) -> HashMap<i32, Node> {
                 if let Some(system) = reports::system::System::load(id, ctx) {
                     let mut node = Node::new(system, 1, ctx);
                     node.border_width = 1;
-                    node.shape = String::from("circle");
+                    node.shape = String::from("ellipse");
                     nodes.insert(node.id, node);
                 }
             }
