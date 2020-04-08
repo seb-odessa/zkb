@@ -94,7 +94,7 @@ pub fn get_system_nodes(id: &i32, deep: u32, ctx: &Context) -> HashMap<i32, Node
             let mut node = Node::new(system, 3, ctx);
             node.border_width = 3;
             let neighbors = node.neighbors.clone();
-            nodes.insert(*id, node);
+            nodes.insert(node.id, node);
             make_system_network(&neighbors, ctx, &mut nodes, deep-1);
         }
     }
@@ -121,14 +121,23 @@ pub fn get_system_edges(id: &i32, deep: u32, ctx: &Context) -> Vec<Edge> {
 
 pub fn get_constellations_nodes(id: &i32, ctx: &Context) -> HashMap<i32, Node> {
     let mut nodes:  HashMap<i32, Node> = HashMap::new();
-
+    let mut neighbors = Vec::new();
     if let Some(systems) = reports::constellation::Constellation::get_systems(id, ctx) {
         for system in systems.into_iter() {
             let mut node = Node::new(system, 3, ctx);
             node.border_width = 3;
+            neighbors.append(&mut node.neighbors.clone());
             nodes.insert(node.id, node);    
         }
-
+        for id in &neighbors {
+            if !nodes.contains_key(id) {
+                if let Some(system) = reports::system::System::load(id, ctx) {
+                let mut node = Node::new(system, 1, ctx);
+                node.border_width = 1;
+                nodes.insert(node.id, node);
+                }
+            }
+        }
 // @todo add nearest systems from other constellation
 //        let neighbors = node.neighbors.clone();
 //        make_system_network(&neighbors, ctx, &mut nodes, deep-1);
