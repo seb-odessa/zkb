@@ -60,10 +60,11 @@ impl Node {
 #[derive(Serialize, Deserialize, Debug, Clone, Default, Eq)]
 pub struct Edge {
     pub from: i32,
-    pub to: i32
+    pub to: i32,
+    pub color: String,
 }
 impl Edge {
-    pub fn new(from: i32, to: i32) -> Self { Self{from, to} }
+    pub fn new(from: i32, to: i32) -> Self { Self{ from, to, color: String::from("Black") } }
 }
 impl PartialEq for Edge {
     fn eq(&self, other: &Self) -> bool {
