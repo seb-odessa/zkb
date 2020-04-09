@@ -1,3 +1,4 @@
+use crate::api;
 use crate::models;
 use crate::services;
 use crate::services::Context;
@@ -21,9 +22,12 @@ impl reports::ReportableEx for Constellation {
                 reports::lazy(&mut output, format!("api/region_brief/{}", constellation.region_id), &ctx);
                 Self::neighbors(&mut output, id, &ctx);
                 Self::systems(&mut output, id, &ctx);
-                reports::map(&mut output, id, 0, "constellation", &ctx);
                 reports::Region::constellations(&mut output, &constellation.region_id, &ctx);
+                reports::map(&mut output, id, 0, "constellation", &ctx);                
                 reports::lazy(&mut output, format!("history/constellation/{}/{}", id, 60), &ctx);
+                reports::lazy(&mut output, format!("stat/constellation/{}", id), &ctx);
+                reports::div(&mut output, "");
+
             }
         }
         return output;
@@ -108,4 +112,18 @@ impl Constellation {
         }
     }
 
+    pub fn stat(id: &i32, ctx: &Context) -> String {
+        use api::stats::Stats;
+        use api::stats::Entity;
+        use api::stats::TopList;
+        use std::collections::HashSet;
+
+        let mut output = String::new();
+        if let Some(stats) = Stats::new(Entity::Constellation(*id)) {
+            //character, corporation, alliance, shipType, solarSystem, location
+            let allowed: HashSet<String> = vec!["character", "corporation", "alliance", "shipType", "solarSystem", "location"].into_iter().map(|s| String::from(s)).collect();
+            TopList::write(&mut output, &stats.top_lists, allowed, ctx);
+        }
+        return output;
+    }
 }

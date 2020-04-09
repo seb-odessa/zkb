@@ -111,6 +111,7 @@ fn stat(info: web::Path<(String, i32)>, ctx: Context) -> HttpResponse {
         "corporation" => reports::Corporation::stat(&id, &ctx),
         "character" => reports::Character::stat(&id, &ctx),
         "system" => reports::System::stat(&id, &ctx),
+        "constellation" => reports::Constellation::stat(&id, &ctx),
         "region" => reports::Region::stat(&id, &ctx),
 
         _=> format!("Unknown route {} ", route)

@@ -16,6 +16,7 @@ pub enum Entity {
     Ship(i32),
     Group(i32),
     System(i32),
+    Constellation(i32),
     Region(i32),
 }
 
@@ -76,14 +77,15 @@ impl Stats {
 
     pub fn new(entity: Entity) -> Option<Self> {
         match entity {
-            Entity::Character(id)   => Self::load("characterID", &id),
-            Entity::Corporation(id) => Self::load("corporationID", &id),
-            Entity::Alliance(id)    => Self::load("allianceID", &id),
-            Entity::Faction(id)     => Self::load("factionID", &id),
-            Entity::Ship(id)        => Self::load("shipTypeID", &id),
-            Entity::Group(id)       => Self::load("groupID", &id),
-            Entity::System(id)      => Self::load("solarSystemID", &id),
-            Entity::Region(id)      => Self::load("regionID", &id),
+            Entity::Character(id)     => Self::load("characterID", &id),
+            Entity::Corporation(id)   => Self::load("corporationID", &id),
+            Entity::Alliance(id)      => Self::load("allianceID", &id),
+            Entity::Faction(id)       => Self::load("factionID", &id),
+            Entity::Ship(id)          => Self::load("shipTypeID", &id),
+            Entity::Group(id)         => Self::load("groupID", &id),
+            Entity::System(id)        => Self::load("solarSystemID", &id),
+            Entity::Constellation(id) => Self::load("constellationID", &id),
+            Entity::Region(id)        => Self::load("regionID", &id),
         }
     }
 
