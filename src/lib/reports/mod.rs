@@ -225,7 +225,7 @@ pub fn map<S: Into<String>>(output: &mut dyn Write, id: &i32, deep: u32, target:
         output,
         format_args!(r##"
             <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-            <style type="text/css"> #network {{ width: 90%; height: 70%; border: 1px solid lightgray; }} </style>
+            <style type="text/css"> #network {{ width: 95%; height: 95%; border: 1px solid lightgray; }} </style>
             <div><span><br/></span></div>
             <div id = "network">...</div>
             <div id = "extinfo"></div>
