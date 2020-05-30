@@ -22,6 +22,7 @@ impl reports::ReportableEx for Region {
             if report_type == reports::ReportType::Full {
                 Self::neighbors(&mut output, id, ctx);
                 Self::constellations(&mut output, &region.region_id, &ctx);
+                reports::map(&mut output, id, 1, "region", &ctx);
                 reports::lazy(&mut output, format!("history/region/{}/{}", id, 60), &ctx);
                 reports::lazy(&mut output, format!("stat/region/{}", id), &ctx);
             }

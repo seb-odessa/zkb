@@ -4,7 +4,7 @@ use crate::models;
 use crate::reports;
 
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::convert::From;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
@@ -122,7 +122,7 @@ pub fn get_system_edges(id: &i32, deep: u32, ctx: &Context) -> Vec<Edge> {
     return build_edges(&get_system_nodes(id, deep, ctx));
 }
 
-pub fn get_constellations_nodes(id: &i32, ctx: &Context) -> HashMap<i32, Node> {
+pub fn get_constellation_nodes(id: &i32, ctx: &Context) -> HashMap<i32, Node> {
     let mut nodes:  HashMap<i32, Node> = HashMap::new();
     let mut neighbors = Vec::new();
     if let Some(systems) = reports::constellation::Constellation::get_systems(id, ctx) {
@@ -144,7 +144,38 @@ pub fn get_constellations_nodes(id: &i32, ctx: &Context) -> HashMap<i32, Node> {
     return nodes;
 }
 
-pub fn get_constellations_edges(id: &i32, ctx: &Context) -> Vec<Edge> {
-    return build_edges(&get_constellations_nodes(id, ctx));
+pub fn get_constellation_edges(id: &i32, ctx: &Context) -> Vec<Edge> {
+    return build_edges(&get_constellation_nodes(id, ctx));
 }
 
+pub fn get_region_nodes(id: &i32, ctx: &Context) -> HashMap<i32, Node> {
+    let mut nodes:  HashMap<i32, Node> = HashMap::new();    
+    if let Some(constellations) = reports::region::Region::get_constellation(id, ctx) {
+        let mut neighbors = HashSet::new();
+        for constellation in constellations.into_iter() {
+            let id = constellation.constellation_id;
+            if let Some(systems) = reports::constellation::Constellation::get_systems(&id, ctx) {
+                for system in systems.into_iter() {
+                    let node = Node::new(system, 1, ctx);
+                    let other: HashSet<i32> = node.neighbors.clone().into_iter().collect();
+                    neighbors = neighbors.union(&other).cloned().collect::<HashSet<_>>();
+                    nodes.insert(node.id, node);
+                }
+            }
+        }
+        for id in &neighbors {
+            if !nodes.contains_key(id) {
+                if let Some(system) = reports::system::System::load(id, ctx) {
+                    let mut node = Node::new(system, 1, ctx);
+                    node.shape = String::from("hexagon");
+                    nodes.insert(node.id, node);
+                }
+            }
+        }
+    }
+    return nodes;
+}
+
+pub fn get_region_edges(id: &i32, ctx: &Context) -> Vec<Edge> {
+    return build_edges(&get_region_nodes(id, ctx));
+}
